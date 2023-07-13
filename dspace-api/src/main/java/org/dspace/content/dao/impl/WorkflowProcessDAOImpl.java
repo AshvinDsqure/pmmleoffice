@@ -86,6 +86,41 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
+    public List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statusreferid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
+        Query query = createQuery(context, "" +
+                "SELECT wp FROM WorkflowProcess as wp " +
+                "join wp.workflowProcessEpeople as ep " +
+                "join ep.ePerson as p  " +
+                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and p.id=:eperson and st.id IN(:statusreferid) and wp.isdelete=:isdelete order by wp.InitDate desc");
+        query.setParameter("isOwner", true);
+        query.setParameter("eperson", eperson);
+        query.setParameter("isdelete", false);
+        query.setParameter("statusreferid", statusreferid);
+
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int countRefer(Context context, UUID eperson, UUID statusreferid, UUID statusdraftid, UUID statusdraft) throws SQLException {
+        Query query = createQuery(context, "" +
+                "SELECT count(wp) FROM WorkflowProcess as wp " +
+                "join wp.workflowProcessEpeople as ep " +
+                "join ep.ePerson as p  " +
+                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and p.id=:eperson and st.id IN(:statusreferid) and wp.isdelete=:isdelete");
+        query.setParameter("isOwner", true);
+        query.setParameter("eperson", eperson);
+        query.setParameter("isdelete", false);
+        query.setParameter("statusreferid", statusreferid);
+        return count(query);
+    }
+
+    @Override
     public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +

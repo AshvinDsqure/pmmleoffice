@@ -359,12 +359,12 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
 
     @SearchRestMethod(name = "searchByDepartment")
     public Page<EPersonRest> searchByDepartment(
-            @Parameter(value = "searchdepartment", required = true) UUID searchdepartment,
+            @Parameter(value = "searchdepartmentorofficeid", required = true) UUID searchdepartmentorofficeid,
             Pageable pageable) {
         try {
-            System.out.println("search value :"+searchdepartment);
+            System.out.println("search value :"+searchdepartmentorofficeid);
             Context context = obtainContext();
-            List<EPerson> witems =es.getByDepartment(context,searchdepartment);
+            List<EPerson> witems =es.getByDepartment(context,searchdepartmentorofficeid);
             return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

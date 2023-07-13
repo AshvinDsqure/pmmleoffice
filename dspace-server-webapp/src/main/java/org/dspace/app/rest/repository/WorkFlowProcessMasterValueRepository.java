@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -14,6 +14,8 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.ConverterService;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
+import org.dspace.app.rest.enums.WorkFlowStatus;
+import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.model.WorkFlowProcessMasterRest;
@@ -63,6 +65,7 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
     public WorkFlowProcessMasterValueRepository(WorkFlowProcessMasterValueService dso) {
         super(dso);
     }
+
     @Override
     protected WorkFlowProcessMasterValueRest createAndReturn(Context context)
             throws AuthorizeException {
@@ -73,10 +76,10 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         WorkFlowProcessMasterValue workFlowProcessMasterValue = null;
         try {
             workFlowProcessMasterValueRest = mapper.readValue(req.getInputStream(), WorkFlowProcessMasterValueRest.class);
-            if(workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID()==null&& workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername()!=null){
-                WorkFlowProcessMaster workFlowProcessMaster=new WorkFlowProcessMaster();
+            if (workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID() == null && workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername() != null) {
+                WorkFlowProcessMaster workFlowProcessMaster = new WorkFlowProcessMaster();
                 workFlowProcessMaster.setMastername(workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername());
-                WorkFlowProcessMaster ms=masterService.create(context,workFlowProcessMaster);
+                WorkFlowProcessMaster ms = masterService.create(context, workFlowProcessMaster);
                 workFlowProcessMasterValueRest.setWorkFlowProcessMaster(ms);
             }
             workFlowProcessMasterValue = createWorkFlowProcessMasterFromRestObject(context, workFlowProcessMasterValueRest);
@@ -92,7 +95,7 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
 
         try {
-            workFlowProcessMasterValue=workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue,workFlowProcessMasterValueRest);
+            workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
             workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -102,15 +105,15 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
 
     @Override
     protected WorkFlowProcessMasterValueRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                            JsonNode jsonNode) throws SQLException, AuthorizeException {
+                                                 JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkFlowProcessMasterValueRest workFlowProcessMasterValueRest = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessMasterValueRest.class);
 
         WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.find(context, id);
         if (workFlowProcessMasterValue == null) {
-            System.out.println("WorkFlowProcessMasterRest id ::: is Null  WorkFlowProcessMasterRest tye null"+id);
+            System.out.println("WorkFlowProcessMasterRest id ::: is Null  WorkFlowProcessMasterRest tye null" + id);
             throw new ResourceNotFoundException("WorkFlowProcessMasterRest  field with id: " + id + " not found");
         }
-        workFlowProcessMasterValue=workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue,workFlowProcessMasterValueRest);
+        workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
         workFlowProcessMasterValueService.update(context, workFlowProcessMasterValue);
         context.commit();
         return converter.toRest(workFlowProcessMasterValue, utils.obtainProjection());
@@ -120,13 +123,13 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
     @Override
     public WorkFlowProcessMasterValueRest findOne(Context context, UUID uuid) {
 
-        System.out.println("in findOne "+uuid);
+        System.out.println("in findOne " + uuid);
 
-        WorkFlowProcessMasterValueRest workFlowProcessMasterRest=null;
+        WorkFlowProcessMasterValueRest workFlowProcessMasterRest = null;
         try {
             Optional<WorkFlowProcessMasterValue> workFlowProcessMasterValue = Optional.ofNullable(workFlowProcessMasterValueService.find(context, uuid));
             if (workFlowProcessMasterValue.isPresent()) {
-                System.out.println("in findOne present name"+workFlowProcessMasterValue.get().getName());
+                System.out.println("in findOne present name" + workFlowProcessMasterValue.get().getName());
                 workFlowProcessMasterRest = converter.toRest(workFlowProcessMasterValue.get(), utils.obtainProjection());
             }
         } catch (Exception e) {
@@ -163,41 +166,54 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
     @SearchRestMethod(name = "findByType")
     public Page<WorkFlowProcessMasterRest> findByStartDateAndEndDate(
             @Parameter(value = "type", required = true) String type,
-            Pageable pageable)
-    {
+            Pageable pageable) {
         try {
+            String workflowstatus=type;
             Context context = obtainContext();
-            System.out.println("in Repo "+type);
-            int total = workFlowProcessMasterValueService.countfindByType(context,type);
-            List<WorkFlowProcessMasterValue> workFlowProcessMasterValueRests = workFlowProcessMasterValueService.findByType(context,type,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            System.out.println("workFlowProcessMasterValueRests result"+workFlowProcessMasterValueRests.size());
-           List<WorkFlowProcessMasterValueRest> transformedList= workFlowProcessMasterValueRests.stream().map(f->{
-               return workFlowProcessMasterValueConverter.convert(f,utils.obtainProjection());
+            List<WorkFlowProcessMasterValue> workFlowProcessMasterValueRests=null;
+            int total = workFlowProcessMasterValueService.countfindByType(context, type);
+            WorkFlowProcessMaster master = masterService.findByName(context, type);
+            if (master != null) {
+                type = master.getID().toString();
+            }
+           workFlowProcessMasterValueRests = workFlowProcessMasterValueService.findByType(context, type, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            if(workflowstatus.equalsIgnoreCase(WorkFlowStatus.MASTER.getAction())){
+                List<WorkFlowProcessMasterValueRest> transformedList = workFlowProcessMasterValueRests.stream()
+                        .filter(wei -> !wei.getPrimaryvalue().equals(WorkFlowStatus.REFER.getAction()))
+                        .map(f -> {
+                    return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
+                }).collect(Collectors.toList());
+                return new PageImpl(transformedList, pageable, total);
+            }
+            List<WorkFlowProcessMasterValueRest> transformedList = workFlowProcessMasterValueRests.stream().map(f -> {
+                return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
             }).collect(Collectors.toList());
-          return  new PageImpl(transformedList, pageable, total);
+            return new PageImpl(transformedList, pageable, total);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
 
-
     @SearchRestMethod(name = "searchByDepartment")
     public Page<WorkFlowProcessMasterValueRest> searchByDepartment(
-            @Parameter(value = "searchdepartment", required = true) String searchdepartment,
+            @Parameter(value = "mastername", required = true) String mastername,
+            @Parameter(value = "search", required = true) String search,
             Pageable pageable) {
         try {
-            System.out.println("search value :"+searchdepartment);
+            System.out.println("master name :" + mastername);
+            System.out.println("search value :" + search);
             Context context = obtainContext();
-            UUID masterid=null;
-            WorkFlowProcessMaster master=masterService.findByName(context,"Department");
-           if(master!=null){
-               masterid=master.getID();
-           }
-            List<WorkFlowProcessMasterValue> witems =workFlowProcessMasterValueService.searchByDepartment(context,masterid,searchdepartment);
+            UUID masterid = null;
+            WorkFlowProcessMaster master = masterService.findByName(context, mastername);
+            if (master != null) {
+                masterid = master.getID();
+            }
+            List<WorkFlowProcessMasterValue> witems = workFlowProcessMasterValueService.searchByDepartment(context, masterid, search);
             return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

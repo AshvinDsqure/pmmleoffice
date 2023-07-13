@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.security;
@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.content.LoginCounter;
+import org.dspace.content.service.LoginCounterService;
 import org.dspace.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
+
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * Custom logout handler to support stateless sessions
@@ -32,6 +37,8 @@ public class CustomLogoutHandler implements LogoutHandler {
 
     @Autowired
     private RestAuthenticationService restAuthenticationService;
+    @Autowired
+    private LoginCounterService loginCounterService;
 
     /**
      * This method removes the session salt from an eperson, this way the token won't be verified anymore
@@ -43,10 +50,10 @@ public class CustomLogoutHandler implements LogoutHandler {
     public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                        Authentication authentication) {
         try {
+            System.out.println("in logout ");
             Context context = ContextUtil.obtainContext(httpServletRequest);
             restAuthenticationService.invalidateAuthenticationData(httpServletRequest, httpServletResponse, context);
             context.commit();
-
         } catch (Exception e) {
             log.error("Unable to logout", e);
         }

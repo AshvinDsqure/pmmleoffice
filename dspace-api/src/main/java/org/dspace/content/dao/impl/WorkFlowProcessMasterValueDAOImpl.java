@@ -39,15 +39,14 @@ public class WorkFlowProcessMasterValueDAOImpl  extends AbstractHibernateDAO<Wor
     }
     @Override
     public List<WorkFlowProcessMasterValue> findByType(Context context, String mastername,Integer offset,Integer limit) throws SQLException{
-        CriteriaBuilder criteriaBuilder= getCriteriaBuilder(context);
-        CriteriaQuery<WorkFlowProcessMasterValue> criteriaQuery =getCriteriaQuery(criteriaBuilder,WorkFlowProcessMasterValue.class);
-        Root<WorkFlowProcessMasterValue> workFlowProcessMasterValueRoot=criteriaQuery.from(WorkFlowProcessMasterValue.class);
-        Join<WorkFlowProcessMasterValue,WorkFlowProcessMaster> workFlowProcessMasterValueWorkFlowProcessMasterJoin = workFlowProcessMasterValueRoot.join(WorkFlowProcessMasterValue_.workflowprocessmaster);
-        criteriaQuery.select(workFlowProcessMasterValueRoot).where(criteriaBuilder.and(
-                criteriaBuilder.equal(workFlowProcessMasterValueWorkFlowProcessMasterJoin.get("mastername"),mastername)
-        ));
-        Query query = this.getHibernateSession(context).createQuery(criteriaQuery);
-        return list(query);
+        try {
+            Query query = createQuery(context, "SELECT mv from  WorkFlowProcessMasterValue as mv join mv.workflowprocessmaster as m where m.id=:master");
+            query.setParameter("master",UUID.fromString(mastername));
+            return query.getResultList();
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return null;
+        }
     }
     @Override
     public WorkFlowProcessMasterValue findByName(Context context, String name, WorkFlowProcessMaster workFlowProcessMaster)throws SQLException{

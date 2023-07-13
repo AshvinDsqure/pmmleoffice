@@ -51,6 +51,7 @@
     <bean class="org.dspace.content.WorkFlowProcessOutwardDetailsServiceImpl"/>
     <bean class="org.dspace.content.WorkflowProcessReferenceDocServiceImpl"/>
     <bean class="org.dspace.content.WorkflowProcessEpersonServiceImpl"/>
+    <bean class="org.dspace.content.LoginCounterServiceImpl"/>
     <bean class="org.dspace.content.DocumentTypeServiceImpl"/>
     <bean class="org.dspace.content.WorkflowProcessNoteServiceImpl"/>
     <bean class="org.dspace.content.WorkflowProcessDefinitionServiceImpl"/>

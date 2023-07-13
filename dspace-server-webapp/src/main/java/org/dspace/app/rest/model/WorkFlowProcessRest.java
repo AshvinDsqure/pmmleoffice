@@ -35,7 +35,7 @@ import java.util.List;
 })
 public class WorkFlowProcessRest extends DSpaceObjectRest {
     public static final String NAME = "workflowprocesse";
-    public static final String PLURAL_NAME = "workflowprocess";
+    public static final String PLURAL_NAME = "workflowprocesses";
     public static final String CATEGORY = RestAddressableModel.WORKFLOWPROCESS;
     public static final String CATEGORY_INWARD = "inward";
     public static final String CATEGORY_OUTWARE = "outward";

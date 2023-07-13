@@ -201,6 +201,30 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "getReferWorkflow")
+    public Page<WorkFlowProcessRest> getReferWorkflow(Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            UUID referstatusid=WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdraft=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Workflow Type");
+            UUID statusdraftid=null;
+            if(workFlowProcessMaster!=null){
+                statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
+            }
+            System.out.println("statuscloseid>>"+referstatusid);
+            System.out.println("statusdraftid>>"+statusdraftid);
+            System.out.println("statusdraft>>"+statusdraft);
+            int count=workflowProcessService.countRefer(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft);
+            List<WorkflowProcess> workflowProcesses= workflowProcessService.findReferList(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
+            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+        }catch (Exception e){
+            e.printStackTrace();
+            throw  new RuntimeException(e.getMessage(),e);
+        }
+    }
+
     @SearchRestMethod(name = "getDocumentByItemID")
     public WorkFlowProcessRest getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid) {
         try {

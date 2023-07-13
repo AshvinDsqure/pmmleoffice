@@ -43,6 +43,7 @@
     <bean class="org.dspace.content.dao.impl.WorkFlowProcessInwardDetailsDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.WorkFlowProcessDraftDetailsDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.WorkFlowProcessCommentDAOImpl"/>
+    <bean class="org.dspace.content.dao.impl.LoginCounterDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.WorkflowProcessReferenceDocVersionDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.WorkFlowProcessOutwardDetailsDAOImpl"/>
     <bean class="org.dspace.content.dao.impl.LatterCategoryDAOImpl"/>

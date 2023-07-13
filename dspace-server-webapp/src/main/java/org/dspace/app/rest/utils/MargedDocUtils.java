@@ -1,42 +1,81 @@
 package org.dspace.app.rest.utils;
 
-import com.spire.doc.*;
-import com.spire.doc.fields.Field;
-import com.spire.doc.interfaces.IDocumentObject;
+import com.spire.doc.Document;
+import com.spire.doc.DocumentObject;
+import com.spire.doc.FileFormat;
+import com.spire.doc.Section;
 import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-import org.apache.xmlbeans.XmlOptions;
-import org.dspace.content.Bitstream;
+import org.apache.poi.xwpf.usermodel.*;
 import org.dspace.content.WorkFlowProcessComment;
-import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STOnOff;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBody;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHyperlink;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class MargedDocUtils {
     static String[] filePaths = new String[3];
     static List<String> documentPaths = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
-       // DocOneWrite(1l);
-       // InputStream input = new FileInputStream(new File("D://note2.docx"));
-       // InputStream input3 = new FileInputStream(new File("D://note3.docx"));
-      //  DocTwoWrite(input);
-      //  DocTwoWrite2(input3);
-          // DocthreWrite1();
-          //writeMultipleFiles();
-       // DocumentMerger("D://finalaaaaaaa.docx");
 
 
-        DocthreWrite1();
+//        ConvertToPDF("D://output.docx", "D://documentsss.pdf");
+
+        // removetext("D://note11.docx","D://out123.docx");
+
+
+        // Open the source HTML file.
+        // DocOneWrite(1l);
+        // InputStream input = new FileInputStream(new File("D://note2.docx"));
+        // InputStream input3 = new FileInputStream(new File("D://note3.docx"));
+        //  DocTwoWrite(input);
+        //  DocTwoWrite2(input3);
+        // DocthreWrite1();
+        //writeMultipleFiles();
+        // DocumentMerger("D://finalaaaaaaa.docx");
+
+        // Create a new documen
+
+        //DocthreWrite1();
+    }
+/*
+
+    public static void ConvertToPDF(String docPath, String pdfPath) {
+        System.out.println("::::::::::::::::::::IN DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
+        try {
+            InputStream in = new FileInputStream(new File(docPath));
+            XWPFDocument document = new XWPFDocument(in);
+            PdfOptions options = PdfOptions.create();
+            OutputStream out = new FileOutputStream(new File(pdfPath));
+            PdfConverter.getInstance().convert(document, out, options);
+            document.close();
+            out.close();
+            System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
+
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::"+e.getMessage());
+
+        }
+
+    }
+*/
+
+    public static void lineBreak(int n, XWPFDocument doc) {
+        for (int i = 1; i <= n; i++) {
+            XWPFParagraph p2 = doc.createParagraph();
+            p2.setAlignment(ParagraphAlignment.CENTER);
+            // set font
+            XWPFRun r1 = p2.createRun();
+            r1.setText(" ");
+        }
     }
 
     public static void finalwriteDocument(String path) {
@@ -64,6 +103,12 @@ public class MargedDocUtils {
             XWPFRun r1 = p1.createRun();
             r1.setBold(true);
             r1.setText("Note#" + notecount);
+
+            XWPFParagraph p2 = doc.createParagraph();
+            p2.setAlignment(ParagraphAlignment.CENTER);
+            // set font
+            XWPFRun r2 = p2.createRun();
+            r1.setText(" ");
 
             // save it to .docx file
             try (FileOutputStream out = new FileOutputStream(oneFile)) {
@@ -122,84 +167,6 @@ public class MargedDocUtils {
         }
     }
 
-    public static void DocTwoWrite2(InputStream in) {
-        System.out.println("in Seconned doc save Done!");
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File twoFile = new File(TEMP_DIRECTORY, "file3.docx");
-        if (!twoFile.exists()) {
-            try {
-                twoFile.createNewFile();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }
-        filePaths[2] = twoFile.getAbsolutePath();
-        documentPaths.add(twoFile.getAbsolutePath());
-        try (XWPFDocument doc = new XWPFDocument()) {
-            FileOutputStream out = new FileOutputStream(twoFile);
-            byte[] buf = new byte[8192];
-            int length;
-            while ((length = in.read(buf)) != -1) {
-                out.write(buf, 0, length);
-            }
-            System.out.println("Second doc save Done!" + twoFile.getAbsolutePath());
-        } catch (Exception e) {
-            System.out.println("Error Seconned doc save !" + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void DocthreWrite1() {
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File oneFile = new File(TEMP_DIRECTORY, "file3.docx");
-        if (!oneFile.exists()) {
-            try {
-                oneFile.createNewFile();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }
-        filePaths[2] = oneFile.getAbsolutePath();
-        documentPaths.add(oneFile.getAbsolutePath());
-        try (XWPFDocument doc = new XWPFDocument()) {
-
-
-            XWPFParagraph paragraph = doc.createParagraph();
-            XWPFRun run = paragraph.createRun();
-            run.setText("Paragraph 1 LTR");
-
-            paragraph = doc.createParagraph();
-
-            CTP ctp = paragraph.getCTP();
-            CTPPr ctppr;
-            if ((ctppr = ctp.getPPr()) == null) ctppr = ctp.addNewPPr();
-            ctppr.addNewBidi().setVal(ctp);
-
-            run = paragraph.createRun();
-            run.setText("Reference Noting");
-            paragraph = doc.createParagraph();
-            run = paragraph.createRun();
-            run.setText("Paragraph 3 LTR");
-
-            // save it to .docx file
-            try (FileOutputStream out = new FileOutputStream(oneFile)) {
-                doc.write(out);
-                out.close();
-                doc.close();
-            }
-            System.out.println("three doc save Done!" + oneFile.getAbsolutePath());
-        } catch (IOException e) {
-            System.out.println("Error First doc save !" + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-
-    }
 
     public static void DocthreWrite(Map<String, Object> hashMap) {
         System.out.println("in 3 doc!");
@@ -218,11 +185,11 @@ public class MargedDocUtils {
         }
         filePaths[2] = threeFile.getAbsolutePath();
         documentPaths.add(threeFile.getAbsolutePath());
-
         try (XWPFDocument doc = new XWPFDocument()) {
             // create a paragraph
             int total = hashMap.entrySet().size();
             for (int i = 0; i < total; i++) {
+
                 for (Map.Entry<String, Object> entry : hashMap.entrySet()) {
                     System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                     //creater
@@ -235,8 +202,6 @@ public class MargedDocUtils {
                             r1.setText(creators);
                         }
                     }
-
-
                     if (entry.getKey().contains("Reference Noting") && i == 2) {
                         XWPFParagraph Noting = doc.createParagraph();
                         Noting.setAlignment(ParagraphAlignment.RIGHT);
@@ -247,86 +212,110 @@ public class MargedDocUtils {
                         List<Map<String, String>> listreferencenotting = (List<Map<String, String>>) entry.getValue();
                         if (listreferencenotting != null) {
                             System.out.println(listreferencenotting.size());
+                            StringBuffer sb1 = new StringBuffer();
+
                             for (Map<String, String> maps : listreferencenotting) {
                                 int t = maps.entrySet().size();
                                 for (int j = 0; j < t; j++) {
+                                    System.out.println("map>>>>>>>size>>>>>>>>" + maps.entrySet().size());
                                     for (Map.Entry<String, String> entry1 : maps.entrySet()) {
+                                        System.out.println("map>>>>>>>>>>>>>>>" + entry1);
 
                                         if (entry1.getKey().contains("link") && j == 0) {
-                                            XWPFParagraph p1 = doc.createParagraph();
-                                            p1.setAlignment(ParagraphAlignment.RIGHT);
-                                            XWPFRun rb = p1.createRun();
-                                            p1.createHyperlinkRun(entry1.getValue().toString());
+                                            sb1.append(entry1.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("subject") && j == 1) {
+                                        if (entry1.getKey().contains("name") && j == 1) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
-                                            XWPFRun r3 = p3.createRun();
-                                            r3.setText(entry1.getValue().toString());
-
+                                            XWPFHyperlinkRun hyperlinkrun = createHyperlinkRun(p3, sb1.toString());
+                                            hyperlinkrun.setText(entry1.getValue().toString());
+                                            hyperlinkrun.setColor("0000FF");
+                                            hyperlinkrun.setUnderline(UnderlinePatterns.SINGLE);
                                         }
-                                        if (entry1.getKey().contains("fullname") && j == 2) {
-                                            XWPFParagraph p3 = doc.createParagraph();
-                                            p3.setAlignment(ParagraphAlignment.RIGHT);
-                                            XWPFRun r3 = p3.createRun();
-                                            r3.setText(entry1.getValue().toString());
-                                        }
-                                        if (entry1.getKey().contains("designation") && j == 3) {
+                                        if (entry1.getKey().contains("subject") && j == 2) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
                                             r3.setText(entry1.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("date") && j == 4) {
+                                        if (entry1.getKey().contains("notecreateor") && j == 3) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
                                             r3.setText(entry1.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("filename") && j == 5) {
+                                        if (entry1.getKey().contains("filename") && j == 4) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
                                             r3.setText(entry1.getValue().toString());
                                         }
                                     }
+
                                 }
-
+                                lineBreak(1, doc);
                             }
                         }
                     }
 
+                    //Reference Documents start
                     if (entry.getKey().contains("Reference Documents") && i == 1) {
-                        XWPFParagraph Documents = doc.createParagraph();
-                        Documents.setAlignment(ParagraphAlignment.LEFT);
-                        XWPFRun ra = Documents.createRun();
-                        ra.setBold(true);
-                        ra.setText("Reference Documents");
-                        String name = "";
-                        String link = "";
-                        Map<String, String> map = (Map<String, String>) entry.getValue();
-                        for (Map.Entry<String, String> entry1 : map.entrySet()) {
+                        XWPFParagraph Noting = doc.createParagraph();
+                        Noting.setAlignment(ParagraphAlignment.LEFT);
+                        XWPFRun r1 = Noting.createRun();
+                        r1.setBold(true);
+                        r1.setText("Reference Documents");
+                        List<Map<String, String>> listofmapReferenceDocuments = (List<Map<String, String>>) entry.getValue();
+                        System.out.println(listofmapReferenceDocuments.size());
+                        System.out.println("List Reference Documents::::" + listofmapReferenceDocuments);
 
-                            if (entry1.getKey().contains("link")) {
-                                link = entry1.getValue().toString();
-                            }
-                            if (entry1.getKey().contains("name")) {
-                                name = entry1.getValue().toString();
+                        if (listofmapReferenceDocuments != null) {
+                            System.out.println(listofmapReferenceDocuments.size());
+                            StringBuffer sb11 = new StringBuffer();
+                            for (Map<String, String> maps : listofmapReferenceDocuments) {
+                                int t = maps.entrySet().size();
+                                for (int j = 0; j < t; j++) {
+                                    for (Map.Entry<String, String> entry1 : maps.entrySet()) {
+                                        if (entry1.getKey().contains("link") && j == 0) {
+                                            sb11.append(entry1.getValue().toString());
+                                        }
+                                        if (entry1.getKey().contains("doctyperefnumber") && j == 1) {
+                                            XWPFParagraph p3 = doc.createParagraph();
+                                            p3.setAlignment(ParagraphAlignment.LEFT);
+                                            XWPFHyperlinkRun hyperlinkrun = createHyperlinkRun(p3, sb11.toString());
+                                            hyperlinkrun.setText(entry1.getValue().toString());
+                                            hyperlinkrun.setColor("0000FF");
+                                            hyperlinkrun.setUnderline(UnderlinePatterns.SINGLE);
+
+                                        }
+                                        if (entry1.getKey().contains("datelettercategory") && j == 2) {
+                                            XWPFParagraph p3 = doc.createParagraph();
+                                            p3.setAlignment(ParagraphAlignment.LEFT);
+                                            XWPFRun r3 = p3.createRun();
+                                            r3.setText(entry1.getValue().toString());
+                                        }
+                                        if (entry1.getKey().contains("description") && j == 3) {
+                                            XWPFParagraph p3 = doc.createParagraph();
+                                            p3.setAlignment(ParagraphAlignment.LEFT);
+                                            XWPFRun r3 = p3.createRun();
+                                            r3.setText(entry1.getValue().toString());
+                                        }
+                                    }
+                                }
+                                lineBreak(1, doc);
                             }
                         }
-                        XWPFParagraph p1 = doc.createParagraph();
-                        p1.setAlignment(ParagraphAlignment.LEFT);
-                        XWPFRun rb = p1.createRun();
-                        p1.createHyperlinkRun(link);
-                        rb.setText(name);
                     }
+                    ////Reference Documents end
 
                     if (entry.getKey().contains("comment") && i == 3) {
                         List<WorkFlowProcessComment> list = (List<WorkFlowProcessComment>) entry.getValue();
                         XWPFParagraph p1 = doc.createParagraph();
                         p1.setAlignment(ParagraphAlignment.LEFT);
                         XWPFRun rc = p1.createRun();
-                        rc.setText("[" + list.size() + "]");
+                        rc.setText("Comments [" + list.size() + "]");
+                        rc.setBold(true);
+                        lineBreak(1, doc);
                         int index = 1;
                         for (WorkFlowProcessComment b : list) {
                             //comment count
@@ -336,12 +325,19 @@ public class MargedDocUtils {
                             r2.setBold(true);
                             r2.setText("Comment #" + index + "");
 
+                            XWPFParagraph p2w = doc.createParagraph();
+                            p2w.setAlignment(ParagraphAlignment.CENTER);
+                            // set font
+                            XWPFRun r2w = p2w.createRun();
+                            r2w.setText(" ");
+
                             //Comment
                             if (b.getComment() != null) {
                                 XWPFParagraph p3 = doc.createParagraph();
                                 p3.setAlignment(ParagraphAlignment.LEFT);
                                 XWPFRun r3 = p3.createRun();
                                 r3.setText(b.getComment());
+
                             }
                             if (b.getSubmitter().getFullName() != null) {
                                 XWPFParagraph p3 = doc.createParagraph();
@@ -375,6 +371,8 @@ public class MargedDocUtils {
         } catch (IOException e) {
             System.out.println("Error First doc save !" + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -423,12 +421,72 @@ public class MargedDocUtils {
             }
         }
         //Save the resultant document
-        document1.saveToFile(finalpathe, FileFormat.Docx_2013);
+        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+        File finaldoc = new File(TEMP_DIRECTORY, "final.docx");
+        document1.saveToFile(finaldoc.getAbsolutePath(), FileFormat.Docx_2013);
+        removetext(finaldoc.getAbsolutePath(), finalpathe);
         System.out.println("in marged doc 2 to 3 done");
     }
 
     private static String DateFormate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
         return formatter.format(date);
+    }
+
+    public static void removetext(String fileopen, String finalpath) {
+        System.out.println("remove text");
+        try {
+            XWPFDocument doc = new XWPFDocument(OPCPackage.open(new File(fileopen)));
+            for (XWPFParagraph p : doc.getParagraphs()) {
+                List<XWPFRun> runs = p.getRuns();
+                if (runs != null) {
+                    int i = 0;
+                    for (XWPFRun r : runs) {
+                        if (i == 0) {
+                            String text = r.getText(0);
+                            if (text != null && text.contains("Evaluation Warning: The document was created with Spire.Doc for JAVA.")) {
+                                System.out.println("remove text :::::::::::::::" + text);
+                                text = text.replace("Evaluation Warning: The document was created with Spire.Doc for JAVA.", " ");
+                                r.setText(text, 0);
+                            }
+                        }
+                        if (i == 1) {
+                            String text = r.getText(0);
+                            System.out.println("remove text ::::::s:::::::::" + text);
+                            if (text != null && text.contains("cument was created with Spire.Doc for JAVA.")) {
+                                text = text.replace("cument was created with Spire.Doc for JAVA.", " ");
+                                r.setText(text, 0);
+                            }
+                        }
+                        i++;
+                    }
+                }
+            }
+
+            final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+            File finaldocf = new File(TEMP_DIRECTORY, "finalww.docx");
+            doc.write(new FileOutputStream(finalpath));
+            //ConvertToPDF(finaldocf.getAbsolutePath(),finalpath);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
+    public static XWPFHyperlinkRun createHyperlinkRun(XWPFParagraph paragraph, String uri) throws Exception {
+        String rId = paragraph.getPart().getPackagePart().addExternalRelationship(
+                uri,
+                XWPFRelation.HYPERLINK.getRelation()
+        ).getId();
+
+        CTHyperlink cthyperLink = paragraph.getCTP().addNewHyperlink();
+        cthyperLink.setId(rId);
+        cthyperLink.addNewR();
+
+        return new XWPFHyperlinkRun(
+                cthyperLink,
+                cthyperLink.getRArray(0),
+                paragraph
+        );
     }
 }

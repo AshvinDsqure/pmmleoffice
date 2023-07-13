@@ -35,6 +35,7 @@ import org.dspace.app.rest.security.RestAuthenticationService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.service.LoginCounterService;
 import org.dspace.core.Context;
 import org.dspace.service.ClientInfoService;
 import org.slf4j.Logger;
@@ -69,6 +70,9 @@ public class AuthenticationRestController implements InitializingBean {
 
     @Autowired
     DiscoverableEndpointsService discoverableEndpointsService;
+
+    @Autowired
+    LoginCounterService loginCounterService;
 
     @Autowired
     private ConverterService converter;
@@ -234,7 +238,6 @@ public class AuthenticationRestController implements InitializingBean {
         if (!clientInfoService.isRequestFromTrustedProxy(request.getRemoteAddr())) {
             throw new AuthorizeException("Requests to this endpoint should be made from a trusted IP address.");
         }
-
         return shortLivedTokenResponse(request);
     }
 
@@ -248,7 +251,6 @@ public class AuthenticationRestController implements InitializingBean {
         AuthenticationTokenRest authenticationTokenRest = converter.toRest(shortLivedToken, projection);
         return converter.toResource(authenticationTokenRest);
     }
-
     /**
      * Disables GET/PUT/PATCH on the /login endpoint. You must use POST (see above method)
      * @return ResponseEntity

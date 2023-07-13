@@ -60,6 +60,7 @@
         <mapping class="org.dspace.content.WorkFlowProcessComment"/>
         <mapping class="org.dspace.content.WorkflowProcessReferenceDocVersion"/>
         <mapping class="org.dspace.content.WorkFlowProcessMasterValue"/>
+        <mapping class="org.dspace.content.LoginCounter"/>
         <mapping class="org.dspace.content.WorkflowProcessDefinition"/>
         <mapping class="org.dspace.content.WorkflowProcessEperson"/>
         <mapping class="org.dspace.content.DocumentType"/>

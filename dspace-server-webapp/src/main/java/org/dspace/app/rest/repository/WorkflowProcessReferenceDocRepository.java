@@ -22,9 +22,7 @@ import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
-import org.dspace.content.service.WorkflowProcessReferenceDocService;
-import org.dspace.content.service.WorkflowProcessSenderDiaryService;
-import org.dspace.content.service.WorkflowProcessService;
+import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +35,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +56,13 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
 
     @Autowired
     private WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
+
+    @Autowired
+    private WorkFlowProcessHistoryService workFlowProcessHistoryService;
+
+    @Autowired
+    private WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
 
     @Autowired
     ModelMapper modelMapper;
@@ -107,12 +109,15 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         try {
             workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, id);
+            storeWorkFlowHistoryforDocumentDelete(context, workflowProcessReferenceDoc);
             if (workflowProcessReferenceDoc == null) {
                 throw new ResourceNotFoundException(WorkflowProcessReferenceDocRest.CATEGORY + "." + WorkflowProcessReferenceDocRest.NAME +
                         " with id: " + id + " not found");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         try {
             workflowProcessReferenceDocService.delete(context, workflowProcessReferenceDoc);
@@ -144,9 +149,9 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             long total = workflowProcessReferenceDocService.countDocumentByItemid(context, itemid);
             List<WorkflowProcessReferenceDoc> witems = workflowProcessReferenceDocService.getDocumentByItemid(context, itemid, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-                    List<WorkflowProcessReferenceDoc> filterlist = witems.stream()
+            List<WorkflowProcessReferenceDoc> filterlist = witems.stream()
                     .filter(f -> f.getBitstream() != null)
-                    .filter(f -> !f.getBitstream().getName().contains("Note#")).filter(f->f.getDrafttype()!=null)
+                    .filter(f -> !f.getBitstream().getName().contains("Note#")).filter(f -> f.getDrafttype() != null)
                     .filter(f -> !f.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
                     .collect(Collectors.toList());
             return converter.toRestPage(filterlist, pageable, total, utils.obtainProjection());
@@ -154,6 +159,27 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
+    public void storeWorkFlowHistoryforDocumentDelete(Context context, WorkflowProcessReferenceDoc doc) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistory::delete::Document:::::: ");
+        try {
+            WorkflowProcess workflowProcess = doc.getWorkflowProcess();
+            WorkFlowProcessHistory workFlowAction = null;
+            workFlowAction = new WorkFlowProcessHistory();
+            WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+            workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
+            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.REJECTED.getAction(), workFlowProcessMaster);
+            workFlowAction.setActionDate(new Date());
+            workFlowAction.setAction(workFlowProcessMasterValue);
+            workFlowAction.setWorkflowProcess(workflowProcess);
+            workFlowAction.setComment("Deleted " + doc.getDrafttype().getPrimaryvalue());
+            workFlowProcessHistoryService.create(context, workFlowAction);
+            System.out.println("::::::OUT :storeWorkFlowHistory: delete :Document:::::::: ");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @SearchRestMethod(name = "getDocumentByworkflowprocessid")
     public Page<WorkflowProcessReferenceDocVersionRest> getDocumentByworkflowprocessid(@Parameter(value = "workflowprocessid", required = true) UUID workflowprocessid, Pageable pageable) {
         try {

@@ -27,6 +27,7 @@ public enum WorkFlowStatus {
     DRAFT("Draft"),
     CLOSE("Close"),
     REJECTED("Rejected"),
+    REFER("Refer"),
     DISPATCH("Dispatch Ready");
     private String status;
     private WorkFlowProcessMasterValueService workFlowProcessMasterValueService;

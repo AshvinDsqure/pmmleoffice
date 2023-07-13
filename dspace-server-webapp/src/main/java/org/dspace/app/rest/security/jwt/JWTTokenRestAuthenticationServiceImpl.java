@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.security.jwt;
@@ -10,7 +10,10 @@ package org.dspace.app.rest.security.jwt;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.UUID;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +27,9 @@ import org.dspace.app.rest.security.RestAuthenticationService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authenticate.AuthenticationMethod;
 import org.dspace.authenticate.service.AuthenticationService;
+import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.LoginCounter;
+import org.dspace.content.service.LoginCounterService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
@@ -63,6 +69,9 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     private EPersonService ePersonService;
 
     @Autowired
+    private LoginCounterService loginCounterService;
+
+    @Autowired
     private AuthenticationService authenticationService;
 
     @Lazy
@@ -76,34 +85,35 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
 
     @Override
     public void addAuthenticationDataForUser(HttpServletRequest request, HttpServletResponse response,
-            DSpaceAuthentication authentication, boolean addCookie) throws IOException {
+                                             DSpaceAuthentication authentication, boolean addCookie) throws IOException {
         try {
+            System.out.println("in login----->");
             Context context = ContextUtil.obtainContext(request);
             context.setCurrentUser(ePersonService.findByEmail(context, authentication.getName()));
-
-            String token = loginJWTTokenHandler.createTokenForEPerson(context, request,
-                                                                 authentication.getPreviousLoginDate());
+            String token = loginJWTTokenHandler.createTokenForEPerson(context, request,authentication.getPreviousLoginDate());
+            AddCounter(context,token);
             context.commit();
-
             // Add newly generated auth token to the response
             addTokenToResponse(request, response, token, addCookie);
-
         } catch (JOSEException e) {
             log.error("JOSE Exception", e);
         } catch (SQLException e) {
             log.error("SQL error when adding authentication", e);
+        } catch (AuthorizeException e) {
+            throw new RuntimeException(e);
         }
     }
-
     /**
      * Create a short-lived token for bitstream downloads among other things
-     * @param context   The context for which to create the token
-     * @param request   The request for which to create the token
+     *
+     * @param context The context for which to create the token
+     * @param request The request for which to create the token
      * @return The token with a short lifespan
      */
     @Override
     public AuthenticationToken getShortLivedAuthenticationToken(Context context, HttpServletRequest request) {
         try {
+            System.out.println("in login ");
             String token = shortLivedJWTTokenHandler.createTokenForEPerson(context, request, null);
             context.commit();
             return new AuthenticationToken(token);
@@ -112,7 +122,6 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
         } catch (SQLException e) {
             log.error("SQL error when adding authentication", e);
         }
-
         return null;
     }
 
@@ -149,14 +158,21 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     public void invalidateAuthenticationData(HttpServletRequest request, HttpServletResponse response,
                                              Context context) throws Exception {
         String token = getLoginToken(request, response);
+        System.out.println("in logout");
+        LoginCounter loginCounter = loginCounterService.getbyToken(context, token);
+        if (loginCounter != null) {
+            System.out.println("in LoginCounter Update!");
+            loginCounter.setLogoutdate(new Date());
+            loginCounterService.create(context, loginCounter);
+        }
         loginJWTTokenHandler.invalidateToken(token, request, context);
-
         // Reset our CSRF token, generating a new one
         resetCSRFToken(request, response);
     }
 
     /**
      * Invalidate our temporary authentication cookie by overwriting it in the response.
+     *
      * @param request
      * @param response
      */
@@ -164,13 +180,31 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     public void invalidateAuthenticationCookie(HttpServletRequest request, HttpServletResponse response) {
         // Re-send the same cookie (as addTokenToResponse()) with no value and a Max-Age of 0 seconds
         ResponseCookie cookie = ResponseCookie.from(AUTHORIZATION_COOKIE, "")
-                                              .maxAge(0).httpOnly(true).secure(true).sameSite("None").build();
+                .maxAge(0).httpOnly(true).secure(true).sameSite("None").build();
 
         // Write the cookie to the Set-Cookie header in order to send it
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         // Reset our CSRF token, generating a new one
         resetCSRFToken(request, response);
+    }
+
+    public void AddCounter(Context context, String token) throws SQLException, AuthorizeException {
+        System.out.println("in Login Counter add");
+        try {
+            LocalDate today = LocalDate.now();
+            int year = today.getYear();
+            int month = today.getMonthValue();
+            LoginCounter loginCounter = new LoginCounter();
+            loginCounter.setMonth("" + month);
+            loginCounter.setYear("" + year);
+            loginCounter.setSesionid(token);
+            loginCounter.setUserid(context.getCurrentUser().getID());
+            loginCounterService.create(context, loginCounter);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(" Login Counter add done!");
     }
 
     @Override
@@ -183,10 +217,11 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
      * This list is sent to the client in the WWW-Authenticate header in order to inform it of all the enabled
      * authentication plugins *and* (optionally) to provide it with the "location" of the login page, if
      * the authentication plugin requires an external login page (e.g. Shibboleth).
-     * <P>
+     * <p>
      * Example output looks like:
-     *    shibboleth realm="DSpace REST API" location=[shibboleth-url], password realm="DSpace REST API"
-     * @param request The current client request
+     * shibboleth realm="DSpace REST API" location=[shibboleth-url], password realm="DSpace REST API"
+     *
+     * @param request  The current client request
      * @param response The response being build for the client
      * @return comma separated list of authentication options
      */
@@ -221,21 +256,22 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
 
     /**
      * Adds the Authentication token (JWT) to the response either in a header (default) or in a temporary cookie.
-     * <P>
+     * <p>
      * If 'addCookie' is true, then the JWT is also added to a response cookie. This is primarily for support of auth
      * plugins which _require_ cookie-based auth (e.g. Shibboleth). Note that this cookie can be used cross-site
      * (i.e. SameSite=None), but cannot be used by Javascript (HttpOnly), including the Angular UI. It also will only be
      * sent via HTTPS (Secure).
-     * <P>
+     * <p>
      * If 'addCookie' is false, then the JWT is only added in the Authorization header & the auth cookie (if it exists)
      * is removed. This ensures we are primarily using the Authorization header & remove the temporary auth cookie as
      * soon as it is no longer needed.
-     * <P>
+     * <p>
      * Because this method is called for login actions, it usually resets the CSRF token, *except* when the auth cookie
      * is being created. This is because we will reset the CSRF token once the auth cookie is used & invalidated.
-     * @param request current request
-     * @param response current response
-     * @param token the authentication token
+     *
+     * @param request   current request
+     * @param response  current response
+     * @param token     the authentication token
      * @param addCookie whether to send token in a cookie & header (true) or header only (false)
      */
     private void addTokenToResponse(final HttpServletRequest request, final HttpServletResponse response,
@@ -246,7 +282,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
         // which destroys this temporary auth cookie. So, the auth cookie only exists a few seconds.
         if (addCookie) {
             ResponseCookie cookie = ResponseCookie.from(AUTHORIZATION_COOKIE, token)
-                                                  .httpOnly(true).secure(true).sameSite("None").build();
+                    .httpOnly(true).secure(true).sameSite("None").build();
 
             // Write the cookie to the Set-Cookie header in order to send it
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -267,6 +303,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     /**
      * Get the Login token (JWT) in the current request. First we check the Authorization header.
      * If not found there, we check for a temporary authentication cookie and use that.
+     *
      * @param request current request
      * @return authentication token (if found), or null
      */
@@ -294,6 +331,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
 
     /**
      * Get the value of the (temporary) authorization cookie, if exists.
+     *
      * @param request current request
      * @return string cookie value
      */
@@ -313,6 +351,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
 
     /**
      * Check if the (temporary) authorization cookie exists and is not empty.
+     *
      * @param request current request
      * @return true if cookie is found in request. false otherwise.
      */
@@ -328,7 +367,8 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
      * Force reset the CSRF Token, causing a new one to be generated.
      * This method is used internally during login/logout to ensure a new CSRF token is generated anytime authentication
      * information changes.
-     * @param request current request
+     *
+     * @param request  current request
      * @param response current response
      */
     private void resetCSRFToken(HttpServletRequest request, HttpServletResponse response) {

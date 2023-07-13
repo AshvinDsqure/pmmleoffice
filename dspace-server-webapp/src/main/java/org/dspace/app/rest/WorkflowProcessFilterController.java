@@ -40,6 +40,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ControllerUtils;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -55,10 +56,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
@@ -79,8 +77,7 @@ import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFI
  * </pre>
  */
 @RestController
-@RequestMapping("/api/" + WorkFlowProcessFilterRest.NAME + "/" + WorkFlowProcessFilterRest.PLURAL_NAME
-        + "/filter")
+@RequestMapping("/api/" + WorkFlowProcessRest.CATEGORY + "/" + WorkFlowProcessRest.PLURAL_NAME + "/filter")
 public class WorkflowProcessFilterController {
 
     @Autowired
@@ -90,6 +87,9 @@ public class WorkflowProcessFilterController {
     EPersonConverter ePersonConverter;
     @Autowired
     EPersonService ePersonService;
+    @Autowired
+    private DiscoverableEndpointsService discoverableEndpointsService;
+
 
 
     @Autowired
@@ -101,7 +101,10 @@ public class WorkflowProcessFilterController {
     protected Utils utils;
     @Autowired
     protected ItemService itemService;
-
+    public void afterPropertiesSet() throws Exception {
+        this.discoverableEndpointsService.register(this,
+                        Arrays.asList(new Link[] { Link.of("/api/workflowprocesse", "workflowprocesses") }));
+    }
     /**
      * Method to upload a Bitstream to a Bundle with the given UUID in the URL. This will create a Bitstream with the
      * file provided in the request and attach this to the Item that matches the UUID in the URL.
@@ -138,6 +141,25 @@ public class WorkflowProcessFilterController {
                 return workFlowProcessConverter.convert(d, utils.obtainProjection());
             }).collect(Collectors.toList());
             return rests;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getFilterPerameter")
+    public  HashMap<String, String> getFilterdate(HttpServletRequest request) {
+        try {
+            System.out.println("in getFilterPerameter ");
+            Context context = ContextUtil.obtainContext(request);
+             HashMap<String, String> map = new HashMap<>();
+              map.put("Priority","dropdown");
+              map.put("Status", "dropdown");
+              map.put("Department", "text");
+              map.put("User", "text");
+              map.put("Subject", "text");
+            System.out.println("out getFilterPerameter ");
+            return map;
         } catch (Exception e) {
             e.printStackTrace();
         }

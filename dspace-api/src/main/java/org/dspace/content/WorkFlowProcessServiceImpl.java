@@ -215,4 +215,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return workflowProcessDAO.Filter(context,perameter,offset,limit);
     }
 
+    @Override
+    public List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findReferList(context,eperson,statuscloseid,statusdraftid,statusdraft,offset,limit);
+    }
+
+    @Override
+    public int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
+        return workflowProcessDAO.countRefer(context,eperson,statuscloseid,statusdraftid,statusdraft);
+    }
 }

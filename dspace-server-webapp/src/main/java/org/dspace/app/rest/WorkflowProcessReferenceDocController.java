@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.*;
+import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -20,6 +21,7 @@ import org.dspace.app.rest.model.hateoas.BitstreamResource;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.utils.PdfUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
@@ -93,13 +95,18 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     @Autowired
     private WorkflowProcessService workflowProcessService;
 
-
     @Autowired
     private ItemConverter itemConverter;
     @Autowired
     WorkflowProcessNoteConverter workflowProcessNoteConverter;
     @Autowired
     WorkFlowProcessCommentService workFlowProcessCommentService;
+    @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
+
+    @Autowired
+    private WorkFlowProcessHistoryService workFlowProcessHistoryService;
 
 
     @Autowired
@@ -176,15 +183,15 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 workflowProcessReferenceDoc.setWorkflowProcess(workflowProcess);
                 workflowProcessService.update(context, workflowProcess);
             }
-            if (workflowProcessReferenceDocRest.getItemname()!=null){
+            if (workflowProcessReferenceDocRest.getItemname() != null) {
                 System.out.println("in item rest :");
                 workflowProcessReferenceDoc.setItemname(workflowProcessReferenceDocRest.getItemname());
             }
-            if (workflowProcessReferenceDocRest.getWorkflowProcessNoteRest()!=null){
+            if (workflowProcessReferenceDocRest.getWorkflowProcessNoteRest() != null) {
                 workflowProcessReferenceDoc.setWorkflowprocessnote(workflowProcessNoteConverter.convert(workflowProcessReferenceDocRest.getWorkflowProcessNoteRest()));
             }
             if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Comment")) {
-                List<WorkflowProcessReferenceDoc>docs=new ArrayList<>();
+                List<WorkflowProcessReferenceDoc> docs = new ArrayList<>();
                 if (workflowProcessReferenceDocRest.getUuid() != null) {
                     System.out.println("Comment if");
                     workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
@@ -234,8 +241,10 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         if (workflowProcessReferenceDocRest.getBitstreamRest() != null) {
                             version.setBitstream(bitstream);
                         }
+
                         version.setCreationdatetime(new Date());
                         workflowProcessReferenceDocVersionService.update(context, version);
+                        storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc.getWorkflowProcess());
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         context.commit();
                         return rest;
@@ -297,7 +306,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         Double versionnumber = (double) workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().size() + 1;
         version.setVersionnumber(versionnumber);
         version.setWorkflowProcessReferenceDoc(workflowProcessReferenceDoc);
-
         Set<WorkflowProcessReferenceDocVersion> versionsetss = new HashSet<>();
         List<WorkflowProcessReferenceDocVersion> versionset = workflowProcessReferenceDocVersionService.getDocVersionBydocumentID(context, workflowProcessReferenceDoc.getID(), 0, 100);
         System.out.println(versionset);
@@ -352,11 +360,14 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 if (wrd.getWorkflowProcessNoteRest() != null) {
                     workflowProcessReferenceDoc.setWorkflowprocessnote(workflowProcessNoteService.find(context, UUID.fromString(wrd.getWorkflowProcessNoteRest().getUuid())));
                 }
-                if (wrd.getItemname()!=null){
+                if (wrd.getItemname() != null) {
                     System.out.println("in item rest :");
                     workflowProcessReferenceDoc.setItemname(wrd.getItemname());
                 }
                 WorkflowProcessReferenceDoc finalworkflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+                if(wrd.getWorkFlowProcessRest()!=null && wrd.getDrafttypeRest()!=null){
+                    storeWorkFlowHistoryforDocument(context,finalworkflowProcessReferenceDoc);
+                }
                 workflowProcessService.storeWorkFlowMataDataTOBitsream(context, finalworkflowProcessReferenceDoc);
                 rest = workflowProcessReferenceDocConverter.convert(finalworkflowProcessReferenceDoc, utils.obtainProjection());
                 if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null) {
@@ -370,6 +381,36 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         }).collect(Collectors.toList());
         context.commit();
         return rsponce;
+    }
+
+    public void storeWorkFlowHistoryVersionUpdate(Context context, WorkflowProcess workflowProcess) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistory::Update::version:::::: ");
+        WorkFlowProcessHistory workFlowAction = null;
+        workFlowAction = new WorkFlowProcessHistory();
+        WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+        workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.CREATE.getAction(), workFlowProcessMaster);
+        workFlowAction.setActionDate(new Date());
+        workFlowAction.setAction(workFlowProcessMasterValue);
+        workFlowAction.setWorkflowProcess(workflowProcess);
+        workFlowAction.setComment("Update Version");
+        workFlowProcessHistoryService.create(context, workFlowAction);
+        System.out.println("::::::OUT :storeWorkFlowHistory::Update::version:::::: ");
+    }
+    public void storeWorkFlowHistoryforDocument(Context context, WorkflowProcessReferenceDoc doc) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistory::Update::Document:::::: ");
+        WorkflowProcess workflowProcess=doc.getWorkflowProcess();
+        WorkFlowProcessHistory workFlowAction = null;
+        workFlowAction = new WorkFlowProcessHistory();
+        WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+        workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.CREATE.getAction(), workFlowProcessMaster);
+        workFlowAction.setActionDate(new Date());
+        workFlowAction.setAction(workFlowProcessMasterValue);
+        workFlowAction.setWorkflowProcess(workflowProcess);
+        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue());
+        workFlowProcessHistoryService.create(context, workFlowAction);
+        System.out.println("::::::OUT :storeWorkFlowHistory::Document:::::::: ");
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/test")
