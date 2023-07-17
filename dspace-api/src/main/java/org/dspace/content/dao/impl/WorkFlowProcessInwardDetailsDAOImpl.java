@@ -9,11 +9,14 @@ package org.dspace.content.dao.impl;
 
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.WorkFlowProcessInwardDetails;
+import org.dspace.content.WorkflowProcessSenderDiary;
 import org.dspace.content.dao.WorkFlowProcessInwardDetailsDAO;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
 
+import javax.persistence.Query;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class WorkFlowProcessInwardDetailsDAOImpl extends AbstractHibernateDAO<WorkFlowProcessInwardDetails> implements WorkFlowProcessInwardDetailsDAO {
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(WorkFlowProcessInwardDetailsDAOImpl.class);
@@ -28,5 +31,12 @@ public class WorkFlowProcessInwardDetailsDAOImpl extends AbstractHibernateDAO<Wo
     @Override
     public int countRows(Context context) throws SQLException {
         return count(createQuery(context, "SELECT count(*) FROM WorkFlowProcessInwardDetails"));
+    }
+
+    @Override
+    public WorkFlowProcessInwardDetails getByInwardNumber(Context context, String inwardnumber) throws SQLException {
+        Query query = createQuery(context, "SELECT inward from  WorkFlowProcessInwardDetails as inward where inward.inwardNumber=:inwardnumber");
+        query.setParameter("inwardnumber",inwardnumber);
+        return (WorkFlowProcessInwardDetails) query.getSingleResult();
     }
 }

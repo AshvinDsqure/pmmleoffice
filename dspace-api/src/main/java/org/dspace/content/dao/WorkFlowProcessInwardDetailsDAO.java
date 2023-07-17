@@ -9,10 +9,13 @@
 package org.dspace.content.dao;
 
 import org.dspace.content.WorkFlowProcessInwardDetails;
+import org.dspace.content.WorkFlowProcessOutwardDetails;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
 
 public interface WorkFlowProcessInwardDetailsDAO extends DSpaceObjectLegacySupportDAO<WorkFlowProcessInwardDetails>{
     int countRows(Context context) throws SQLException;
+
+    WorkFlowProcessInwardDetails getByInwardNumber(Context context,String inwardnumber) throws SQLException;
 }

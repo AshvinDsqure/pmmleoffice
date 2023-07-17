@@ -142,6 +142,8 @@ public enum WorkFlowAction {
             return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
         }
     },
+    DELETE("Delete"),
+    UPDATE("Update"),
     COMPLETE("Complete") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
@@ -172,6 +174,7 @@ public enum WorkFlowAction {
             return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
         }
     };
+
     private String action;
     private String comment;
 
@@ -323,14 +326,14 @@ public enum WorkFlowAction {
         WorkFlowProcessMasterValue workFlowProcessMasterValue = this.getWorkFlowProcessMasterValueService().findByName(context, this.getAction(), workFlowProcessMaster);
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
-        System.out.println("::::::IN :storeWorkFlowHistory::::::::::Action : " + workFlowProcessMasterValue.getPrimaryvalue());
         workFlowAction.setWorkflowProcess(workflowProcess);
         if (this.getComment() != null && !this.getComment().isEmpty()) {
-            String htmlcomment = "<div>" + this.getComment() + "</div>";
-            System.out.println("::::::html::::::::::" + htmlcomment);
-            System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
+                String htmlcomment = "<div>" + this.getComment() + "</div>";
+                System.out.println("::::::html::::::::::" + htmlcomment);
+               System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
             workFlowAction.setComment(PdfUtils.htmlToText(htmlcomment));
             if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
+
                 WorkFlowProcessComment workFlowProcessComment = new WorkFlowProcessComment();
                 workFlowProcessComment.setComment(PdfUtils.htmlToText(htmlcomment));
                 workFlowProcessComment.setWorkFlowProcessHistory(workFlowAction);
@@ -368,12 +371,12 @@ public enum WorkFlowAction {
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
-        String htmlcomment = "<div>Create Version </div>";
+        String htmlcomment = "<div>Create Version 1 for "+workflowProcess.getWorkflowProcessNote().getSubject()+" </div>";
         workFlowAction.setComment(PdfUtils.htmlToText(htmlcomment));
         System.out.println("::::::OUT :storeWorkFlowHistory::::create:::::: ");
         return workFlowAction;
     }
-
+// this history call when draft note create time Attaged Reference Doc.
     public WorkFlowProcessHistory storeWorkFlowHistoryforDocumentReference(Context context, WorkflowProcess workflowProcess, WorkflowProcessEperson workflowProcessEperson) {
        WorkFlowProcessHistory workFlowAction = null;
         try {
@@ -388,7 +391,7 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue());
+                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue()+" In "+doc.getItemname());
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                     if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Noting")) {
@@ -399,7 +402,7 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue());
+                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue() +" In "+doc.getSubject());
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                }

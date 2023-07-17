@@ -134,7 +134,6 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             long total = workflowProcessReferenceDocService.countDocumentByType(context, drafttypeid);
             List<WorkflowProcessReferenceDoc> witems = workflowProcessReferenceDocService.getDocumentByType(context, drafttypeid, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-            System.out.println("lisy" + witems);
             return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -168,11 +167,11 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             workFlowAction = new WorkFlowProcessHistory();
             WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
             workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
-            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.REJECTED.getAction(), workFlowProcessMaster);
+            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.DELETE.getAction(), workFlowProcessMaster);
             workFlowAction.setActionDate(new Date());
             workFlowAction.setAction(workFlowProcessMasterValue);
             workFlowAction.setWorkflowProcess(workflowProcess);
-            workFlowAction.setComment("Deleted " + doc.getDrafttype().getPrimaryvalue());
+            workFlowAction.setComment("Deleted " + doc.getDrafttype().getPrimaryvalue()+" "+(doc.getItemname()!=null?doc.getItemname():""));
             workFlowProcessHistoryService.create(context, workFlowAction);
             System.out.println("::::::OUT :storeWorkFlowHistory: delete :Document:::::::: ");
         } catch (Exception e) {

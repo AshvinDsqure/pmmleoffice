@@ -8,57 +8,40 @@
 package org.dspace.app.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.*;
 import org.dspace.app.rest.enums.WorkFlowAction;
-import org.dspace.app.rest.enums.WorkFlowType;
-import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
-import org.dspace.app.rest.model.*;
-import org.dspace.app.rest.model.hateoas.BitstreamResource;
+import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
-import org.dspace.app.rest.utils.PdfUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ControllerUtils;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.RepresentationModel;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
 
 /**
  * Controller to upload bitstreams to a certain bundle, indicated by a uuid in the request
@@ -241,20 +224,23 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         if (workflowProcessReferenceDocRest.getBitstreamRest() != null) {
                             version.setBitstream(bitstream);
                         }
-
                         version.setCreationdatetime(new Date());
-                        workflowProcessReferenceDocVersionService.update(context, version);
                         storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc.getWorkflowProcess());
+                        workflowProcessReferenceDocVersionService.update(context, version);
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         context.commit();
                         return rest;
                     }
                 }
                 if (workflowProcessReferenceDocRest.getUuid() != null) {
-                    System.out.println("value version:" + workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest());
                     if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
+                        System.out.println("in create new version of note ");
                         workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
                         storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                        if(workflowProcessReferenceDoc.getWorkflowProcess()!=null){
+                            System.out.println("in store histitory create new version ");
+                            storeWorkFlowHistoryforDocument(context,workflowProcessReferenceDoc);
+                        }
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         context.commit();
                         return rest;
@@ -289,7 +275,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
     }
 
-    public void storeVersion(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Bitstream bitstream, WorkflowProcessReferenceDocRest rest) throws SQLException, AuthorizeException, UnsupportedEncodingException {
+    public void storeVersion(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Bitstream bitstream, WorkflowProcessReferenceDocRest rest) throws Exception {
         WorkflowProcessReferenceDocVersion version = new WorkflowProcessReferenceDocVersion();
         version.setCreator(context.getCurrentUser());
         version.setIsactive(true);
@@ -351,6 +337,9 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                     Bitstream bitstream = bs.find(context, UUID.fromString(wrd.getBitstreamRest().getUuid()));
                     if (bitstream != null) {
                         workflowProcessReferenceDoc.setBitstream(bitstream);
+                        if(workFlowProcessMasterValueConverter.convert(context, wrd.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Note")){
+                         workflowProcessReferenceDoc.setSubject(bitstream.getDescription());
+                        }
                     }
                 }
                 if (wrd.getWorkFlowProcessRest() != null && wrd.getWorkFlowProcessRest().getUuid() != null) {
@@ -389,16 +378,18 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         workFlowAction = new WorkFlowProcessHistory();
         WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
         workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
-        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.CREATE.getAction(), workFlowProcessMaster);
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.UPDATE.getAction(), workFlowProcessMaster);
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
-        workFlowAction.setComment("Update Version");
+        workflowProcess.getWorkflowProcessNote().getSubject();
+        workFlowAction.setComment("Update Version for "+workflowProcess.getWorkflowProcessNote().getSubject());
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Update::version:::::: ");
     }
+    //this hisory call when Attaged Reference Doc in view Draft note.
     public void storeWorkFlowHistoryforDocument(Context context, WorkflowProcessReferenceDoc doc) throws Exception {
-        System.out.println("::::::IN :storeWorkFlowHistory::Update::Document:::::: ");
+        System.out.println("::::::IN :storeWorkFlowHistory::::Document:::::: ");
         WorkflowProcess workflowProcess=doc.getWorkflowProcess();
         WorkFlowProcessHistory workFlowAction = null;
         workFlowAction = new WorkFlowProcessHistory();
@@ -408,7 +399,18 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
-        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue());
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")) {
+            workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " In  " + (doc.getItemname() != null ? doc.getItemname() : "-"));
+        }
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Noting")) {
+            workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " In  " + (doc.getSubject() != null ? doc.getSubject() : "-"));
+        }
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Comment")) {
+            workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " In  " + (doc.getItemname() != null ? doc.getItemname() : "-"));
+        }
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet")) {
+            workFlowAction.setComment("Create Version  " + doc.getWorkflowProcessReferenceDocVersion().size() + " for  " + (doc.getSubject() != null ? doc.getSubject() : "-"));
+        }
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Document:::::::: ");
     }

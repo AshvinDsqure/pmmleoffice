@@ -810,9 +810,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     if (!isTextEditorFlow) {
                         stroremetadateinmap(workflowProcessReferenceDoc.getBitstream(), referencedocumentmap);
                         listreferenceReference.add(referencedocumentmap);
+                    } else {
+                        stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
                     }
-                    stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
-
                 }
             }
 
@@ -975,17 +975,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             margedoc.setReferenceNumber("" + notecount);
             WorkFlowProcessMasterValue doctype = getMastervalueData(context, "Document Type", "Invoice");
             if (doctype != null) {
-                System.out.println(" doctype" + doctype.getPrimaryvalue());
                 margedoc.setWorkFlowProcessReferenceDocType(doctype);
             }
             WorkFlowProcessMasterValue lattercategory = getMastervalueData(context, "Latter Category", "Latter Category 1");
             if (lattercategory != null) {
-                System.out.println(" lattercategory " + lattercategory.getPrimaryvalue());
                 margedoc.setLatterCategory(lattercategory);
             }
             WorkFlowProcessMasterValue Drafttype = getMastervalueData(context, "Draft Type", "Note");
             if (Drafttype != null) {
-                System.out.println(" Drafttype " + Drafttype.getPrimaryvalue());
                 margedoc.setDrafttype(Drafttype);
             }
             margedoc.setWorkflowProcess(workflowProcess);
@@ -1072,30 +1069,23 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             for (MetadataValue metadataValue : bitstream.getMetadata()) {
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_doc_type")) {
                     doctype = metadataValue.getValue();
-                    System.out.println(i + "dc_ref_number :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_ref_number")) {
                     refnumber = metadataValue.getValue();
-                    System.out.println(i + "dc_ref_number :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_date")) {
                     date = metadataValue.getValue();
-                    System.out.println(i + "dc_date :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_category")) {
                     lettercategory = metadataValue.getValue();
-                    System.out.println(i + "dc_letter_category :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_categoryhi")) {
                     lettercategoryhindi = metadataValue.getValue();
-                    System.out.println(i + "dc_letter_category :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_description")) {
                     description = metadataValue.getValue();
-                    System.out.println(i + "dc_description :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_title")) {
-                    System.out.println(i + "title :" + metadataValue.getValue());
                 }
                 i++;
             }
@@ -1153,30 +1143,23 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             for (MetadataValue metadataValue : bitstream.getMetadata()) {
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_doc_type")) {
                     doctype = metadataValue.getValue();
-                    System.out.println(i + "dc_ref_number :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_ref_number")) {
                     refnumber = metadataValue.getValue();
-                    System.out.println(i + "dc_ref_number :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_date")) {
                     date = metadataValue.getValue();
-                    System.out.println(i + "dc_date :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_category")) {
                     lettercategory = metadataValue.getValue();
-                    System.out.println(i + "dc_letter_category :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_categoryhi")) {
                     lettercategoryhindi = metadataValue.getValue();
-                    System.out.println(i + "dc_letter_category :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_description")) {
                     description = metadataValue.getValue();
-                    System.out.println(i + "dc_description :" + metadataValue.getValue());
                 }
                 if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_title")) {
-                    System.out.println(i + "title :" + metadataValue.getValue());
                 }
                 i++;
             }

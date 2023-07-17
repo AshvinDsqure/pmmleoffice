@@ -97,7 +97,11 @@ public class WorkFlowProcessOutwardDetailsServiceImpl extends DSpaceObjectServic
     }
 
     public void update(Context context, WorkFlowProcessOutwardDetails workFlowProcessOutwardDetails) throws SQLException, AuthorizeException {
-
         this.workFlowProcessOutwardDetailsDAO.save(context, workFlowProcessOutwardDetails);
+    }
+
+    @Override
+    public WorkFlowProcessOutwardDetails getByOutwardNumber(Context context, String outwardnumber) throws SQLException {
+        return workFlowProcessOutwardDetailsDAO.getByOutwardNumber(context,outwardnumber);
     }
 }

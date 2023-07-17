@@ -230,7 +230,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             Context context = obtainContext();
             WorkflowProcess witems = workflowProcessService.getNoteByItemsid(context, itemid);
-            System.out.println("lisy"+witems);
             return workFlowProcessConverter.convert(witems, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

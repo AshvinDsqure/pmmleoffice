@@ -224,4 +224,12 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     public int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
         return workflowProcessDAO.countRefer(context,eperson,statuscloseid,statusdraftid,statusdraft);
     }
+    @Override
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatus(context,typeid,statusid);
+    }
+    @Override
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriority(context,typeid,priorityid);
+    }
 }

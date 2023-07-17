@@ -236,11 +236,13 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
     @Override
     public List<WorkflowProcess> Filter(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        StringBuffer sb = new StringBuffer("SELECT wp FROM WorkflowProcess as wp " +
+        StringBuffer sb = new StringBuffer("SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "left join wp.priority as p " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t  " +
                 "left join wp.workflowStatus as st  " +
+                "left join wp.workFlowProcessInwardDetails as inward  " +
+                "left join wp.workFlowProcessOutwardDetails as outward  " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as user " +
                 "left join user.department as dpt " +
@@ -295,7 +297,22 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                     sb.append(" and user.id=:" + map.getKey());
                 }
             }
+            if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" inward.id=:" + map.getKey());
 
+                } else {
+                    sb.append(" and inward.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" outward.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and outward.id=:" + map.getKey());
+                }
+            }
             i++;
         }
         System.out.println("query " + sb.toString());
@@ -310,4 +327,22 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         return query.getResultList();
     }
 
+
+    @Override
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid) throws SQLException {
+        Query query = createQuery(context,
+                "SELECT count(wp) FROM WorkflowProcess as wp join wp.workflowStatus as st join wp.workflowType as t where  t.id=:typeid and st.id=:statusid ");
+        query.setParameter("typeid", typeid);
+        query.setParameter("statusid", statusid);
+        return count(query);
+    }
+
+    @Override
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid) throws SQLException {
+        Query query = createQuery(context,
+                "SELECT count(wp) FROM WorkflowProcess as wp join wp.priority as p join wp.workflowType as t where t.id=:typeid and p.id=:priorityid ");
+        query.setParameter("typeid", typeid);
+        query.setParameter("priorityid", priorityid);
+        return count(query);
+    }
 }

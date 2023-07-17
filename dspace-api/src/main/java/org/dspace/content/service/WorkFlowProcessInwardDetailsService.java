@@ -27,4 +27,6 @@ public interface WorkFlowProcessInwardDetailsService extends DSpaceObjectService
     public WorkFlowProcessInwardDetails create(Context context, WorkFlowProcessInwardDetails workFlowProcessHistory) throws SQLException, AuthorizeException;
     public List<WorkFlowProcessInwardDetails> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public int countRows(Context context) throws SQLException;
+
+    WorkFlowProcessInwardDetails getByInwardNumber(Context context,String inwardnumber) throws SQLException;
 }

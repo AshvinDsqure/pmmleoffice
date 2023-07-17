@@ -4,33 +4,40 @@ import com.spire.doc.Document;
 import com.spire.doc.DocumentObject;
 import com.spire.doc.FileFormat;
 import com.spire.doc.Section;
+/*import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;*/
 import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.*;
 import org.dspace.content.WorkFlowProcessComment;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHyperlink;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTShd;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
 public class MargedDocUtils {
     static String[] filePaths = new String[3];
     static List<String> documentPaths = new ArrayList<>();
+    static void setDisplayBackgroundShape(XWPFSettings settings, boolean booleanOnOff) throws Exception {
+        java.lang.reflect.Field _ctSettings = XWPFSettings.class.getDeclaredField("ctSettings");
+        _ctSettings.setAccessible(true);
+        CTSettings ctSettings = (CTSettings )_ctSettings.get(settings);
+        CTOnOff onOff = CTOnOff.Factory.newInstance();
+        onOff.setVal(onOff.getVal());
+        ctSettings.setDisplayBackgroundShape(onOff);
+    }
 
     public static void main(String[] args) throws Exception {
-
-
-//        ConvertToPDF("D://output.docx", "D://documentsss.pdf");
-
+       // ConvertToPDF("D://output.docx", "D://sdsdsdsdsdsd.pdf");
+        //DocOneWrite(1l);
         // removetext("D://note11.docx","D://out123.docx");
-
-
         // Open the source HTML file.
         // DocOneWrite(1l);
         // InputStream input = new FileInputStream(new File("D://note2.docx"));
@@ -40,34 +47,26 @@ public class MargedDocUtils {
         // DocthreWrite1();
         //writeMultipleFiles();
         // DocumentMerger("D://finalaaaaaaa.docx");
-
         // Create a new documen
-
         //DocthreWrite1();
     }
-/*
-
-    public static void ConvertToPDF(String docPath, String pdfPath) {
+   /* public static void ConvertToPDF(String docPath, String pdfPath) {
         System.out.println("::::::::::::::::::::IN DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
         try {
             InputStream in = new FileInputStream(new File(docPath));
-            XWPFDocument document = new XWPFDocument(in);
+            XWPFDocument doc = new XWPFDocument(in);
             PdfOptions options = PdfOptions.create();
             OutputStream out = new FileOutputStream(new File(pdfPath));
-            PdfConverter.getInstance().convert(document, out, options);
-            document.close();
+            PdfConverter.getInstance().convert(doc, out, options);
+            doc.close();
             out.close();
             System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
 
         }catch (Exception e){
             e.printStackTrace();
             System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::"+e.getMessage());
-
         }
-
-    }
-*/
-
+    }*/
     public static void lineBreak(int n, XWPFDocument doc) {
         for (int i = 1; i <= n; i++) {
             XWPFParagraph p2 = doc.createParagraph();
@@ -113,28 +112,15 @@ public class MargedDocUtils {
             // save it to .docx file
             try (FileOutputStream out = new FileOutputStream(oneFile)) {
                 doc.write(out);
-                out.close();
-                doc.close();
             }
             System.out.println("First doc save Done!" + oneFile.getAbsolutePath());
         } catch (IOException e) {
             System.out.println("Error First doc save !" + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    public static String readInputStream(InputStream inputStream) throws IOException {
-        // Create a byte array to store the data read from the InputStream.
-        byte[] data = new byte[1024];
-        int bytesRead;
-        StringBuffer buffer = new StringBuffer();
-        // Read the data from the InputStream and store it in the byte array.
-        while ((bytesRead = inputStream.read(data)) != -1) {
-            buffer.append(new String(data, 0, bytesRead));
-        }
-        // Return the data read from the InputStream as a String.
-        return buffer.toString();
     }
 
     public static void DocTwoWrite(InputStream in) {
@@ -186,6 +172,7 @@ public class MargedDocUtils {
         filePaths[2] = threeFile.getAbsolutePath();
         documentPaths.add(threeFile.getAbsolutePath());
         try (XWPFDocument doc = new XWPFDocument()) {
+
             // create a paragraph
             int total = hashMap.entrySet().size();
             for (int i = 0; i < total; i++) {
@@ -379,16 +366,10 @@ public class MargedDocUtils {
 
     public static void DocumentMerger(String finalpathe) {
         System.out.println("in marged doc 1 to 2 ");
-        //File path of the first document
-        //Load the first document
         Document document1 = new Document(filePaths[0]);
-        //Load the second document
         Document document2 = new Document(filePaths[1]);
-        //Get the last section of the first document
         Section lastSection = document1.getLastSection();
-
-        //Add the sections of the second document to the last section of the first document
-        for (Section section : (Iterable<Section>) document2.getSections()) {
+       for (Section section : (Iterable<Section>) document2.getSections()) {
             for (DocumentObject obj : (Iterable<DocumentObject>) section.getBody().getChildObjects()
             ) {
                 lastSection.getBody().getChildObjects().add(obj.deepClone());
@@ -396,7 +377,6 @@ public class MargedDocUtils {
         }
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         File file1andfile2 = new File(TEMP_DIRECTORY, "file1andfile2.docx");
-        //Save the resultant document
         document1.saveToFile(file1andfile2.getAbsolutePath(), FileFormat.Docx_2013);
         System.out.println("in marged doc 1 to 2 done");
         DocumentMerger2(file1andfile2.getAbsolutePath(), finalpathe);
@@ -406,37 +386,38 @@ public class MargedDocUtils {
     public static void DocumentMerger2(String mrgedoneandtwo, String finalpathe) {
         Document document = new Document();
         System.out.println("in marged doc 2 to 3 ");
-        //File path of the first document
-        //Load the first document
         Document document1 = new Document(mrgedoneandtwo);
-        //Load the second document
         Document document2 = new Document(filePaths[2]);
-        //Get the last section of the first document
         Section lastSection = document1.getLastSection();
-        //Add the sections of the second document to the last section of the first document
         for (Section section : (Iterable<Section>) document2.getSections()) {
             for (DocumentObject obj : (Iterable<DocumentObject>) section.getBody().getChildObjects()
             ) {
                 lastSection.getBody().getChildObjects().add(obj.deepClone());
             }
         }
-        //Save the resultant document
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         File finaldoc = new File(TEMP_DIRECTORY, "final.docx");
         document1.saveToFile(finaldoc.getAbsolutePath(), FileFormat.Docx_2013);
         removetext(finaldoc.getAbsolutePath(), finalpathe);
         System.out.println("in marged doc 2 to 3 done");
     }
-
     private static String DateFormate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
         return formatter.format(date);
     }
-
+    static XWPFSettings getSettings(XWPFDocument document) throws Exception {
+        java.lang.reflect.Field settings = XWPFDocument.class.getDeclaredField("settings");
+        settings.setAccessible(true);
+        return (XWPFSettings)settings.get(document);
+    }
     public static void removetext(String fileopen, String finalpath) {
-        System.out.println("remove text");
+        System.out.println(":::::::::::remove text:::::::::::");
         try {
             XWPFDocument doc = new XWPFDocument(OPCPackage.open(new File(fileopen)));
+            XWPFSettings settings = getSettings(doc);
+            setDisplayBackgroundShape(settings, true);
+            CTBackground background = doc.getDocument().addNewBackground();
+            background.setColor("FF0000");
             for (XWPFParagraph p : doc.getParagraphs()) {
                 List<XWPFRun> runs = p.getRuns();
                 if (runs != null) {
@@ -466,7 +447,8 @@ public class MargedDocUtils {
             final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
             File finaldocf = new File(TEMP_DIRECTORY, "finalww.docx");
             doc.write(new FileOutputStream(finalpath));
-            //ConvertToPDF(finaldocf.getAbsolutePath(),finalpath);
+            System.out.println(":::::::::::remove text::::::::::done!:");
+          //  ConvertToPDF(finaldocf.getAbsolutePath(),finalpath);
         } catch (Exception e) {
             e.printStackTrace();
 

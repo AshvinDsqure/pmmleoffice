@@ -64,7 +64,6 @@ public class WorkFlowProcessMasterValueDAOImpl  extends AbstractHibernateDAO<Wor
     @Override
     public int countfindByType(Context context, String type) throws SQLException {
         try {
-            System.out.println("in DAO impl " + type);
             Query query = createQuery(context, "SELECT count(mv) from  WorkFlowProcessMasterValue as mv inner join mv.workflowprocessmaster as  mm where mm.mastername=:mastername");
             query.setParameter("mastername", type);
             return count(query);

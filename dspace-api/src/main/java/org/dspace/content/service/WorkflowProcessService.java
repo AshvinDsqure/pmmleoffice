@@ -91,5 +91,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
 
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft, Integer offset, Integer limit) throws SQLException;
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
+    int countByTypeAndStatus(Context context,UUID typeid,UUID statusid) throws SQLException;
+    int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid) throws SQLException;
 
 }

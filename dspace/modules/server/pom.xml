@@ -21,6 +21,9 @@ just adding new jar in the classloader</description>
         <root.basedir>${basedir}/../../..</root.basedir>
     </properties>
 
+
+
+
     <build>
         <plugins>
             <!-- Unpack the "additions" module into our target directory,

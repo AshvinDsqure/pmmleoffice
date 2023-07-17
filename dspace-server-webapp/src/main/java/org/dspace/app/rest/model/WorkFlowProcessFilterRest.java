@@ -55,6 +55,12 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
 
     @JsonProperty
     private String subject;
+
+    @JsonProperty
+    private String inward;
+    @JsonProperty
+    private String outward;
+
     @Override
     public String getCategory() {
         return "workflowprocessefilter";
@@ -109,5 +115,21 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
 
     public void setePersonRest(EPersonRest ePersonRest) {
         this.ePersonRest = ePersonRest;
+    }
+
+    public String getInward() {
+        return inward;
+    }
+
+    public void setInward(String inward) {
+        this.inward = inward;
+    }
+
+    public String getOutward() {
+        return outward;
+    }
+
+    public void setOutward(String outward) {
+        this.outward = outward;
     }
 }
