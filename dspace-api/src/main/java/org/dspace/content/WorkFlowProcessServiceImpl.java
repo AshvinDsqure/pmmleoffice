@@ -166,6 +166,9 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             if (workflowProcessReferenceDoc.getInitdate() != null) {
                 bitstreamService.addMetadata(context, bitstream, "dc", "date", null, null, workflowProcessReferenceDoc.getInitdate().toString());
             }
+            if (workflowProcessReferenceDoc.getSubject() != null) {
+                bitstreamService.addMetadata(context, bitstream, "dc", "subject", null, null, workflowProcessReferenceDoc.getSubject());
+            }
         }
 
     }
@@ -188,6 +191,9 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             }
             if (workflowProcessReferenceDoc.getInitdate() != null) {
                 bitstreamService.addMetadata(context, bitstream, "dc", "date", null, null, workflowProcessReferenceDoc.getInitdate().toString());
+            }
+            if (workflowProcessReferenceDoc.getSubject() != null) {
+                bitstreamService.addMetadata(context, bitstream, "dc", "subject", null, null, workflowProcessReferenceDoc.getSubject());
             }
         }
     }

@@ -80,4 +80,12 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
         query.setParameter("workflowprocessid",workflowprocessid);
         return query.getResultList();
     }
+
+    @Override
+    public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context, UUID signitoreid) throws SQLException {
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d join d.documentsignator as ds  where d.isSignature=:issignitor and ds.id=:signitoreid ");
+        query.setParameter("issignitor",false);
+        query.setParameter("signitoreid",signitoreid);
+        return query.getResultList();
+    }
 }

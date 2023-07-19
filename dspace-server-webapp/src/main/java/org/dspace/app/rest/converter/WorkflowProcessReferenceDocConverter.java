@@ -43,6 +43,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
     BitstreamConverter bitstreamConverter;
 
     @Autowired
+    EPersonConverter ePersonConverter;
+
+    @Autowired
     WorkflowProcessNoteService workflowProcessNoteService;
 
     @Autowired
@@ -81,6 +84,13 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if(obj.getItemname()!=null){
             workflowProcessDefinitionRest.setItemname(obj.getItemname());
         }
+        if(obj.getCreatedate()!=null){
+            workflowProcessDefinitionRest.setCreatedate(obj.getCreatedate());
+        }
+        if (obj.getDocumentsignator() != null) {
+            workflowProcessDefinitionRest.setDocumentsignatorRest(ePersonConverter.convert(obj.getDocumentsignator(), projection));
+        }
+        workflowProcessDefinitionRest.setIssignature(obj.getIssignature());
         workflowProcessDefinitionRest.setUuid(obj.getID().toString());
         return workflowProcessDefinitionRest;
     }
@@ -129,6 +139,13 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if(rest.getItemname() != null) {
             workflowProcessReferenceDoc.setItemname(rest.getItemname());
         }
+        if(rest.getCreatedate()!=null){
+            workflowProcessReferenceDoc.setCreatedate(rest.getCreatedate());
+        }
+        if (rest.getDocumentsignatorRest() != null && rest.getDocumentsignatorRest().getUuid()!=null && !rest.getDocumentsignatorRest().getUuid().toString().isEmpty()) {
+            workflowProcessReferenceDoc.setDocumentsignator(ePersonConverter.convert(context, rest.getDocumentsignatorRest()));
+        }
+        workflowProcessReferenceDoc.setIssignature(rest.getIssignature());
         return  workflowProcessReferenceDoc;
     }
     public WorkflowProcessReferenceDoc convertByService(Context context, WorkflowProcessReferenceDocRest rest) throws SQLException {

@@ -95,6 +95,11 @@ public class MargedDocUtils {
         filePaths[0] = oneFile.getAbsolutePath();
         documentPaths.add(oneFile.getAbsolutePath());
         try (XWPFDocument doc = new XWPFDocument()) {
+
+            XWPFSettings settings = getSettings(doc);
+            setDisplayBackgroundShape(settings, true);
+            CTBackground background = doc.getDocument().addNewBackground();
+            background.setColor("d9fdd3");
             // create a paragraph
             XWPFParagraph p1 = doc.createParagraph();
             p1.setAlignment(ParagraphAlignment.CENTER);
@@ -139,6 +144,10 @@ public class MargedDocUtils {
         filePaths[1] = twoFile.getAbsolutePath();
         documentPaths.add(twoFile.getAbsolutePath());
         try (XWPFDocument doc = new XWPFDocument()) {
+            XWPFSettings settings = getSettings(doc);
+            setDisplayBackgroundShape(settings, true);
+            CTBackground background = doc.getDocument().addNewBackground();
+            background.setColor("d9fdd3");
             FileOutputStream out = new FileOutputStream(twoFile);
             byte[] buf = new byte[8192];
             int length;
@@ -172,6 +181,10 @@ public class MargedDocUtils {
         filePaths[2] = threeFile.getAbsolutePath();
         documentPaths.add(threeFile.getAbsolutePath());
         try (XWPFDocument doc = new XWPFDocument()) {
+            XWPFSettings settings = getSettings(doc);
+            setDisplayBackgroundShape(settings, true);
+            CTBackground background = doc.getDocument().addNewBackground();
+            background.setColor("d9fdd3");
 
             // create a paragraph
             int total = hashMap.entrySet().size();
@@ -417,7 +430,7 @@ public class MargedDocUtils {
             XWPFSettings settings = getSettings(doc);
             setDisplayBackgroundShape(settings, true);
             CTBackground background = doc.getDocument().addNewBackground();
-            background.setColor("FF0000");
+            background.setColor("d9fdd3");
             for (XWPFParagraph p : doc.getParagraphs()) {
                 List<XWPFRun> runs = p.getRuns();
                 if (runs != null) {

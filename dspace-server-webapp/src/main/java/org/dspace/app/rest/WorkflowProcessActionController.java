@@ -129,6 +129,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     @Autowired
     WorkFlowProcessEpersonConverter workFlowProcessEpersonConverter;
     @Autowired
+    WorkFlowProcessHistoryService workFlowProcessHistoryService;
+
+    @Autowired
     WorkflowProcessEpersonService workflowProcessEpersonService;
     @Autowired
     private BundleService bundleService;
@@ -512,11 +515,15 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
+
             Item item = workFlowProcess.getItem();
             if (item != null) {
                 workFlowProcess.getWorkflowProcessReferenceDocs().forEach(wd -> {
                     try {
-                        workflowProcessService.storeWorkFlowMataDataTOBitsream(context, wd, item);
+                        if(wd.getDrafttype()!=null && wd.getDrafttype().getPrimaryvalue()!=null &&!wd.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Document"))
+                        {
+                          workflowProcessService.storeWorkFlowMataDataTOBitsream(context, wd, item);
+                        }
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     } catch (AuthorizeException e) {
@@ -527,6 +534,10 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                 throw new ResourceNotFoundException("Item not found");
             }
             workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
+            if (workFlowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
+                //document Forward To Segnitor
+                documentForwardToSegnitor(context,workFlowProcess);
+            }
             workflowProcessService.create(context, workFlowProcess);
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             WorkFlowAction COMPLETE = WorkFlowAction.COMPLETE;
@@ -1129,6 +1140,45 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
         }
 
+    }
+    public void documentForwardToSegnitor(Context context,WorkflowProcess workFlowProcess) throws Exception {
+        if(workFlowProcess.getWorkFlowProcessDraftDetails()!=null){
+            System.out.println("Document Going to  Documentsignator");
+            WorkFlowProcessDraftDetails draft= workFlowProcess.getWorkFlowProcessDraftDetails();
+            if(draft.getDocumentsignator()!=null){
+                List<WorkflowProcessReferenceDoc> docs=workFlowProcess.getWorkflowProcessReferenceDocs().stream()
+                        .filter(a->a.getDrafttype()!=null)
+                        .filter(b->b.getDrafttype().getPrimaryvalue()!=null)
+                        .filter(c->c.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Document")).collect(Collectors.toList());
+                if(docs!=null){
+                    for (WorkflowProcessReferenceDoc doc:docs) {
+                        WorkflowProcessReferenceDoc workflowProcessReferenceDoc= workflowProcessReferenceDocService.find(context,doc.getID());
+                        workflowProcessReferenceDoc.setDocumentsignator(draft.getDocumentsignator());
+                        workflowProcessReferenceDoc.setIssignature(false);
+                        workflowProcessReferenceDocService.update(context,workflowProcessReferenceDoc);
+                        storeWorkFlowHistoryForSignaturePanding(context,doc);
+                    }
+                    System.out.println("Document out to  Documentsignator");
+                }
+            }
+        }
+    }
+
+    public void storeWorkFlowHistoryForSignaturePanding(Context context, WorkflowProcessReferenceDoc doc) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistoryForSignaturePanding:::::::: ");
+        WorkFlowProcessHistory workFlowAction = null;
+        WorkflowProcess workflowProcess=doc.getWorkflowProcess();
+        workFlowAction = new WorkFlowProcessHistory();
+        WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+        workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.PENDING.getAction(), workFlowProcessMaster);
+        workFlowAction.setActionDate(new Date());
+        workFlowAction.setAction(workFlowProcessMasterValue);
+        workFlowAction.setWorkflowProcess(workflowProcess);
+        workflowProcess.getWorkflowProcessNote().getSubject();
+        workFlowAction.setComment("Document Signature Pending By "+doc.getDocumentsignator().getFullName()+" | "+doc.getDocumentsignator().getDesignation().getPrimaryvalue());
+        workFlowProcessHistoryService.create(context, workFlowAction);
+        System.out.println("::::::OUT :storeWorkFlowHistoryForSignaturePanding:::: ");
     }
 
     public void stroremetadate(Bitstream bitstream, StringBuffer sb) throws ParseException {

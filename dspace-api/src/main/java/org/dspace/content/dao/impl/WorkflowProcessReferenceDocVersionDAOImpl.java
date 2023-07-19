@@ -53,7 +53,6 @@ public class WorkflowProcessReferenceDocVersionDAOImpl extends AbstractHibernate
         }if (0 <= limit) {
             query.setMaxResults(limit);
         }
-        System.out.println("query>>>>>>>>>>>>>"+query);
         return query.getResultList();
     }
 }

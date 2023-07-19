@@ -70,6 +70,18 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
     @Column(name = "initdate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date initdate = new Date();
+
+    @Column(name = "createdate", columnDefinition = "timestamp with time zone")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdate = new Date();
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "documentsignator_id")
+    private EPerson documentsignator;
+
+    @Column(name = "issignature")
+    private Boolean  issignature =false;
+
     @Column(name = "description")
     private String description;
 
@@ -190,5 +202,29 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setItemname(String itemname) {
         this.itemname = itemname;
+    }
+
+    public Date getCreatedate() {
+        return createdate;
+    }
+
+    public void setCreatedate(Date createdate) {
+        this.createdate = createdate;
+    }
+
+    public EPerson getDocumentsignator() {
+        return documentsignator;
+    }
+
+    public void setDocumentsignator(EPerson documentsignator) {
+        this.documentsignator = documentsignator;
+    }
+
+    public Boolean getIssignature() {
+        return issignature;
+    }
+
+    public void setIssignature(Boolean issignature) {
+        this.issignature = issignature;
     }
 }

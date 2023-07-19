@@ -48,6 +48,7 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     @JsonProperty
     private String description;
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest workFlowProcessReferenceDocType;
     @JsonProperty
@@ -58,13 +59,18 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date initdate = new Date();
     @JsonProperty
+    private Date createdate = new Date();
+
+    @JsonProperty
     private WorkFlowProcessRest workFlowProcessRest;
     @JsonProperty
     private WorkflowProcessNoteRest workflowProcessNoteRest;
-
+    private Boolean  issignature =false;
     @JsonProperty
     private WorkflowProcessReferenceDocVersionRest workflowProcessReferenceDocVersionRest;
     private String itemname;
+
+    private EPersonRest documentsignatorRest;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String entityType = null;
@@ -186,5 +192,29 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setItemname(String itemname) {
         this.itemname = itemname;
+    }
+
+    public Date getCreatedate() {
+        return createdate;
+    }
+
+    public void setCreatedate(Date createdate) {
+        this.createdate = createdate;
+    }
+
+    public EPersonRest getDocumentsignatorRest() {
+        return documentsignatorRest;
+    }
+
+    public void setDocumentsignatorRest(EPersonRest documentsignatorRest) {
+        this.documentsignatorRest = documentsignatorRest;
+    }
+
+    public Boolean getIssignature() {
+        return issignature;
+    }
+
+    public void setIssignature(Boolean issignature) {
+        this.issignature = issignature;
     }
 }

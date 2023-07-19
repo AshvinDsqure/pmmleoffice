@@ -91,7 +91,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
             Context context = ContextUtil.obtainContext(request);
             context.setCurrentUser(ePersonService.findByEmail(context, authentication.getName()));
             String token = loginJWTTokenHandler.createTokenForEPerson(context, request,authentication.getPreviousLoginDate());
-            AddCounter(context,token);
+           // AddCounter(context,token);
             context.commit();
             // Add newly generated auth token to the response
             addTokenToResponse(request, response, token, addCookie);
@@ -99,9 +99,9 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
             log.error("JOSE Exception", e);
         } catch (SQLException e) {
             log.error("SQL error when adding authentication", e);
-        } catch (AuthorizeException e) {
+        }/* catch (AuthorizeException e) {
             throw new RuntimeException(e);
-        }
+        }*/
     }
     /**
      * Create a short-lived token for bitstream downloads among other things
@@ -159,12 +159,12 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
                                              Context context) throws Exception {
         String token = getLoginToken(request, response);
         System.out.println("in logout");
-        LoginCounter loginCounter = loginCounterService.getbyToken(context, token);
+        /*LoginCounter loginCounter = loginCounterService.getbyToken(context, token);
         if (loginCounter != null) {
             System.out.println("in LoginCounter Update!");
             loginCounter.setLogoutdate(new Date());
             loginCounterService.create(context, loginCounter);
-        }
+        }*/
         loginJWTTokenHandler.invalidateToken(token, request, context);
         // Reset our CSRF token, generating a new one
         resetCSRFToken(request, response);
@@ -189,7 +189,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
         resetCSRFToken(request, response);
     }
 
-    public void AddCounter(Context context, String token) throws SQLException, AuthorizeException {
+   /* public void AddCounter(Context context, String token) throws SQLException, AuthorizeException {
         System.out.println("in Login Counter add");
         try {
             LocalDate today = LocalDate.now();
@@ -205,7 +205,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
             e.printStackTrace();
         }
         System.out.println(" Login Counter add done!");
-    }
+    }*/
 
     @Override
     public AuthenticationService getAuthenticationService() {
