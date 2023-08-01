@@ -44,6 +44,7 @@ import org.dspace.util.UUIDUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,6 +59,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -112,6 +115,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @Override
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     public Page<WorkFlowProcessRest> findAll(Context context, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             UUID statusid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             System.out.println("status id:"+statusid);
@@ -122,7 +126,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             }
             int count=workflowProcessService.countfindNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.findNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
+            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
@@ -132,14 +140,16 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "gethistory")
     public Page<WorkFlowProcessRest> gethistory(Pageable pageable) {
-
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
             UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            System.out.println("Draft Id"+statusid);
             int count=workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
@@ -148,12 +158,17 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "dashboard")
     public Page<WorkFlowProcessRest> dashboard(Context context, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             System.out.println("Statis id isDraft"+statusid);
             int count=workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
+            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
@@ -164,13 +179,19 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "getDraft")
     public Page<WorkFlowProcessRest> getDraft(Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
             UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             System.out.println("Draft Id"+statusid);
             int count=workflowProcessService.countgetHistoryByOwnerAndIsDraft(context,context.getCurrentUser().getID(),statusid);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByOwnerAndIsDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
+
+            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
@@ -180,6 +201,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "getDraftNotePendingWorkflow")
     public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
             UUID statuscloseid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
@@ -187,23 +209,27 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             WorkFlowProcessMaster workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Workflow Type");
             UUID statusdraftid=null;
             if(workFlowProcessMaster!=null){
-                 statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
+                statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
             }
             System.out.println("statuscloseid>>"+statuscloseid);
             System.out.println("statusdraftid>>"+statusdraftid);
             System.out.println("statusdraft>>"+statusdraft);
             int count=workflowProcessService.countfindDraftPending(context,context.getCurrentUser().getID(),statuscloseid,statusdraftid,statusdraft);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.findDraftPending(context,context.getCurrentUser().getID(),statuscloseid,statusdraftid,statusdraft,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
+            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
         }
     }
-
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "getReferWorkflow")
     public Page<WorkFlowProcessRest> getReferWorkflow(Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
             UUID referstatusid=WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
@@ -218,13 +244,17 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             System.out.println("statusdraft>>"+statusdraft);
             int count=workflowProcessService.countRefer(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.findReferList(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
-            return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable,count);
+
+            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
         }
     }
-
     @SearchRestMethod(name = "getDocumentByItemID")
     public WorkFlowProcessRest getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid) {
         try {
@@ -235,8 +265,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
-
     @Override
     public Class<WorkFlowProcessRest> getDomainClass() {
         return null;
@@ -253,7 +281,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             workFlowProcessRest = mapper.readValue(req.getInputStream(), WorkFlowProcessRest.class);
 
-       System.out.println(">>>>>>>>>>>>>>>>>>>json"+workFlowProcessRest);
+            System.out.println(">>>>>>>>>>>>>>>>>>>json"+workFlowProcessRest);
             Set<ConstraintViolation<WorkFlowProcessRest>> violations=validatorFactory.getValidator().validate(workFlowProcessRest);
             if (!violations.isEmpty()){
                 //throw new WorkFlowValiDationException(violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList()));
@@ -281,7 +309,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             try {
                 System.out.println("isDraft:::"+isDraft);
                 if(!isDraft) {
-                   WorkFlowAction create= WorkFlowAction.CREATE;
+                    WorkFlowAction create= WorkFlowAction.CREATE;
                     create.perfomeAction(context,workflowProcess,workFlowProcessRest);
                 }
                 context.commit();
@@ -307,7 +335,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 workflowProcess.setWorkflowProcessSenderDiary(workflowProcessSenderDiaryOptional.get());
             }
             WorkFlowProcessMasterValue workflowstatusopOptionalWorkFlowProcessMasterValue=null;
-                System.out.println("workFlowProcessRest.getDraft()::"+workFlowProcessRest.getDraft());
+            System.out.println("workFlowProcessRest.getDraft()::"+workFlowProcessRest.getDraft());
             if(!workFlowProcessRest.getDraft()){
                 System.out.println(">>>>>>>>>>>>>>>>>>>>"+WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getPrimaryvalue());
                 workflowstatusopOptionalWorkFlowProcessMasterValue =WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get();
@@ -329,7 +357,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
-            }).collect(Collectors.toList()));
+            }).collect(toList()));
             System.out.println("workflowProcess::: update ......");
             workflowProcessService.update(context,workflowProcess);
         } catch (Exception e) {

@@ -17,9 +17,7 @@ import org.dspace.content.*;
 import org.dspace.content.enums.Dispatch;
 import org.dspace.content.enums.Priority;
 import org.dspace.content.enums.WorkFlowProcessReferenceDocType;
-import org.dspace.content.service.BitstreamService;
-import org.dspace.content.service.WorkFlowProcessDraftDetailsService;
-import org.dspace.content.service.WorkflowProcessService;
+import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.dspace.eperson.service.GroupService;
 import org.hibernate.internal.build.AllowSysOut;
@@ -54,6 +52,15 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
     BitstreamService bitstreamService;
     @Autowired
     WorkflowProcessSenderDiaryConverter workflowProcessSenderDiaryConverter;
+
+    @Autowired
+    WorkFlowProcessInwardDetailsService workFlowProcessInwardDetailsService;
+    @Autowired
+    WorkFlowProcessOutwardDetailsService workFlowProcessOutwardDetailsService;
+    @Autowired
+    WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
+
+
     @Autowired
     WorkFlowProcessInwardDetailsConverter workFlowProcessInwardDetailsConverter;
     @Autowired
@@ -61,8 +68,6 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
-    @Autowired
-    WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
     @Autowired
     WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
     @Autowired
@@ -77,7 +82,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
 
     @Override
     public WorkFlowProcessRest convert(WorkflowProcess obj, Projection projection) {
-        WorkFlowProcessRest workFlowProcessRest = super.convert(obj, projection);
+        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
         if (obj.getWorkflowProcessSenderDiary() != null) {
             workFlowProcessRest.setWorkflowProcessSenderDiaryRest(workflowProcessSenderDiaryConverter.convert(obj.getWorkflowProcessSenderDiary(), projection));
         }
@@ -227,7 +232,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getItemRest() != null) {
             workflowProcess.setItem(itemConverter.convert(obj.getItemRest(), context));
         }
-        if(obj.getWorkflowTypeStr()!=null) {
+        if (obj.getWorkflowTypeStr() != null) {
             WorkFlowType workFlowType = WorkFlowType.valueOf(obj.getWorkflowTypeStr());
             if (workFlowType != null) {
                 Optional<WorkFlowProcessMasterValue> workFlowProcessMasterValue = workFlowType.getUserTypeFromMasterValue(context);
@@ -246,6 +251,47 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workflowProcess.setPriority(workFlowProcessMasterValueConverter.convert(context, obj.getPriorityRest()));
         }
         return workflowProcess;
+    }
+
+    public WorkFlowProcessRest convertByDashbord(Context context, WorkflowProcess obj, Projection projection) {
+        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
+        if (obj.getWorkflowType() != null) {
+            workFlowProcessRest.setWorkflowType(workFlowProcessMasterValueConverter.convert(obj.getWorkflowType(), projection));
+        }
+        if (obj.getWorkflowStatus() != null) {
+            workFlowProcessRest.setWorkflowStatus(workFlowProcessMasterValueConverter.convert(obj.getWorkflowStatus(), projection));
+        }
+        workFlowProcessRest.setSubject(obj.getSubject());
+        workFlowProcessRest.setInitDate(obj.getInitDate());
+        if (obj.getPriority() != null) {
+            workFlowProcessRest.setPriorityRest(workFlowProcessMasterValueConverter.convert(obj.getPriority(), projection));
+        }
+        Optional<WorkflowProcessEperson> ownerRest = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).findFirst();
+        if (ownerRest.isPresent() && ownerRest.get().getAssignDate() != null) {
+            workFlowProcessRest.setDueDate(ownerRest.get().getAssignDate());
+            workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
+        }
+        if (obj.getWorkflowProcessEpeople() != null) {
+            Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
+            if (senderRest.isPresent() && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
+                workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
+                workFlowProcessRest.setSendername(senderRest.get().getePerson().getFullName());
+            }
+        }
+        if (obj.getWorkFlowProcessInwardDetails() != null && obj.getWorkFlowProcessInwardDetails().getInwardDate() != null) {
+            workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));
+            workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessInwardDetails().getInwardDate());
+        }
+        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardDate() != null) {
+            workFlowProcessRest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(obj.getWorkFlowProcessOutwardDetails(), projection));
+            workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessOutwardDetails().getOutwardDate());
+        }
+        if (obj.getWorkFlowProcessDraftDetails() != null && obj.getWorkFlowProcessDraftDetails().getDraftdate() != null) {
+            workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsConverter.convert(obj.getWorkFlowProcessDraftDetails(), projection));
+            workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessDraftDetails().getDraftdate());
+        }
+        workFlowProcessRest.setUuid(obj.getID().toString());
+        return workFlowProcessRest;
     }
 
     @Override

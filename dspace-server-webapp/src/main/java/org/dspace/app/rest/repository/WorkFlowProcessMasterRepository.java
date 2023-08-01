@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -28,9 +28,9 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * This is the repository responsible to manage Item Rest object
  *
@@ -40,7 +40,7 @@ import java.util.UUID;
 public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<WorkFlowProcessMaster, WorkFlowProcessMasterRest> {
 
     @Autowired
-     private WorkFlowProcessMasterService workFlowProcessMasterService;
+    private WorkFlowProcessMasterService workFlowProcessMasterService;
 
     @Autowired
     WorkFlowProcessMasterConverter workFlowProcessMasterConverter;
@@ -49,6 +49,7 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
     public WorkFlowProcessMasterRepository(WorkFlowProcessMasterService dso) {
         super(dso);
     }
+
     @Override
     protected WorkFlowProcessMasterRest createAndReturn(Context context)
             throws AuthorizeException {
@@ -72,7 +73,7 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
     private WorkFlowProcessMaster createWorkFlowProcessMasterFromRestObject(Context context, WorkFlowProcessMasterRest workFlowProcessMasterRest) throws AuthorizeException {
         WorkFlowProcessMaster workFlowProcessMaster = new WorkFlowProcessMaster();
         try {
-         workFlowProcessMaster.setMastername(workFlowProcessMasterRest.getMastername());
+            workFlowProcessMaster.setMastername(workFlowProcessMasterRest.getMastername());
             workFlowProcessMasterService.create(context, workFlowProcessMaster);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -82,12 +83,12 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
 
     @Override
     protected WorkFlowProcessMasterRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                     JsonNode jsonNode) throws SQLException, AuthorizeException {
+                                            JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkFlowProcessMasterRest workFlowProcessMasterRest = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessMasterRest.class);
 
         WorkFlowProcessMaster wflowProcessMaster = workFlowProcessMasterService.find(context, id);
         if (wflowProcessMaster == null) {
-            System.out.println("WorkFlowProcessMasterRest id ::: is Null  WorkFlowProcessMasterRest tye null"+id);
+            System.out.println("WorkFlowProcessMasterRest id ::: is Null  WorkFlowProcessMasterRest tye null" + id);
             throw new ResourceNotFoundException("WorkFlowProcessMasterRest  field with id: " + id + " not found");
         }
         wflowProcessMaster.setMastername(workFlowProcessMasterRest.getMastername());
@@ -99,7 +100,7 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
 
     @Override
     public WorkFlowProcessMasterRest findOne(Context context, UUID uuid) {
-        WorkFlowProcessMasterRest workFlowProcessMasterRest =null;
+        WorkFlowProcessMasterRest workFlowProcessMasterRest = null;
         try {
             Optional<WorkFlowProcessMaster> workFlowProcessMaster = Optional.ofNullable(workFlowProcessMasterService.find(context, uuid));
             if (workFlowProcessMaster.isPresent()) {
@@ -114,9 +115,11 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
     @Override
     public Page<WorkFlowProcessMasterRest> findAll(Context context, Pageable pageable) throws SQLException {
         int total = workFlowProcessMasterService.countRows(context);
+        List<WorkFlowProcessMaster> list = new ArrayList<>();
+        List<String> dontshowmasterlist = Arrays.asList("Workflow Status", "Workflow Type", "Action", "Workflow User Type","Draft Type");
         List<WorkFlowProcessMaster> workFlowProcessMasters = workFlowProcessMasterService.findAll(context);
-        return converter.toRestPage(workFlowProcessMasters, pageable, total, utils.obtainProjection());
-
+        list = workFlowProcessMasters.stream().filter(d -> !dontshowmasterlist.contains(d.getMastername())).collect(Collectors.toList());
+        return converter.toRestPage(list, pageable, total, utils.obtainProjection());
     }
 
     protected void delete(Context context, UUID id) throws AuthorizeException {

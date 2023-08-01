@@ -97,10 +97,9 @@ public class WorkflowProcessSenderDiaryServiceImpl extends DSpaceObjectServiceIm
     }
 
     @Override
-    public WorkflowProcessSenderDiary searchSenderDiary(Context context,String name, String email) throws SQLException {
-        return workflowProcessSenderDiaryDAO.searchSenderDiary(context,name,email);
+    public List<WorkflowProcessSenderDiary> searchSenderDiary(Context context,String name) throws SQLException {
+        return workflowProcessSenderDiaryDAO.searchSenderDiary(context,name);
     }
-
     @Override
     public WorkflowProcessSenderDiary findByEmailID(Context context, String emailID) throws SQLException {
         return workflowProcessSenderDiaryDAO.findByEmailID(context,emailID);

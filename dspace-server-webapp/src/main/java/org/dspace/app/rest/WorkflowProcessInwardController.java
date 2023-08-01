@@ -41,6 +41,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -166,7 +168,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getInwardNumber")
-    public ResponseEntity getInwardNumber() throws Exception {
+    public Map<String,String> getInwardNumber() throws Exception {
         String inwardnumber = null;
         try {
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
@@ -177,13 +179,13 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (currentuser != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
-                    sb.append(DateUtils.getShortName(department.getPrimaryvalue()));
+                    sb.append(department.getSecondaryvalue());
                 }
             }
             if (currentuser.getTablenumber() != null) {
                 sb.append("/" + currentuser.getTablenumber());
             }
-            sb.append("/Inward");
+            sb.append("/Inw");
             sb.append("/" + DateUtils.getFinancialYear());
             int count = workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.INWARD.getAction()).getID());
             count = count + 1;
@@ -193,7 +195,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             e.printStackTrace();
             System.out.println("Error in getInwardNumber ");
         }
-        return ResponseEntity.ok(inwardnumber);
+        Map<String,String>map=new HashMap<>();
+        map.put("inwardnumber",inwardnumber);
+        return map;
     }
 
     public WorkflowProcessEpersonRest getSubmitor(Context context) throws SQLException {

@@ -40,6 +40,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -129,7 +131,7 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getOutWardNumber")
-    public ResponseEntity getOutWardNumber() throws Exception {
+    public Map<String,String> getOutWardNumber() throws Exception {
         String inwardnumber = null;
         try {
             // System.out.println("workFlowProcessRest::" + new Gson().toJson());
@@ -142,13 +144,13 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
                     System.out.println("department.getPrimaryvalue() "+department.getPrimaryvalue());
-                    sb.append(DateUtils.getShortName(department.getPrimaryvalue()));
+                    sb.append(department.getSecondaryvalue());
                 }
             }
             if (currentuser.getTablenumber() != null) {
                 sb.append("/"+currentuser.getTablenumber());
             }
-            sb.append("/outward");
+            sb.append("/Out");
             sb.append("/"+DateUtils.getFinancialYear());
             int count = workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.OUTWARED.getAction()).getID());
             count = count + 1;
@@ -157,7 +159,9 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResponseEntity.ok(inwardnumber);
+        Map<String,String> map=new HashMap<>();
+        map.put("outwardnumber",inwardnumber);
+        return map;
     }
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD},value = "/draft")

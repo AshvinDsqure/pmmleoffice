@@ -124,9 +124,9 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
-                "join wp.workflowProcessEpeople as ep " +
-                "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:statuscloseid) and st.id NOT IN(:statusdraft) and t.id IN (:statusdraftid) and wp.isdelete=:isdelete order by wp.InitDate desc");
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p  " +
+                "left join wp.workflowStatus as st left join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:statuscloseid) and st.id NOT IN(:statusdraft) and t.id IN (:statusdraftid) and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", true);
         query.setParameter("eperson", eperson);
         query.setParameter("isdelete", false);
@@ -329,20 +329,24 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
 
     @Override
-    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid) throws SQLException {
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid,UUID epersonid) throws SQLException {
         Query query = createQuery(context,
-                "SELECT count(wp) FROM WorkflowProcess as wp join wp.workflowStatus as st join wp.workflowType as t where  t.id=:typeid and st.id=:statusid ");
+                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.workflowStatus as st left join wp.workflowType as t where  t.id=:typeid and st.id=:statusid and user.id=:epersonid and ep.isOwner=:isOwner");
         query.setParameter("typeid", typeid);
         query.setParameter("statusid", statusid);
+        query.setParameter("epersonid", epersonid);
+        query.setParameter("isOwner", true);
         return count(query);
     }
 
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid) throws SQLException {
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid,UUID epersonid) throws SQLException {
         Query query = createQuery(context,
-                "SELECT count(wp) FROM WorkflowProcess as wp join wp.priority as p join wp.workflowType as t where t.id=:typeid and p.id=:priorityid ");
+                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.priority as p left join wp.workflowType as t where t.id=:typeid and p.id=:priorityid and user.id=:epersonid and ep.isOwner=:isOwner");
         query.setParameter("typeid", typeid);
         query.setParameter("priorityid", priorityid);
+        query.setParameter("epersonid", epersonid);
+        query.setParameter("isOwner", true);
         return count(query);
     }
 }

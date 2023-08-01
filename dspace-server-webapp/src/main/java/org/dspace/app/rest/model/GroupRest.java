@@ -10,6 +10,7 @@ package org.dspace.app.rest.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.dspace.app.rest.RestResourceController;
+import org.dspace.content.WorkFlowProcessMasterValue;
 
 /**
  * The Group REST Resource
@@ -41,6 +42,7 @@ public class GroupRest extends DSpaceObjectRest {
     public static final String OBJECT = "object";
     private boolean permanent;
     private Boolean isdspace;
+    private WorkFlowProcessMasterValueRest grouptypeRest = null;
     @Override
     public String getCategory() {
         return CATEGORY;
@@ -67,5 +69,12 @@ public class GroupRest extends DSpaceObjectRest {
 
     public void setIsdspace(Boolean isdspace) {
         this.isdspace = isdspace;
+    }
+
+    public WorkFlowProcessMasterValueRest getGrouptypeRest() {
+        return grouptypeRest;
+    }
+    public void setGrouptypeRest(WorkFlowProcessMasterValueRest grouptypeRest) {
+        this.grouptypeRest = grouptypeRest;
     }
 }

@@ -15,6 +15,7 @@ import org.dspace.eperson.EPerson;
 import org.springframework.data.annotation.Transient;
 
 import javax.validation.constraints.NotBlank;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -48,6 +49,9 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     @JsonProperty
     private List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
+
+    @JsonProperty
+    private List<EPersonRest> ePersonRests = new ArrayList<>();
 
     @JsonProperty
     private ItemRest itemRest = null;
@@ -207,5 +211,13 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setIsrefer(Boolean isrefer) {
         this.isrefer = isrefer;
+    }
+
+    public List<EPersonRest> getePersonRests() {
+        return ePersonRests;
+    }
+
+    public void setePersonRests(List<EPersonRest> ePersonRests) {
+        this.ePersonRests = ePersonRests;
     }
 }

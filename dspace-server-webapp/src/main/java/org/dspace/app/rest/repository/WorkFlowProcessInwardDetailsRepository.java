@@ -75,7 +75,7 @@ public class WorkFlowProcessInwardDetailsRepository extends DSpaceObjectRestRepo
         log.info("::::::start::::createWorkFlowProcessInwardDetailsFromRestObject::::::::::");
         WorkFlowProcessInwardDetails workFlowProcessInwardDetails = new WorkFlowProcessInwardDetails();
         try {
-            workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(workFlowProcessInwardDetails,workFlowProcessInwardDetailsRest );
+            workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(workFlowProcessInwardDetailsRest );
             workFlowProcessInwardDetailsService.create(context, workFlowProcessInwardDetails);
         } catch (Exception e) {
             log.info("::::::error::::createWorkFlowProcessInwardDetailsFromRestObject::::::::::");

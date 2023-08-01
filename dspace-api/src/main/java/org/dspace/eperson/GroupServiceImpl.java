@@ -834,4 +834,9 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
     public String getName(Group dso) {
         return dso.getName();
     }
+
+    @Override
+    public List<Group> getGroupsByGroupType(Context context, UUID grouptypeid) throws SQLException {
+        return groupDAO.getGroupsByGroupType(context,grouptypeid);
+    }
 }

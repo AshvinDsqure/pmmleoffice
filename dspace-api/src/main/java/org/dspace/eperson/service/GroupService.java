@@ -10,6 +10,7 @@ package org.dspace.eperson.service;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.MetadataField;
@@ -327,4 +328,7 @@ public interface GroupService extends DSpaceObjectService<Group>, DSpaceObjectLe
      */
     List<Group> findByMetadataField(Context context, String searchValue, MetadataField metadataField)
         throws SQLException;
+
+    List<Group> getGroupsByGroupType(Context context, UUID grouptypeid) throws SQLException;
+
 }

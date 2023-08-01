@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.jbpm.models.JBPMResponse;
 import org.dspace.app.rest.jbpm.models.JBPMResponse_;
+import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
 import org.dspace.app.rest.utils.PdfUtils;
@@ -70,7 +71,21 @@ public enum WorkFlowAction {
                 System.out.println("in removeInitiatorgetUserList");
                 usersUuid = this.removeInitiatorgetUserList(workFlowProcessRest);
             }
-            System.out.println("user list" + usersUuid);
+
+            /* this code enable when multiuser flow
+            if (this.getInitiator()) {
+                System.out.println("in removeInitiatorgetUserList1");
+                usersUuid = this.noteremoveInitiatorgetUserList(workFlowProcessRest);
+            }
+            List<EPersonRest> list = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(s -> s.getePersonRests() != null && s.getePersonRests().size() != 0).map(d -> d.getePersonRest()).collect(Collectors.toList());
+            System.out.println("test getePersonRests" + list.size());
+            if (list != null) {
+                usersUuid = this.removeInitiatorgetUserList2(context, workFlowProcessRest);
+            } else {
+                usersUuid = this.removeInitiatorgetUserList(workFlowProcessRest);
+            }*/
+
+            System.out.println("user list " + usersUuid);
             String forwardResponce = this.getJbpmServer().forwardTask(workFlowProcessRest, usersUuid);
             System.out.println("forward jbpm responce create" + forwardResponce);
             JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
@@ -294,6 +309,30 @@ public enum WorkFlowAction {
                 .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).map(d -> d.getUuid()).collect(Collectors.toList());
     }
 
+    public List<String> removeInitiatorgetUserList2(Context context, WorkFlowProcessRest workFlowProcessRest) {
+        List user = new ArrayList();
+
+        StringBuffer forwardRequestUserList = new StringBuffer();
+
+        List<WorkflowProcessEpersonRest> nextgroup = workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
+                .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.INITIATOR.getAction()))
+                .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.DISPATCH.getAction()))
+                .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).collect(Collectors.toList());
+        List<Integer> indexlist = nextgroup.stream().map(d -> d.getIndex()).collect(Collectors.toList());
+        for (int i = 0; i < nextgroup.size() - 1; i++) {
+            if (countOccurrences(indexlist, i) > 1) {
+                user.add(nextgroup.stream().map(d -> d.getUuid()).collect(Collectors.toList()));
+            } else {
+                user.add(indexlist.get(i));
+            }
+        }
+        return user;
+    }
+
+    public static int countOccurrences(List<Integer> inputList, int numberToFind) {
+        return Collections.frequency(inputList, numberToFind);
+    }
+
     public List<String> noteremoveInitiatorgetUserList(WorkFlowProcessRest workFlowProcessRest) {
         return workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
                 .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).map(d -> d.getUuid()).collect(Collectors.toList());
@@ -328,9 +367,9 @@ public enum WorkFlowAction {
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
         if (this.getComment() != null && !this.getComment().isEmpty()) {
-                String htmlcomment = "<div>" + this.getComment() + "</div>";
-                System.out.println("::::::html::::::::::" + htmlcomment);
-               System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
+            String htmlcomment = "<div>" + this.getComment() + "</div>";
+            System.out.println("::::::html::::::::::" + htmlcomment);
+            System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
             workFlowAction.setComment(PdfUtils.htmlToText(htmlcomment));
             if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
                 WorkFlowProcessComment workFlowProcessComment = new WorkFlowProcessComment();
@@ -359,9 +398,10 @@ public enum WorkFlowAction {
         System.out.println("::::::OUT :storeWorkFlowHistory:::::::::: ");
         return workFlowAction;
     }
+
     // this history call when draft note create time Attaged Reference Doc.
     public WorkFlowProcessHistory storeWorkFlowHistoryforDocumentReference(Context context, WorkflowProcess workflowProcess, WorkflowProcessEperson workflowProcessEperson) {
-       WorkFlowProcessHistory workFlowAction = null;
+        WorkFlowProcessHistory workFlowAction = null;
         try {
             if (workflowProcess.getWorkflowProcessReferenceDocs() != null && workflowProcess.getWorkflowProcessReferenceDocs().size() != 0) {
                 System.out.println("::::::IN :storeWorkFlowHistory::::DocumentReference:::::: ");
@@ -376,7 +416,7 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue()+" In "+doc.getItemname());
+                        workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " In " + doc.getItemname());
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                     if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Noting")) {
@@ -387,7 +427,7 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Attached "+doc.getDrafttype().getPrimaryvalue() +" In "+doc.getSubject());
+                        workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " In " + doc.getSubject());
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                     if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Document")) {
@@ -399,7 +439,7 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Create Version 1 for "+doc.getDrafttype().getPrimaryvalue()+" ");
+                        workFlowAction.setComment("Create Version 1 for " + doc.getDrafttype().getPrimaryvalue() + " ");
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                     if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet")) {
@@ -411,17 +451,17 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        workFlowAction.setComment("Create Version 1 for "+doc.getDrafttype().getPrimaryvalue()+" "+doc.getSubject());
+                        workFlowAction.setComment("Create Version 1 for " + doc.getDrafttype().getPrimaryvalue() + " " + doc.getSubject());
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
-               }
+                }
                 System.out.println("::::::OUT :storeWorkFlowHistory::::DocumentReference:::::: ");
 
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-       return workFlowAction;
+        return workFlowAction;
     }
 
     public WorkflowProcessEperson changeOwnerByReject(Context context, WorkflowProcess workflowProcess) throws SQLException, AuthorizeException {

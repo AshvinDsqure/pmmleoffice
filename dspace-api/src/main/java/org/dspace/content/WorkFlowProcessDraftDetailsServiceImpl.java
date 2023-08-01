@@ -86,4 +86,9 @@ public class WorkFlowProcessDraftDetailsServiceImpl extends DSpaceObjectServiceI
 
         this.workFlowProcessDraftDetailsDAO.save(context, workFlowProcessDraftDetails);
     }
+
+    @Override
+    public WorkFlowProcessDraftDetails getbyDocumentsignator(Context context, UUID workflowprocessid) throws SQLException {
+        return workFlowProcessDraftDetailsDAO.getbyDocumentsignator(context,workflowprocessid);
+    }
 }

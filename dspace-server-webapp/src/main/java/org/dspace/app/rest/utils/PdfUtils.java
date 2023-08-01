@@ -1,32 +1,13 @@
 package org.dspace.app.rest.utils;
 
-import com.itextpdf.commons.exceptions.ITextException;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
-import com.itextpdf.io.font.FontCacheKey;
 import com.itextpdf.layout.font.FontProvider;
-import com.itextpdf.layout.font.FontSet;
-import com.itextpdf.styledxmlparser.IXmlParser;
-import org.apache.poi.sl.usermodel.TextParagraph;
-import org.apache.poi.xslf.usermodel.*;
-import org.apache.poi.xwpf.usermodel.*;
-import org.dspace.app.rest.repository.BundleRestRepository;
-import org.dspace.content.WorkflowProcess;
-import org.dspace.content.service.WorkflowProcessReferenceDocService;
-import org.dspace.content.service.WorkflowProcessService;
-import org.dspace.core.Context;
 import org.jsoup.Jsoup;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 public class PdfUtils {
 
     public static void main(String[] args) throws IOException {

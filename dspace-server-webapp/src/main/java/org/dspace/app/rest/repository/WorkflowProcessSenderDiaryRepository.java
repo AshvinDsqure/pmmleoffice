@@ -13,10 +13,7 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkflowProcessSenderDiaryConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
-import org.dspace.app.rest.model.DocumentTypeRest;
-import org.dspace.app.rest.model.ItemRest;
-import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
-import org.dspace.app.rest.model.WorkflowProcessSenderDiaryRest;
+import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.WorkflowProcessSenderDiary;
@@ -35,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -141,11 +139,8 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
         try {
             workflowProcessSenderDiaryRest = jsonObjectMapper.readValue(jsonNode.toString(), WorkflowProcessSenderDiaryRest.class);
         } catch (Exception e) {
-
         }
         WorkflowProcessSenderDiary workflowProcessSenderDiary = workflowProcessSenderDiaryService.find(context, id);
-
-
         System.out.println("WorkflowProcessSenderDiary a" + id);
         if (workflowProcessSenderDiary == null) {
             System.out.println("workflowProcessSenderDiary id ::: is Null  LatterCategoryRest tye null" + id);
@@ -164,29 +159,22 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
         context.commit();
         System.out.println("WorkflowProcessSenderDiary update finished");
         return converter.toRest(workflowProcessSenderDiary, utils.obtainProjection());
-
     }
-
-
-    @SearchRestMethod(name = "search")
-    public WorkflowProcessSenderDiaryRest search(
-            @Parameter(value = "name", required = true) String name,
-            @Parameter(value = "email", required = true) String email,
-            Pageable pageable) {
-            WorkflowProcessSenderDiaryRest workflowProcessSenderDiaryRest = null;
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "searchByName")
+    public Page<WorkflowProcessSenderDiaryRest> search(@Parameter(value = "name", required = true) String name, Pageable pageable) {
         try {
             System.out.println("sear>>>>>>>>>>>" + name);
             Context context = obtainContext();
-            Optional<WorkflowProcessSenderDiary> workflowProcessSenderDiary = Optional.ofNullable(workflowProcessSenderDiaryService.searchSenderDiary(context, name,email));
+            Optional<List<WorkflowProcessSenderDiary>> workflowProcessSenderDiary = Optional.ofNullable(workflowProcessSenderDiaryService.searchSenderDiary(context, name));
             if (workflowProcessSenderDiary.isPresent()) {
-                workflowProcessSenderDiaryRest = converter.toRest(workflowProcessSenderDiary.get(), utils.obtainProjection());
+                return converter.toRestPage(workflowProcessSenderDiary.get(), pageable, 999, utils.obtainProjection());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return workflowProcessSenderDiaryRest;
+        return null;
     }
-
     @Override
     public Class<WorkflowProcessSenderDiaryRest> getDomainClass() {
         return null;

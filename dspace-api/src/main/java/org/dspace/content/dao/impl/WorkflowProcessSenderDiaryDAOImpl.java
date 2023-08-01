@@ -26,6 +26,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,12 +65,11 @@ public class WorkflowProcessSenderDiaryDAOImpl extends AbstractHibernateDSODAO<W
     }
 
     @Override
-    public WorkflowProcessSenderDiary searchSenderDiary(Context context,String name, String email) throws SQLException {
+    public List<WorkflowProcessSenderDiary> searchSenderDiary(Context context, String name) throws SQLException {
         try {
-            Query query = createQuery(context,"SELECT s from  WorkflowProcessSenderDiary as s where lower(s.sendername)  like :name And lower(s.email) like :email");
+            Query query = createQuery(context,"SELECT s from  WorkflowProcessSenderDiary as s where lower(s.sendername)  like :name ");
             query.setParameter("name","%"+name.toLowerCase()+"%");
-            query.setParameter("email","%"+email.toLowerCase()+"%");
-            return (WorkflowProcessSenderDiary) query.getSingleResult();
+            return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("in error " + e.getMessage());

@@ -12,7 +12,11 @@ import org.dspace.content.WorkFlowProcessDraftDetails;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
+import java.util.UUID;
 
 public interface WorkFlowProcessDraftDetailsDAO extends DSpaceObjectLegacySupportDAO<WorkFlowProcessDraftDetails>{
     int countRows(Context context) throws SQLException;
+
+    WorkFlowProcessDraftDetails getbyDocumentsignator(Context context, UUID workflowprocessid) throws SQLException;
+
 }

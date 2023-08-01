@@ -29,13 +29,16 @@ public class GroupConverter extends DSpaceObjectConverter<Group, GroupRest> {
 
     @Autowired
     GroupService groupService;
+    @Autowired
+    WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
-    @Override
     public GroupRest convert(Group obj, Projection projection) {
-        GroupRest epersongroup = super.convert(obj, projection);
+        GroupRest epersongroup = new GroupRest();
         epersongroup.setPermanent(obj.isPermanent());
         epersongroup.setIsdspace(obj.getIsdspace());
-        return epersongroup;
+        if(obj.getGrouptype()!=null) {
+            epersongroup.setGrouptypeRest(workFlowProcessMasterValueConverter.convert(obj.getGrouptype(), projection));
+        } return epersongroup;
     }
     public Group convert(Context context,GroupRest rest) throws SQLException {
        if(rest!=null && rest.getId()!=null){

@@ -18,7 +18,9 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.GroupConverter;
 import org.dspace.app.rest.converter.MetadataConverter;
+import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.exception.GroupNameNotProvidedException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -46,6 +48,9 @@ import org.springframework.stereotype.Component;
 public class GroupRestRepository extends DSpaceObjectRestRepository<Group, GroupRest> {
     @Autowired
     GroupService gs;
+    @Autowired
+    WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
 
     @Autowired
     GroupRestRepository(GroupService dsoService) {
@@ -79,6 +84,9 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
         try {
             group = gs.create(context);
             gs.setName(group, groupRest.getName());
+            if(groupRest.getGrouptypeRest()!=null){
+             group.setGrouptype(workFlowProcessMasterValueConverter.convert(context,groupRest.getGrouptypeRest()));
+            }
             gs.update(context, group);
             metadataConverter.setMetadata(context, group, groupRest.getMetadata());
         } catch (SQLException excSQL) {
@@ -143,6 +151,17 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
             List<Group> groups = gs.search(context, query, Math.toIntExact(pageable.getOffset()),
                                                            Math.toIntExact(pageable.getPageSize()));
             return converter.toRestPage(groups, pageable, total, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    @SearchRestMethod(name = "getGroupsByGroupType")
+    public Page<GroupRest> getGroupsByGroupType(@Parameter(value = "typeid", required = true) String typeid,
+                                          Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            List<Group> groups = gs.getGroupsByGroupType(context,UUID.fromString(typeid));
+            return converter.toRestPage(groups, pageable, 100, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

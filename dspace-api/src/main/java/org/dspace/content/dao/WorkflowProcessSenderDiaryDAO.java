@@ -12,6 +12,7 @@ import org.dspace.content.WorkflowProcessSenderDiary;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
+import java.util.List;
 
 
 /**
@@ -24,6 +25,6 @@ import java.sql.SQLException;
 public interface WorkflowProcessSenderDiaryDAO extends  DSpaceObjectLegacySupportDAO<WorkflowProcessSenderDiary> {
         int countRows(Context context) throws SQLException;
         WorkflowProcessSenderDiary findByEmailID(Context context,String emailID) throws SQLException;
-        WorkflowProcessSenderDiary searchSenderDiary(Context context,String name, String email) throws SQLException;
+        List<WorkflowProcessSenderDiary> searchSenderDiary(Context context, String name) throws SQLException;
 
 }

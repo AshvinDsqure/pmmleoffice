@@ -43,6 +43,6 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
 
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft, Integer offset, Integer limit) throws SQLException;
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
-    int countByTypeAndStatus(Context context,UUID typeid,UUID statusid) throws SQLException;
-    int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid) throws SQLException;
+    int countByTypeAndStatus(Context context,UUID typeid,UUID statusid,UUID epersonid) throws SQLException;
+    int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid) throws SQLException;
 }

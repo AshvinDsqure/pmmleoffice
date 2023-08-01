@@ -73,6 +73,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     private String workflowTypeStr;
     @JsonProperty
+    private String sendername;
+    @JsonProperty
     private Boolean isDraft = false;
     @JsonProperty
     private String comment;
@@ -85,6 +87,16 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date InitDate = new Date();
+
+    @JsonProperty
+    @JsonDeserialize(converter = MyDateConverter.class)
+    private Date dateRecived = new Date();
+
+    @JsonProperty
+    @JsonDeserialize(converter = MyDateConverter.class)
+    private Date dueDate = new Date();
+
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest priorityRest = null;
 
@@ -268,5 +280,29 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setWorkflowProcessNoteRest(WorkflowProcessNoteRest workflowProcessNoteRest) {
         this.workflowProcessNoteRest = workflowProcessNoteRest;
+    }
+
+    public Date getDateRecived() {
+        return dateRecived;
+    }
+
+    public void setDateRecived(Date dateRecived) {
+        this.dateRecived = dateRecived;
+    }
+
+    public Date getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(Date dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public String getSendername() {
+        return sendername;
+    }
+
+    public void setSendername(String sendername) {
+        this.sendername = sendername;
     }
 }

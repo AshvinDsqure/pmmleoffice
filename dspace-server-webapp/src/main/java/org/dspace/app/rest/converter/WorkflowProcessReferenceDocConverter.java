@@ -45,8 +45,7 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
     @Autowired
     EPersonConverter ePersonConverter;
 
-    @Autowired
-    WorkflowProcessNoteService workflowProcessNoteService;
+
 
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
@@ -87,9 +86,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if(obj.getCreatedate()!=null){
             workflowProcessDefinitionRest.setCreatedate(obj.getCreatedate());
         }
-        if (obj.getDocumentsignator() != null) {
+       /* if (obj.getDocumentsignator() != null) {
             workflowProcessDefinitionRest.setDocumentsignatorRest(ePersonConverter.convert(obj.getDocumentsignator(), projection));
-        }
+        }*/
         workflowProcessDefinitionRest.setIssignature(obj.getIssignature());
         workflowProcessDefinitionRest.setUuid(obj.getID().toString());
         return workflowProcessDefinitionRest;
@@ -142,9 +141,47 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if(rest.getCreatedate()!=null){
             workflowProcessReferenceDoc.setCreatedate(rest.getCreatedate());
         }
-        if (rest.getDocumentsignatorRest() != null && rest.getDocumentsignatorRest().getUuid()!=null && !rest.getDocumentsignatorRest().getUuid().toString().isEmpty()) {
+       /* if (rest.getDocumentsignatorRest() != null && rest.getDocumentsignatorRest().getUuid()!=null && !rest.getDocumentsignatorRest().getUuid().toString().isEmpty()) {
             workflowProcessReferenceDoc.setDocumentsignator(ePersonConverter.convert(context, rest.getDocumentsignatorRest()));
+        }*/
+        workflowProcessReferenceDoc.setIssignature(rest.getIssignature());
+        return  workflowProcessReferenceDoc;
+    }
+    public WorkflowProcessReferenceDoc convertRestToDoc(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc, WorkflowProcessReferenceDocRest rest) throws SQLException {
+        if(rest.getReferenceNumber()!=null){
+            workflowProcessReferenceDoc.setReferenceNumber(rest.getReferenceNumber());}
+        if(rest.getInitdate()!=null){
+            workflowProcessReferenceDoc.setInitdate(rest.getInitdate());}
+        if(rest.getSubject()!=null){
+            workflowProcessReferenceDoc.setSubject(rest.getSubject());}
+        if(rest.getEditortext()!=null){
+            PdfUtils.htmlToText(rest.getEditortext());
+            workflowProcessReferenceDoc.setEditortext(rest.getEditortext());}
+        if(rest.getLatterCategoryRest()!=null) {
+            workflowProcessReferenceDoc.setLatterCategory(workFlowProcessMasterValueConverter.convert(context, rest.getLatterCategoryRest()));
         }
+        if(rest.getWorkFlowProcessReferenceDocType()!=null) {
+            workflowProcessReferenceDoc.setWorkFlowProcessReferenceDocType(workFlowProcessMasterValueConverter.convert(context, rest.getWorkFlowProcessReferenceDocType()));
+        }
+        if(rest.getDrafttypeRest() != null) {
+            workflowProcessReferenceDoc.setDrafttype(workFlowProcessMasterValueConverter.convert(context,rest.getDrafttypeRest()));
+        }
+        if(rest.getDescription() != null) {
+            workflowProcessReferenceDoc.setDescription(rest.getDescription());
+        }
+        if(rest.getBitstreamRest() != null) {
+            workflowProcessReferenceDoc.setBitstream(bitstreamService.find(context, UUID.fromString(rest.getBitstreamRest().getId())));
+        }
+        if(rest.getItemname() != null) {
+            workflowProcessReferenceDoc.setItemname(rest.getItemname());
+        }
+        if(rest.getCreatedate()!=null){
+            workflowProcessReferenceDoc.setCreatedate(rest.getCreatedate());
+        }
+       /* if (rest.getDocumentsignatorRest() != null && rest.getDocumentsignatorRest().getUuid()!=null && !rest.getDocumentsignatorRest().getUuid().toString().isEmpty()) {
+            workflowProcessReferenceDoc.setDocumentsignator(ePersonConverter.convert(context, rest.getDocumentsignatorRest()));
+        }*/
+
         workflowProcessReferenceDoc.setIssignature(rest.getIssignature());
         return  workflowProcessReferenceDoc;
     }

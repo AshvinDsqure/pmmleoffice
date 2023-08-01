@@ -187,6 +187,24 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
         var nextindex=workflowProcessEpersonmax.getIndex()+1;
         workflowProcessEperson.setIndex(nextindex);
         workflowProcessEperson.setSequence(nextindex);
+
+        /* this code enable when multiuser flow work
+        if(workflowProcessEperson.getPersons().size()!=0) {
+            System.out.println("in Multiple user added"+nextindex);
+            for (EPerson e:workflowProcessEperson.getPersons()) {
+                WorkflowProcessEperson ep=new WorkflowProcessEperson();
+                ep.setePerson(e);
+                ep.setIndex(nextindex);
+                ep.setSequence(nextindex);
+                ep.setWorkflowProcess(workflowProcessEperson.getWorkflowProcess());
+                ep.setAssignDate(workflowProcessEperson.getAssignDate());
+                ep.setIssequence(workflowProcessEperson.getIssequence());
+                this.workflowProcessEpeople.add(workflowProcessEperson);
+                System.out.println("in Multiple user added");
+            }
+        }else{
+            this.workflowProcessEpeople.add(workflowProcessEperson);
+        }*/
         this.workflowProcessEpeople.add(workflowProcessEperson);
         System.out.println("workflowProcessEpersonmax index::"+workflowProcessEpersonmax.getIndex());
     }
@@ -254,7 +272,7 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     public Boolean getIsdelete() {
         return isdelete;
     }
-    public void setIsdelete(Boolean isdelete) {
+    public void setIsndelete(Boolean isdelete) {
         this.isdelete = isdelete;
     }
 }

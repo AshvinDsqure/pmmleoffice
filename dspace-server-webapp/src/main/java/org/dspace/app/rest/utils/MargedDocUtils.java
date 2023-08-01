@@ -4,69 +4,131 @@ import com.spire.doc.Document;
 import com.spire.doc.DocumentObject;
 import com.spire.doc.FileFormat;
 import com.spire.doc.Section;
-/*import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
-import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;*/
+import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.*;
 import org.dspace.content.WorkFlowProcessComment;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBackground;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHyperlink;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTShd;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSettings;
 
+import java.awt.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.apache.poi.xwpf.usermodel.*;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
 public class MargedDocUtils {
     static String[] filePaths = new String[3];
     static List<String> documentPaths = new ArrayList<>();
+
     static void setDisplayBackgroundShape(XWPFSettings settings, boolean booleanOnOff) throws Exception {
         java.lang.reflect.Field _ctSettings = XWPFSettings.class.getDeclaredField("ctSettings");
         _ctSettings.setAccessible(true);
-        CTSettings ctSettings = (CTSettings )_ctSettings.get(settings);
-        CTOnOff onOff = CTOnOff.Factory.newInstance();
-        onOff.setVal(onOff.getVal());
-        ctSettings.setDisplayBackgroundShape(onOff);
+        CTSettings ctSettings = (CTSettings) _ctSettings.get(settings);
+//        CTOnOff onOff = CTOnOff.Factory.newInstance();
+//        onOff.setVal(onOff.getVal());
+//        ctSettings.setDisplayBackgroundShape(onOff);
+    }
+
+    public void copyInInputStreamToDocx(InputStream inputStream, String outputpathe) throws IOException {
+        Files.copy(inputStream, Paths.get(outputpathe), StandardCopyOption.REPLACE_EXISTING);
+        inputStream.close();
+    }
+
+    public static void copyInputStreamToPdf(InputStream inputStream, String outputFilePath) throws IOException {
+        try (PDDocument doc = PDDocument.load(inputStream)) {
+            doc.save(outputFilePath);
+        }
     }
 
     public static void main(String[] args) throws Exception {
-       // ConvertToPDF("D://output.docx", "D://sdsdsdsdsdsd.pdf");
-        //DocOneWrite(1l);
-        // removetext("D://note11.docx","D://out123.docx");
-        // Open the source HTML file.
-        // DocOneWrite(1l);
-        // InputStream input = new FileInputStream(new File("D://note2.docx"));
-        // InputStream input3 = new FileInputStream(new File("D://note3.docx"));
-        //  DocTwoWrite(input);
-        //  DocTwoWrite2(input3);
+      /*  InputStream inputStream = new FileInputStream(new File("D://doc/note3.docx"));
+        OutputStream out = new FileOutputStream(new File("D://demo123.pdf"));
+        Converter converter =new DocToPDFConverter(inputStream,out,true,true);
+        converter.convert();
+        Sys                                                                                                         tem.out.println("done");*/
+        // ConvertToPDF("D://doc/note2.docx", "D://a1.pdf");
+        // copyInputStreamToPdf(inputStream,"D://out12as.pdf");
+
+
+        DocOneWrite(1l);
+        InputStream input3 = new FileInputStream(new File("D://new.docx"));
+        DocTwoWrite(input3);
+        InputStream input3a = new FileInputStream(new File("D://doc//note4.docx"));
+        DocTwoWrite1(input3a);
+        DocumentMerger("D://test111112.pdf");
+
         // DocthreWrite1();
         //writeMultipleFiles();
         // DocumentMerger("D://finalaaaaaaa.docx");
         // Create a new documen
         //DocthreWrite1();
+
+
+        //removetext2("D://Note#9.docx","D://ddddd.pdf");
     }
-   /* public static void ConvertToPDF(String docPath, String pdfPath) {
+
+
+    public static void ConvertToPDF(String docPath, String pdfPath) {
         System.out.println("::::::::::::::::::::IN DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
         try {
             InputStream in = new FileInputStream(new File(docPath));
             XWPFDocument doc = new XWPFDocument(in);
             PdfOptions options = PdfOptions.create();
+
+            final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+            File test1 = new File(TEMP_DIRECTORY, "test1.pdf");
+            if (!test1.exists()) {
+                try {
+                    test1.createNewFile();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
             OutputStream out = new FileOutputStream(new File(pdfPath));
             PdfConverter.getInstance().convert(doc, out, options);
             doc.close();
             out.close();
-            System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::");
-
-        }catch (Exception e){
+            System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::" + pdfPath);
+            setcolor(pdfPath);
+        } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::"+e.getMessage());
+            System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::" + e.getMessage());
         }
-    }*/
+    }
+
+    public static  void setcolor(String pathe) throws IOException {
+
+        PDDocument document = PDDocument.load(new File(pathe));
+        PDPage originalPage = document.getPage(0); // Assuming you want to work with the first page (index 0)
+        PDPage newPage = new PDPage(originalPage.getMediaBox());
+        document.addPage(newPage);
+        PDPageContentStream contentStream = new PDPageContentStream(document, newPage);
+        Color backgroundColor = new Color(255, 0, 0); // Red color in RGB format
+        contentStream.setNonStrokingColor(backgroundColor);
+        contentStream.fillRect(0, 0, PDRectangle.A4.getWidth(), PDRectangle.A4.getHeight());
+        contentStream.close();
+        document.save("d://output.pdf");
+        document.close();
+
+    }
+
     public static void lineBreak(int n, XWPFDocument doc) {
         for (int i = 1; i <= n; i++) {
             XWPFParagraph p2 = doc.createParagraph();
@@ -77,7 +139,7 @@ public class MargedDocUtils {
         }
     }
 
-    public static void finalwriteDocument(String path) {
+    public static void finalwriteDocument(String path) throws Exception {
         DocumentMerger(path);
     }
 
@@ -95,7 +157,6 @@ public class MargedDocUtils {
         filePaths[0] = oneFile.getAbsolutePath();
         documentPaths.add(oneFile.getAbsolutePath());
         try (XWPFDocument doc = new XWPFDocument()) {
-
             XWPFSettings settings = getSettings(doc);
             setDisplayBackgroundShape(settings, true);
             CTBackground background = doc.getDocument().addNewBackground();
@@ -148,12 +209,8 @@ public class MargedDocUtils {
             setDisplayBackgroundShape(settings, true);
             CTBackground background = doc.getDocument().addNewBackground();
             background.setColor("d9fdd3");
-            FileOutputStream out = new FileOutputStream(twoFile);
-            byte[] buf = new byte[8192];
-            int length;
-            while ((length = in.read(buf)) != -1) {
-                out.write(buf, 0, length);
-            }
+            Files.copy(in, Paths.get(twoFile.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
+            in.close();
             System.out.println("Second doc save Done!" + twoFile.getAbsolutePath());
         } catch (Exception e) {
             System.out.println("Error Seconned doc save !" + e.getMessage());
@@ -162,6 +219,35 @@ public class MargedDocUtils {
         }
     }
 
+    public static void DocTwoWrite1(InputStream in) {
+        System.out.println("in Seconned doc save Done!");
+        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+        File twoFile = new File(TEMP_DIRECTORY, "files2.docx");
+        if (!twoFile.exists()) {
+            try {
+                twoFile.createNewFile();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+        }
+        filePaths[2] = twoFile.getAbsolutePath();
+        documentPaths.add(twoFile.getAbsolutePath());
+        try (XWPFDocument doc = new XWPFDocument()) {
+            XWPFSettings settings = getSettings(doc);
+            setDisplayBackgroundShape(settings, true);
+            CTBackground background = doc.getDocument().addNewBackground();
+            background.setColor("d9fdd3");
+            Files.copy(in, Paths.get(twoFile.getAbsolutePath()), StandardCopyOption.REPLACE_EXISTING);
+            in.close();
+            System.out.println("Second doc save Done!" + twoFile.getAbsolutePath());
+        } catch (Exception e) {
+            System.out.println("Error Seconned doc save !" + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 
     public static void DocthreWrite(Map<String, Object> hashMap) {
         System.out.println("in 3 doc!");
@@ -176,7 +262,6 @@ public class MargedDocUtils {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
         }
         filePaths[2] = threeFile.getAbsolutePath();
         documentPaths.add(threeFile.getAbsolutePath());
@@ -213,42 +298,41 @@ public class MargedDocUtils {
                         if (listreferencenotting != null) {
                             System.out.println(listreferencenotting.size());
                             StringBuffer sb1 = new StringBuffer();
-
                             for (Map<String, String> maps : listreferencenotting) {
                                 int t = maps.entrySet().size();
-                                for (int j = 0; j < t; j++) {
+                                for (int a = 1; a <= t; a++) {
+                                    System.out.println("::::::::::a:::::::::::::::::::" + a);
                                     System.out.println("map>>>>>>>size>>>>>>>>" + maps.entrySet().size());
-                                    for (Map.Entry<String, String> entry1 : maps.entrySet()) {
-                                        System.out.println("map>>>>>>>>>>>>>>>" + entry1);
-
-                                        if (entry1.getKey().contains("link") && j == 0) {
-                                            sb1.append(entry1.getValue().toString());
+                                    for (Map.Entry<String, String> noteingmap : maps.entrySet()) {
+                                        if (noteingmap.getKey().contains("link") && a == 1) {
+                                            sb1.append(noteingmap.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("name") && j == 1) {
+                                        if (noteingmap.getKey().contains("name1") && a == 2) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFHyperlinkRun hyperlinkrun = createHyperlinkRun(p3, sb1.toString());
-                                            hyperlinkrun.setText(entry1.getValue().toString());
+                                            System.out.println(":::::::name::::::::::::" + noteingmap.getValue().toString());
+                                            hyperlinkrun.setText(noteingmap.getValue().toString());
                                             hyperlinkrun.setColor("0000FF");
                                             hyperlinkrun.setUnderline(UnderlinePatterns.SINGLE);
                                         }
-                                        if (entry1.getKey().contains("subject") && j == 2) {
+                                        if (noteingmap.getKey().contains("subject") && a == 3) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
-                                            r3.setText(entry1.getValue().toString());
+                                            r3.setText(noteingmap.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("notecreateor") && j == 3) {
+                                        if (noteingmap.getKey().contains("notecreateor") && a == 4) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
-                                            r3.setText(entry1.getValue().toString());
+                                            r3.setText(noteingmap.getValue().toString());
                                         }
-                                        if (entry1.getKey().contains("filename") && j == 4) {
+                                        if (noteingmap.getKey().contains("filename") && a == 5) {
                                             XWPFParagraph p3 = doc.createParagraph();
                                             p3.setAlignment(ParagraphAlignment.RIGHT);
                                             XWPFRun r3 = p3.createRun();
-                                            r3.setText(entry1.getValue().toString());
+                                            r3.setText(noteingmap.getValue().toString());
                                         }
                                     }
 
@@ -367,7 +451,7 @@ public class MargedDocUtils {
             try (FileOutputStream out = new FileOutputStream(threeFile)) {
                 doc.write(out);
             }
-            System.out.println("3 doc save Done!");
+            System.out.println("3 doc save Done!" + threeFile.getAbsolutePath());
         } catch (IOException e) {
             System.out.println("Error First doc save !" + e.getMessage());
             e.printStackTrace();
@@ -377,12 +461,12 @@ public class MargedDocUtils {
         }
     }
 
-    public static void DocumentMerger(String finalpathe) {
+    public static void DocumentMerger(String finalpathe) throws Exception {
         System.out.println("in marged doc 1 to 2 ");
         Document document1 = new Document(filePaths[0]);
         Document document2 = new Document(filePaths[1]);
         Section lastSection = document1.getLastSection();
-       for (Section section : (Iterable<Section>) document2.getSections()) {
+        for (Section section : (Iterable<Section>) document2.getSections()) {
             for (DocumentObject obj : (Iterable<DocumentObject>) section.getBody().getChildObjects()
             ) {
                 lastSection.getBody().getChildObjects().add(obj.deepClone());
@@ -396,7 +480,7 @@ public class MargedDocUtils {
 
     }
 
-    public static void DocumentMerger2(String mrgedoneandtwo, String finalpathe) {
+    public static void DocumentMerger2(String mrgedoneandtwo, String finalpathe) throws Exception {
         Document document = new Document();
         System.out.println("in marged doc 2 to 3 ");
         Document document1 = new Document(mrgedoneandtwo);
@@ -409,20 +493,83 @@ public class MargedDocUtils {
             }
         }
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File finaldoc = new File(TEMP_DIRECTORY, "final.docx");
+        File finaldoc = new File(TEMP_DIRECTORY, "finaldoc.docx");
+        File finaldocbeforremove = new File(TEMP_DIRECTORY, "finaldocbeforremove.pdf");
         document1.saveToFile(finaldoc.getAbsolutePath(), FileFormat.Docx_2013);
-        removetext(finaldoc.getAbsolutePath(), finalpathe);
         System.out.println("in marged doc 2 to 3 done");
+        System.out.println("Make final doc pathe is " + finaldoc.getAbsolutePath());
+        //  ConvertToPDF(finaldoc.getAbsolutePath(),finaldocbeforremove.getAbsolutePath());
+        System.out.println("Make final pdf before remove text pathe is " + finaldoc.getAbsolutePath());
+        removetext2(finaldoc.getAbsolutePath(), finalpathe);
+
     }
+
     private static String DateFormate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
         return formatter.format(date);
     }
+
     static XWPFSettings getSettings(XWPFDocument document) throws Exception {
         java.lang.reflect.Field settings = XWPFDocument.class.getDeclaredField("settings");
         settings.setAccessible(true);
-        return (XWPFSettings)settings.get(document);
+        return (XWPFSettings) settings.get(document);
     }
+
+    public static void deleteParagraph(XWPFParagraph p) {
+        XWPFDocument doc = p.getDocument();
+        int pPos = doc.getPosOfParagraph(p);
+        //doc.getDocument().getBody().removeP(pPos);
+        doc.removeBodyElement(pPos);
+    }
+
+    public static void setBGColor(String pathe, String path2) {
+        try {
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void removetext2(String fileopen, String finalpath) throws Exception {
+        System.out.println(":::::::::::remove text:::::::::::");
+        Path msWordPath = Paths.get(fileopen);
+        XWPFDocument document2 = new XWPFDocument(Files.newInputStream(msWordPath));
+
+        XWPFSettings settings = getSettings(document2);
+        setDisplayBackgroundShape(settings, true);
+        CTBackground background = document2.getDocument().addNewBackground();
+        background.setColor("d9fdd3");
+        List<XWPFParagraph> paragraphs = document2.getParagraphs();
+        System.out.println(paragraphs.size());
+        for (int i = document2.getParagraphs().size() - 1; i >= 0; i--) {
+
+            XWPFParagraph paragraphq = document2.getParagraphs().get(i);
+            // Check if the paragraph contains the specific string
+            if (paragraphq.getText().contains("Evaluation Warning: The document was created with Spire.Doc for JAVA.")) {
+                // Remove the paragraph from the document
+                System.out.println(":::::" + paragraphq.getText());
+                document2.removeBodyElement(i);
+            }
+        }
+        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+        File removed = new File(TEMP_DIRECTORY, "removsed.docx");
+        if (!removed.exists()) {
+            try {
+                removed.createNewFile();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        try (FileOutputStream fos = new FileOutputStream(removed.getAbsolutePath())) {
+            document2.write(fos);
+        }
+        document2.close();
+        System.out.println(":::::::::::remove text:::::::::::" + removed.getAbsolutePath());
+        ConvertToPDF(removed.getAbsolutePath(), finalpath);
+    }
+
     public static void removetext(String fileopen, String finalpath) {
         System.out.println(":::::::::::remove text:::::::::::");
         try {
@@ -431,6 +578,7 @@ public class MargedDocUtils {
             setDisplayBackgroundShape(settings, true);
             CTBackground background = doc.getDocument().addNewBackground();
             background.setColor("d9fdd3");
+
             for (XWPFParagraph p : doc.getParagraphs()) {
                 List<XWPFRun> runs = p.getRuns();
                 if (runs != null) {
@@ -458,13 +606,20 @@ public class MargedDocUtils {
             }
 
             final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-            File finaldocf = new File(TEMP_DIRECTORY, "finalww.docx");
-            doc.write(new FileOutputStream(finalpath));
+            File removed = new File(TEMP_DIRECTORY, "removsed.docx");
+            if (!removed.exists()) {
+                try {
+                    removed.createNewFile();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            doc.write(new FileOutputStream(removed.getAbsolutePath()));
             System.out.println(":::::::::::remove text::::::::::done!:");
-          //  ConvertToPDF(finaldocf.getAbsolutePath(),finalpath);
+            ConvertToPDF(removed.getAbsolutePath(), finalpath);
         } catch (Exception e) {
             e.printStackTrace();
-
         }
     }
 
@@ -484,4 +639,6 @@ public class MargedDocUtils {
                 paragraph
         );
     }
+
+
 }

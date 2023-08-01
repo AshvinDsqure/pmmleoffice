@@ -19,8 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * This is the converter from/to the EPerson in the DSpace API data model and the
@@ -57,6 +59,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(obj.getInitiator()!=null) {
             workflowProcessDefinitionEpersonRest.setInitiator(obj.getInitiator());
         }
+        if(obj.getPersons()!=null){
+            workflowProcessDefinitionEpersonRest.setePersonRests(obj.getPersons().stream().map(d->{return ePersonConverter.convert(d,projection);}).collect(Collectors.toList()));
+        }
         workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
@@ -78,7 +83,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
 
     public WorkflowProcessEperson convert(Context context, WorkflowProcessEpersonRest rest) throws SQLException {
         WorkflowProcessEperson workflowProcessEperson = modelMapper.map(rest, WorkflowProcessEperson.class);
-        workflowProcessEperson.setePerson(ePersonService.find(context, UUID.fromString(rest.getePersonRest().getUuid())));
+        if(rest.getePersonRest()!=null && rest.getePersonRest().getUuid()!=null) {
+            workflowProcessEperson.setePerson(ePersonService.find(context, UUID.fromString(rest.getePersonRest().getUuid())));
+        }
         if (rest.getDepartmentRest() != null)
             workflowProcessEperson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest.getDepartmentRest()));
         if (rest.getOfficeRest() != null)
@@ -91,6 +98,17 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         }
         if(rest.getInitiator()!=null) {
             workflowProcessEperson.setInitiator(rest.getInitiator());
+        }
+        if(rest.getePersonRests()!=null) {
+            workflowProcessEperson.setPersons(rest.getePersonRests().stream().filter(d->d.getId()!=null).map(s->
+                    {
+                        try {
+                         return  ePersonConverter.convert(context,s);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+            ).collect(Collectors.toList()));
         }
         workflowProcessEperson.setIssequence(rest.getIssequence());
         workflowProcessEperson.setSequence(rest.getSequence());

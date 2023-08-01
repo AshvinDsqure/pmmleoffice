@@ -78,6 +78,10 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     @Column(name = "isrefer")
     private  Boolean isrefer=false;
+
+    @Transient
+    private List<EPerson> Persons = new ArrayList<>();
+
     @Override
     public int getType() {
         return 0;
@@ -215,5 +219,13 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setIsrefer(Boolean isrefer) {
         this.isrefer = isrefer;
+    }
+
+    public List<EPerson> getPersons() {
+        return Persons;
+    }
+
+    public void setPersons(List<EPerson> persons) {
+        Persons = persons;
     }
 }

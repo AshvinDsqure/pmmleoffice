@@ -94,6 +94,7 @@ public interface GroupDAO extends DSpaceObjectDAO<Group>, DSpaceObjectLegacySupp
      */
     List<Group> getEmptyGroups(Context context) throws SQLException;
 
+
     /**
      * Count the number of groups in DSpace
      *
@@ -145,5 +146,6 @@ public interface GroupDAO extends DSpaceObjectDAO<Group>, DSpaceObjectLegacySupp
      * @throws SQLException if database error
      */
     Group findByIdAndMembership(Context context, UUID id, EPerson ePerson) throws SQLException;
+    List<Group> getGroupsByGroupType(Context context,UUID grouptypeid) throws SQLException;
 
 }

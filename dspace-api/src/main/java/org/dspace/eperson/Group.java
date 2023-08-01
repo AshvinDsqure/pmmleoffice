@@ -10,19 +10,12 @@ package org.dspace.eperson;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.DSpaceObjectLegacySupport;
+import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -86,9 +79,11 @@ public class Group extends DSpaceObject implements DSpaceObjectLegacySupport {
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "groups")
     private final List<Group> parentGroups = new ArrayList<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grouptype")
+    private WorkFlowProcessMasterValue grouptype = null;
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "supervisorGroups")
     private final List<WorkspaceItem> supervisedItems = new ArrayList<>();
-
     @Transient
     private boolean groupsChanged;
 
@@ -252,5 +247,13 @@ public class Group extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     public void setIsdspace(Boolean isdspace) {
         this.isdspace = isdspace;
+    }
+
+    public WorkFlowProcessMasterValue getGrouptype() {
+        return grouptype;
+    }
+
+    public void setGrouptype(WorkFlowProcessMasterValue grouptype) {
+        this.grouptype = grouptype;
     }
 }

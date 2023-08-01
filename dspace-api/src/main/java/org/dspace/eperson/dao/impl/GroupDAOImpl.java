@@ -197,4 +197,10 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
         return count(createQuery(context, "SELECT count(*) FROM Group"));
     }
 
+    @Override
+    public List<Group> getGroupsByGroupType(Context context, UUID grouptypeid) throws SQLException {
+        Query query = createQuery(context,"SELECT g  FROM Group as g join g.grouptype as t  WHERE t.id=:grouptypeid");
+        query.setParameter("grouptypeid", grouptypeid);
+        return query.getResultList();
+    }
 }
