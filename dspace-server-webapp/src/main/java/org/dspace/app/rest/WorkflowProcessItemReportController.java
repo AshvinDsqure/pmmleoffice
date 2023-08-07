@@ -9,19 +9,25 @@ package org.dspace.app.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
 import org.dspace.app.rest.model.CounterDTO;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.LoginCounterRest;
 import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.LoginCounter;
+import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.LoginCounterService;
+import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,9 +38,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Controller to upload bitstreams to a certain bundle, indicated by a uuid in the request
@@ -68,6 +72,13 @@ public class WorkflowProcessItemReportController {
 
     @Autowired
     LoginCounterConverter loginCounterConverter;
+
+
+
+    @Autowired
+    ItemConverter itemConverter;
+    @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
 
 
     /**
@@ -157,6 +168,40 @@ public class WorkflowProcessItemReportController {
         context.commit();
         return loginCounterRest;
     }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber")
+    public Map<String,String> getFileNumber(HttpServletRequest request) throws Exception {
+        String filenumber = null;
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            EPerson currentuser = context.getCurrentUser();
+            StringBuffer sb = new StringBuffer();
+            WorkFlowProcessMasterValue department;
+            if (currentuser != null) {
+                department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
+                if (department.getPrimaryvalue() != null) {
+                    sb.append(department.getSecondaryvalue());
+                }
+            }
+            if (currentuser.getTablenumber() != null) {
+                sb.append("/" + currentuser.getTablenumber());
+            }
+            sb.append("/File");
+            sb.append("/" + DateUtils.getFinancialYear());
+            int count = itemService.countTotal(context);
+            count = count + 1;
+            sb.append("/0000" + count);
+            filenumber = sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in getInwardNumber ");
+        }
+        Map<String,String>map=new HashMap<>();
+        map.put("filenumber",filenumber);
+        return map;
+    }
+
 
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");

@@ -15,6 +15,7 @@ import lombok.Data;
 import org.dspace.app.rest.model.helper.MyDateConverter;
 import org.dspace.app.rest.validation.WorkflowProcessMasterValueValid;
 import org.dspace.app.rest.validation.WorkflowProcessValid;
+import org.dspace.content.Item;
 import org.dspace.content.WorkflowProcessEperson;
 
 import javax.validation.Valid;
@@ -74,10 +75,24 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String workflowTypeStr;
     @JsonProperty
     private String sendername;
+
+    @JsonProperty
+    private String mode;
+
+    @JsonProperty
+    private  Boolean ismode =false;
     @JsonProperty
     private Boolean isDraft = false;
     @JsonProperty
     private String comment;
+    @JsonProperty
+    private String workflowtype;
+    @JsonProperty
+    private String workflowstatus;
+    @JsonProperty
+    private String priority;
+    @JsonProperty
+    private List<ItemRest> itemsRests=new ArrayList<>();
     @JsonProperty
     List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = new ArrayList<>();
 
@@ -304,5 +319,53 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setSendername(String sendername) {
         this.sendername = sendername;
+    }
+
+    public String getWorkflowtype() {
+        return workflowtype;
+    }
+
+    public void setWorkflowtype(String workflowtype) {
+        this.workflowtype = workflowtype;
+    }
+
+    public String getWorkflowstatus() {
+        return workflowstatus;
+    }
+
+    public void setWorkflowstatus(String workflowstatus) {
+        this.workflowstatus = workflowstatus;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public Boolean getIsmode() {
+        return ismode;
+    }
+
+    public void setIsmode(Boolean ismode) {
+        this.ismode = ismode;
+    }
+
+    public List<ItemRest> getItemsRests() {
+        return itemsRests;
+    }
+
+    public void setItemsRests(List<ItemRest> itemsRests) {
+        this.itemsRests = itemsRests;
     }
 }

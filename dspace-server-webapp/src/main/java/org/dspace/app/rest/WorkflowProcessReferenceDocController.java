@@ -535,6 +535,10 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Document") && doc.getIssignature()) {
             workFlowAction.setComment("Document Signature successfully  By " + doc.getDocumentsignator().getFullName() + " | " + doc.getDocumentsignator().getDesignation().getPrimaryvalue());
         }
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase(" Referral File") && doc.getIssignature()) {
+            workFlowAction.setComment("Add Referral File " +doc.getItemname());
+        }
+
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Document:::::::: ");
     }

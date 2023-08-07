@@ -7,10 +7,7 @@
  */
 package org.dspace.app.rest.repository;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
@@ -19,46 +16,29 @@ import org.dspace.app.rest.converter.*;
 import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowUserType;
-import org.dspace.app.rest.exception.DSpaceBadRequestException;
-import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
-import org.dspace.app.rest.exception.WorkFlowValiDationException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
-import org.dspace.app.rest.jbpm.models.JBPMResponse;
 import org.dspace.app.rest.model.*;
-import org.dspace.app.rest.model.patch.Patch;
-import org.dspace.app.rest.repository.handler.service.UriListHandlerService;
-import org.dspace.app.rest.validation.WorkflowProcessValid;
-import org.dspace.app.rest.validation.impl.ValidWorkFlowProcessCheck;
-import org.dspace.app.util.AuthorizeUtil;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Collection;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
-import org.dspace.eperson.EPerson;
-import org.dspace.eperson.RegistrationData;
 import org.dspace.eperson.service.GroupService;
-import org.dspace.util.SolrUtils;
-import org.dspace.util.UUIDUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidatorFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -126,11 +106,34 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             }
             int count=workflowProcessService.countfindNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid);
             List<WorkflowProcess> workflowProcesses= workflowProcessService.findNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
+           workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(toList());
+
+           return new PageImpl(workflowsRes, pageable,count);
+            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+        }catch (Exception e){
+            e.printStackTrace();
+            throw  new RuntimeException(e.getMessage(),e);
+        }
+    }
+
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "getByWorkFlowType")
+    public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
+        System.out.println("in workflow type ");
+        try {
+            Context context = obtainContext();
+            UUID statusid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            int count=workflowProcessService.countfindNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,typeid);
+            List<WorkflowProcess> workflowProcesses= workflowProcessService.findNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,typeid,Math.toIntExact(pageable.getOffset()),pageable.getPageSize());
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
             }).collect(toList());
             return new PageImpl(workflowsRes, pageable,count);
-            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
+           // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
         }catch (Exception e){
             e.printStackTrace();
             throw  new RuntimeException(e.getMessage(),e);
@@ -139,7 +142,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "gethistory")
-    public Page<WorkFlowProcessRest> gethistory(Pageable pageable) {
+    public Page<WorkflowProcessDTO> gethistory(Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
@@ -228,8 +231,9 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     @SearchRestMethod(name = "getReferWorkflow")
-    public Page<WorkFlowProcessRest> getReferWorkflow(Pageable pageable) {
+    public Page<WorkflowProcessDTO> getReferWorkflow(Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
+        List<WorkflowProcessDTO> workflowsRes1=new ArrayList<WorkflowProcessDTO>();
         try {
             Context context = obtainContext();
             UUID referstatusid=WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
@@ -247,6 +251,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
             }).collect(toList());
+
             return new PageImpl(workflowsRes, pageable,count);
 
             //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());

@@ -54,6 +54,11 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     private List<EPersonRest> ePersonRests = new ArrayList<>();
 
     @JsonProperty
+    private WorkFlowProcessMasterValueRest dispatchModeRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest eligibleForFilingRest = null;
+
+    @JsonProperty
     private ItemRest itemRest = null;
     @JsonProperty
     private String comment;
@@ -219,5 +224,22 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setePersonRests(List<EPersonRest> ePersonRests) {
         this.ePersonRests = ePersonRests;
+    }
+
+
+    public WorkFlowProcessMasterValueRest getDispatchModeRest() {
+        return dispatchModeRest;
+    }
+
+    public void setDispatchModeRest(WorkFlowProcessMasterValueRest dispatchModeRest) {
+        this.dispatchModeRest = dispatchModeRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getEligibleForFilingRest() {
+        return eligibleForFilingRest;
+    }
+
+    public void setEligibleForFilingRest(WorkFlowProcessMasterValueRest eligibleForFilingRest) {
+        this.eligibleForFilingRest = eligibleForFilingRest;
     }
 }

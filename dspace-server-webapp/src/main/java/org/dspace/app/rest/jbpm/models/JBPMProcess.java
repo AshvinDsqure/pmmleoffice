@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.jbpm.models;
@@ -29,22 +29,36 @@ public class JBPMProcess implements Serializable {
     private String referuserid;
     private Integer jbpmprocid;
     private Integer jbpmtaskid;
-    private  String procstatus;
-    private String workflowType ="Inward";
-    public JBPMProcess(){
+    private String procstatus;
+
+    private String receiveditem;
+    private String workflowType = "Inward";
+
+    public JBPMProcess() {
 
     }
+
     public JBPMProcess(WorkFlowProcessRest workflowProcess) {
         this.queueid = workflowProcess.getId();
         Optional<WorkflowProcessEpersonRest> optionalWorkflowProcessEpersonRest = workflowProcess.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() == 0).findFirst();
         if (optionalWorkflowProcessEpersonRest.isPresent()) {
-            this.initiator =optionalWorkflowProcessEpersonRest.get().getUuid();
-        }else{
-            this.initiator="Dsquare";
+            this.initiator = optionalWorkflowProcessEpersonRest.get().getUuid();
+        } else {
+            this.initiator = "Dsquare";
         }
-        //this.dispatch = workflowProcess.getDispatchModeRest().getPrimaryvalue();
-        this.dispatch = "electronic";
+        if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
+            if (workflowProcess.getDispatchModeRest() != null && workflowProcess.getDispatchModeRest().getPrimaryvalue() != null) {
+                this.dispatch = workflowProcess.getDispatchModeRest().getPrimaryvalue().toLowerCase();
+            }
+        } else if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")) {
+            if (workflowProcess.getWorkFlowProcessOutwardDetailsRest() != null && workflowProcess.getWorkFlowProcessOutwardDetailsRest().getOutwardmediumRest() != null && workflowProcess.getWorkFlowProcessOutwardDetailsRest().getOutwardmediumRest().getPrimaryvalue() != null) {
+                this.dispatch = workflowProcess.getWorkFlowProcessOutwardDetailsRest().getOutwardmediumRest().getPrimaryvalue().toLowerCase();
+            }
+        } else {
+            this.dispatch = "electronic";
+        }
         this.users = new ArrayList<>();
+
     }
 
     public String getQueueid() {
@@ -118,5 +132,13 @@ public class JBPMProcess implements Serializable {
 
     public void setReferuserid(String referuserid) {
         this.referuserid = referuserid;
+    }
+
+    public String getReceiveditem() {
+        return receiveditem;
+    }
+
+    public void setReceiveditem(String receiveditem) {
+        this.receiveditem = receiveditem;
     }
 }

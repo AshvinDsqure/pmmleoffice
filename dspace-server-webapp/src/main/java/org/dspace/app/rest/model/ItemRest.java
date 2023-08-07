@@ -76,6 +76,12 @@ import org.dspace.eperson.EPerson;
 
     private String hierarchy;
 
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest itemtypeRest = null;
+
+    @JsonProperty
+    private WorkFlowProcessRest workFlowProcessRest = null;
+
     public EPersonRest getSubmitter() {
         return submitter;
     }
@@ -189,5 +195,21 @@ import org.dspace.eperson.EPerson;
 
     public boolean isWithdrawn() {
         return withdrawn;
+    }
+
+    public WorkFlowProcessMasterValueRest getItemtypeRest() {
+        return itemtypeRest;
+    }
+
+    public void setItemtypeRest(WorkFlowProcessMasterValueRest itemtypeRest) {
+        this.itemtypeRest = itemtypeRest;
+    }
+
+    public WorkFlowProcessRest getWorkFlowProcessRest() {
+        return workFlowProcessRest;
+    }
+
+    public void setWorkFlowProcessRest(WorkFlowProcessRest workFlowProcessRest) {
+        this.workFlowProcessRest = workFlowProcessRest;
     }
 }

@@ -106,7 +106,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD})
     public ResponseEntity create(@RequestBody @Valid WorkFlowProcessRest workFlowProcessRest) throws Exception {
         try {
-            System.out.println("workFlowProcessRest::" + new Gson().toJson(workFlowProcessRest));
+            System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
             Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));

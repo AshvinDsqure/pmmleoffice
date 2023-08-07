@@ -7,7 +7,9 @@
  */
 package org.dspace.app.rest.enums;
 
+import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessConverter;
+import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.app.rest.projection.Projection;
@@ -25,6 +27,7 @@ import javax.annotation.PostConstruct;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public enum WorkFlowType {
@@ -46,15 +49,17 @@ public enum WorkFlowType {
             }
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
-            workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
-                try {
-                    WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
-                    workflowProcessReferenceDoc.setWorkflowProcess(finalWorkflowProcess);
-                    return workflowProcessReferenceDoc;
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }).collect(Collectors.toList()));
+            if(workFlowProcessRest.getWorkflowProcessReferenceDocRests()!=null) {
+                workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
+                    try {
+                        WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
+                        workflowProcessReferenceDoc.setWorkflowProcess(finalWorkflowProcess);
+                        return workflowProcessReferenceDoc;
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toList()));
+            }
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             this.getWorkFlowAction().perfomeAction(context, workflowProcess, workFlowProcessRest);
@@ -229,6 +234,8 @@ public enum WorkFlowType {
     private WorkflowProcessSenderDiaryService workflowProcessSenderDiaryService;
     private WorkflowProcessService workflowProcessService;
     private WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
+    private ItemConverter itemConverter;
+
     private Projection projection;
 
     @Component
@@ -245,6 +252,9 @@ public enum WorkFlowType {
         private WorkflowProcessService workflowProcessService;
         @Autowired
         private WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
+        @Autowired
+        private ItemConverter itemConverter;
+
 
         @PostConstruct
         public void postConstruct() {
@@ -255,6 +265,7 @@ public enum WorkFlowType {
                 rt.setWorkflowProcessSenderDiaryService(workflowProcessSenderDiaryService);
                 rt.setWorkflowProcessReferenceDocConverter(workflowProcessReferenceDocConverter);
                 rt.setWorkflowProcessService(workflowProcessService);
+                rt.setItemConverter(itemConverter);
             }
         }
     }
@@ -316,6 +327,14 @@ public enum WorkFlowType {
 
     public void setWorkflowProcessSenderDiaryService(WorkflowProcessSenderDiaryService workflowProcessSenderDiaryService) {
         this.workflowProcessSenderDiaryService = workflowProcessSenderDiaryService;
+    }
+
+    public ItemConverter getItemConverter() {
+        return itemConverter;
+    }
+
+    public void setItemConverter(ItemConverter itemConverter) {
+        this.itemConverter = itemConverter;
     }
 
     public WorkFlowStatus getWorkFlowStatus() {

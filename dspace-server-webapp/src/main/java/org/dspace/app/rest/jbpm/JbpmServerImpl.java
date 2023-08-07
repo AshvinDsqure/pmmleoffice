@@ -85,12 +85,16 @@ public class JbpmServerImpl {
         List<Object> usersobj= new ArrayList<Object>(users);
         System.out.println("usersobj current user:"+new Gson().toJson(usersobj));
         usersobj.add(dispatchUsers);
+        System.out.println("user"+dispatchUsers);
+
+        System.out.println("final make objeck like "+usersobj);
         jbpmProcess.setUsers(usersobj);
         jbpmProcess.setProcstatus("inprogress");
         System.out.println("jbpm json::"+new Gson().toJson(jbpmProcess));
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess,headers);
+        System.out.println("::::::::::::::URL::::::::::::::::::::::"+baseurl+ JBPM.FORWARDPROCESS);
         return restTemplate.exchange(baseurl+ JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
 
     }
@@ -156,7 +160,19 @@ public class JbpmServerImpl {
         HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess,headers);
         return restTemplate.exchange(baseurl+ JBPM.REFERTASK, HttpMethod.POST, entity, String.class).getBody();
     }
-
+    public String received(WorkFlowProcessRest workflowProcess) throws  RuntimeException{
+        String baseurl=configurationService.getProperty("jbpm.server");
+        System.out.println("URL :"+baseurl+ JBPM.RECEIVED);
+        JBPMProcess jbpmProcess=new JBPMProcess();
+        jbpmProcess.setWorkflowType(null);
+        jbpmProcess.setQueueid(workflowProcess.getId());
+       jbpmProcess.setReceiveditem("yes");
+        System.out.println("jbpm json::"+new Gson().toJson(jbpmProcess));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess,headers);
+        return restTemplate.exchange(baseurl+ JBPM.RECEIVED, HttpMethod.POST, entity, String.class).getBody();
+    }
     public String gettasklist(String uuid) throws  RuntimeException{
         String baseurl=configurationService.getProperty("jbpm.server");
         HttpHeaders headers = new HttpHeaders();

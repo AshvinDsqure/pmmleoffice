@@ -23,6 +23,7 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.MetadataConverter;
+import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -32,21 +33,13 @@ import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.WorkspaceItemRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.app.rest.repository.handler.service.UriListHandlerService;
+import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.ExcelHelper;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Bundle;
+import org.dspace.content.*;
 import org.dspace.content.Collection;
-import org.dspace.content.Item;
-import org.dspace.content.Relationship;
-import org.dspace.content.RelationshipType;
-import org.dspace.content.WorkspaceItem;
-import org.dspace.content.service.BundleService;
-import org.dspace.content.service.CollectionService;
-import org.dspace.content.service.InstallItemService;
-import org.dspace.content.service.ItemService;
-import org.dspace.content.service.RelationshipService;
-import org.dspace.content.service.RelationshipTypeService;
-import org.dspace.content.service.WorkspaceItemService;
+import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
@@ -63,6 +56,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.core.io.Resource;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -94,6 +89,8 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
 
     @Autowired
     ItemConverter itemConverter;
+    @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
 
 
 
@@ -445,5 +442,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
             throw new RuntimeException(e);
         }
     }
+
+
 
 }

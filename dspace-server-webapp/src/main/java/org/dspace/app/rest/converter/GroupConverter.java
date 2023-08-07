@@ -38,7 +38,10 @@ public class GroupConverter extends DSpaceObjectConverter<Group, GroupRest> {
         epersongroup.setIsdspace(obj.getIsdspace());
         if(obj.getGrouptype()!=null) {
             epersongroup.setGrouptypeRest(workFlowProcessMasterValueConverter.convert(obj.getGrouptype(), projection));
-        } return epersongroup;
+        }
+        epersongroup.setName(obj.getName());
+        epersongroup.setUuid(obj.getID().toString());
+        return epersongroup;
     }
     public Group convert(Context context,GroupRest rest) throws SQLException {
        if(rest!=null && rest.getId()!=null){

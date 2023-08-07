@@ -82,7 +82,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
     }
 
     public WorkflowProcessEperson convert(Context context, WorkflowProcessEpersonRest rest) throws SQLException {
-        WorkflowProcessEperson workflowProcessEperson = modelMapper.map(rest, WorkflowProcessEperson.class);
+        WorkflowProcessEperson workflowProcessEperson = new WorkflowProcessEperson();
         if(rest.getePersonRest()!=null && rest.getePersonRest().getUuid()!=null) {
             workflowProcessEperson.setePerson(ePersonService.find(context, UUID.fromString(rest.getePersonRest().getUuid())));
         }
@@ -113,6 +113,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessEperson.setIssequence(rest.getIssequence());
         workflowProcessEperson.setSequence(rest.getSequence());
         workflowProcessEperson.setIsrefer(rest.getIsrefer());
+        workflowProcessEperson.setIndex(rest.getIndex());
         return workflowProcessEperson;
     }
     public WorkflowProcessEperson convert(Context context, EPerson rest) {

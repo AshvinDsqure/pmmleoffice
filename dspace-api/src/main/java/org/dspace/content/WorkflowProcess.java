@@ -69,6 +69,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item")
     private Item item;
+    @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess")
+    private List<Item> items=new ArrayList<>();
+
     /* Attechment  Details*/
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess")
     private List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = new ArrayList<>();
@@ -76,6 +79,7 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @OrderBy("actionDate")
     private List<WorkFlowProcessHistory> workFlowProcessHistories = new ArrayList<>();
     /* Office   Details*/
+
     @Column(name = "subject")
     private String Subject;
     @Column(name = "workflow_id", insertable = false, updatable = false)
@@ -94,6 +98,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     private WorkflowProcessNote workflowProcessNote;
     @Column(name = "isdelete")
     private  Boolean isdelete =false;
+
+    @Column(name = "ismode")
+    private  Boolean ismode =false;
 
 
 //    @Column(name = "assignduedate", columnDefinition = "timestamp with time zone")
@@ -274,5 +281,13 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     }
     public void setIsndelete(Boolean isdelete) {
         this.isdelete = isdelete;
+    }
+
+    public Boolean getIsmode() {
+        return ismode;
+    }
+
+    public void setIsmode(Boolean ismode) {
+        this.ismode = ismode;
     }
 }

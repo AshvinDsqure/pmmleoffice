@@ -42,23 +42,28 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
-                "join wp.workflowProcessEpeople as ep " +
-                "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:statusid) and t.id NOT IN(:draftid) and wp.isdelete=:isdelete order by wp.InitDate desc");
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p  " +
+                "left join wp.workflowStatus as st " +
+                "left join wp.workflowType as t " +
+                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "and st.id NOT IN(:statusid) and t.id=:draftid " +
+                "and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", true);
         query.setParameter("isdelete", false);
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
-        query.setParameter("draftid", draftid);
+        query.setParameter("draftid", inwardoutwarttypeid);
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
         if (0 <= limit) {
             query.setMaxResults(limit);
         }
+        System.out.println("query ::::"+query);
         return query.getResultList();
     }
 
@@ -69,7 +74,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id not IN(:statusid) and t.id NOT IN(:draftid) and wp.isdelete=:isdelete");
+                "join wp.workflowStatus as st join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id not IN(:statusid) and t.id =:draftid and wp.isdelete=:isdelete");
         query.setParameter("isOwner", false);
         query.setParameter("eperson", eperson);
         query.setParameter("isdelete", false);

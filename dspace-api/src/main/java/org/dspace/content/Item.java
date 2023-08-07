@@ -76,9 +76,18 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
     @JoinColumn(name = "submitter_id")
     private EPerson submitter = null;
 
+
+
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "item")
     private List<WorkflowProcess> item = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workflowprocess_fk")
+    private WorkflowProcess workflowProcess=null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "itemtype")
+    private WorkFlowProcessMasterValue itemtype=null;
 
     /**
      * The bundles in this item - kept in sync with DB
@@ -401,5 +410,21 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     public void setItem(List<WorkflowProcess> item) {
         this.item = item;
+    }
+
+    public WorkflowProcess getWorkflowProcess() {
+        return workflowProcess;
+    }
+
+    public void setWorkflowProcess(WorkflowProcess workflowProcess) {
+        this.workflowProcess = workflowProcess;
+    }
+
+    public WorkFlowProcessMasterValue getItemtype() {
+        return itemtype;
+    }
+
+    public void setItemtype(WorkFlowProcessMasterValue itemtype) {
+        this.itemtype = itemtype;
     }
 }

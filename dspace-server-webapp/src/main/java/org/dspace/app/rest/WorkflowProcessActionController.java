@@ -96,6 +96,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     ConfigurationService configurationService;
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+    @Autowired
+    WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
     @Autowired
     WorkFlowProcessCommentService workFlowProcessCommentService;
@@ -159,6 +161,12 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             workflowProcessEperson.setWorkflowProcess(workFlowProcess);
             Optional<WorkFlowProcessMasterValue> userTypeOption = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
+            if (workflowProcessEpersonRest.getDispatchModeRest() != null) {
+                workFlowProcess.setDispatchmode(workFlowProcessMasterValueConverter.convert(context, workflowProcessEpersonRest.getDispatchModeRest()));
+            }
+            if (workflowProcessEpersonRest.getEligibleForFilingRest() != null) {
+                workFlowProcess.setEligibleForFiling(workFlowProcessMasterValueConverter.convert(context, workflowProcessEpersonRest.getEligibleForFilingRest()));
+            }
             if (userTypeOption.isPresent()) {
                 workflowProcessEperson.setUsertype(userTypeOption.get());
             }
@@ -273,6 +281,15 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     action.setInitiator(true);
                 } else {
                     action.setInitiator(false);
+                }
+            }
+            if (workFlowProcess.getWorkflowProcessEpeople() != null) {
+                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
+                if (workflowPro.isPresent() && workflowPro.get().getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                    System.out.println("::::::::::::::::::::::::::::setInitiatorForward::::::::true::::::::::::::::::::");
+                    action.setInitiatorForward(true);
+                } else {
+                    action.setInitiatorForward(false);
                 }
             }
             if (comment != null) {
@@ -447,10 +464,10 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     .filter(d -> d.getePerson().getID() != null)
                     .filter(d -> d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString()))
                     .findFirst().get().getIndex();
-            System.out.println("index current user"+index);
+            System.out.println("index current user" + index);
 
             WorkflowProcessEperson workflowProcessEperson = workFlowProcess.getWorkflowProcessEpeople().get(index - 1);
-            System.out.println("index back user"+workflowProcessEperson.getIndex());
+            System.out.println("index back user" + workflowProcessEperson.getIndex());
 
             if (workflowProcessEperson != null && workflowProcessEperson.getIsrefer()) {
                 System.out.println("::::::::::::::::::::::::::::REFER USER ::::::::::::::::::::::::::::::::");
@@ -669,6 +686,31 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "received")
+    public WorkFlowProcessRest received(@PathVariable UUID uuid,
+                                        HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
+        WorkFlowProcessRest workFlowProcessRest = null;
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
+            workFlowProcess.setIsmode(true);
+            workflowProcessService.create(context, workFlowProcess);
+            workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            WorkFlowAction received = WorkFlowAction.RECEIVED;
+            received.perfomeAction(context, workFlowProcess, workFlowProcessRest);
+            context.commit();
+            received.setComment(null);
+            received.setWorkflowProcessReferenceDocs(null);
+            received.setIsrefer(false);
+            return workFlowProcessRest;
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+            throw new UnprocessableEntityException("error in forwardTask Server..");
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "completed")
     public WorkFlowProcessRest complete(@PathVariable UUID uuid,
                                         HttpServletRequest request) throws Exception {
@@ -705,8 +747,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     }
                 });
             } else {
-                throw new ResourceNotFoundException("Item not found");
+                System.out.println("Item note selected");
             }
+
             workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             if (workFlowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
                 //document Forward To Segnitor

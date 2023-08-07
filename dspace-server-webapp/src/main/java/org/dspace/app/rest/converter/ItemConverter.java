@@ -17,10 +17,9 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.MetadataValueList;
 import org.dspace.app.rest.projection.Projection;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataField;
-import org.dspace.content.MetadataValue;
+import org.dspace.content.*;
 import org.dspace.content.service.ItemService;
+import org.dspace.content.service.WorkflowProcessService;
 import org.dspace.core.Context;
 import org.dspace.discovery.IndexableObject;
 import org.modelmapper.ModelMapper;
@@ -56,7 +55,6 @@ public class ItemConverter
         if (CollectionUtils.isNotEmpty(entityTypes) && StringUtils.isNotBlank(entityTypes.get(0).getValue())) {
             item.setEntityType(entityTypes.get(0).getValue());
         }
-
         return item;
     }
     public ItemRest convertNameOnly(Item obj, Projection projection) {
