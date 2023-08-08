@@ -75,7 +75,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String workflowTypeStr;
     @JsonProperty
     private String sendername;
-
+Add    @JsonProperty
+    private String currentrecipient;
     @JsonProperty
     private String mode;
 
@@ -367,5 +368,13 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setItemsRests(List<ItemRest> itemsRests) {
         this.itemsRests = itemsRests;
+    }
+
+    public String getCurrentrecipient() {
+        return currentrecipient;
+    }
+
+    public void setCurrentrecipient(String currentrecipient) {
+        this.currentrecipient = currentrecipient;
     }
 }

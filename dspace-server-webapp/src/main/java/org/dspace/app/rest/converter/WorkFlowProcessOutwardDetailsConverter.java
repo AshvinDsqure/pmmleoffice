@@ -61,7 +61,7 @@ public class WorkFlowProcessOutwardDetailsConverter extends DSpaceObjectConverte
     }
     public WorkFlowProcessOutwardDetails convert(Context context,WorkFlowProcessOutwardDetailsRest rest) throws SQLException {
         WorkFlowProcessOutwardDetails obj = new WorkFlowProcessOutwardDetails();
-       if(rest.getOutwardDepartmentRest()!=null && rest.getOutwardDepartmentRest().getId()!=null){
+       if(rest.getOutwardDepartmentRest()!=null && rest.getOutwardDepartmentRest().getId()!=null && !rest.getOutwardDepartmentRest().getId().isEmpty()){
            obj.setOutwardDepartment(groupConverter.convert(context,rest.getOutwardDepartmentRest()));
        }
         if(rest.getOutwardmediumRest()!=null){

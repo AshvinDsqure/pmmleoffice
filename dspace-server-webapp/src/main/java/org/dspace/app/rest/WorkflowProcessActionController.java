@@ -795,27 +795,30 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         try {
             Context context = ContextUtil.obtainContext(request);
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-            if (workFlowProcess.getWorkFlowProcessOutwardDetails() == null || workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment() == null) {
-                throw new ResourceNotFoundException("Dispatch not found");
-            }
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DISPATCH.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
-            workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment().getMembers().forEach(e -> {
-                System.out.println("eperson:::" + e.getEmail());
-                WorkflowProcessEperson workflowProcessEpersonFromGroup = workFlowProcessEpersonConverter.convert(context, e);
-                try {
-                    Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.DISPATCH.getUserTypeFromMasterValue(context);
-                    if (workFlowUserTypOptional.isPresent()) {
-                        workflowProcessEpersonFromGroup.setUsertype(workFlowUserTypOptional.get());
+            if(workFlowProcess.getWorkFlowProcessOutwardDetails()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment()!=null) {
+                workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment().getMembers().forEach(e -> {
+                    System.out.println("eperson:::" + e.getEmail());
+                    WorkflowProcessEperson workflowProcessEpersonFromGroup = workFlowProcessEpersonConverter.convert(context, e);
+                    try {
+                        Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.DISPATCH.getUserTypeFromMasterValue(context);
+                        if (workFlowUserTypOptional.isPresent()) {
+                            workflowProcessEpersonFromGroup.setUsertype(workFlowUserTypOptional.get());
+                        }
+                        workflowProcessEpersonFromGroup.setWorkflowProcess(workFlowProcess);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
                     }
-                    workflowProcessEpersonFromGroup.setWorkflowProcess(workFlowProcess);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-                workFlowProcess.setnewUser(workflowProcessEpersonFromGroup);
-            });
+                    workFlowProcess.setnewUser(workflowProcessEpersonFromGroup);
+                });
+            }
+            if(workFlowProcess.getWorkFlowProcessOutwardDetails()!=null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Electronic")){
+               String emailid= workFlowProcess.getWorkflowProcessSenderDiary().getEmail();
+                System.out.println(":::::::::::::::::::::::sent Mail for this email"+emailid);
+            }
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             WorkFlowAction DISPATCH = WorkFlowAction.DISPATCH;
             if (comment != null) {

@@ -284,6 +284,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (ownerRest.isPresent() && ownerRest.get().getAssignDate() != null) {
             workFlowProcessRest.setDueDate(ownerRest.get().getAssignDate());
             workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
+            if(ownerRest.get().getePerson().getFullName()!=null){
+                workFlowProcessRest.setCurrentrecipient(ownerRest.get().getePerson().getFullName());
+            }
         }
         if (obj.getWorkflowProcessEpeople() != null) {
             Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
