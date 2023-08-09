@@ -20,6 +20,7 @@ import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.LoginCounter;
 import org.dspace.content.WorkFlowProcessMasterValue;
+import org.dspace.content.service.FeedbackService;
 import org.dspace.content.service.ItemService;
 import org.dspace.content.service.LoginCounterService;
 import org.dspace.content.service.WorkFlowProcessMasterValueService;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.sql.SQLException;
@@ -67,6 +69,8 @@ public class WorkflowProcessItemReportController {
     @Autowired
     ConfigurationService configurationService;
 
+    @Autowired
+    private FeedbackService feedbackService;
     @Autowired
     LoginCounterService loginCounterService;
 
@@ -150,7 +154,20 @@ public class WorkflowProcessItemReportController {
            return  null;
        }
     }
-
+    @RequestMapping(method = RequestMethod.GET, value = "/sent")
+    public String sent(HttpServletRequest request) throws SQLException {
+        Context context = ContextUtil.obtainContext(request);
+        String result="";
+        try {
+            feedbackService.sendEmail(context, request, "ashvinmajethiya22@gmail.com", "no-reply@d2t.co", "Email ", "page");
+            result="success";
+        } catch (IOException | MessagingException e) {
+           e.printStackTrace();
+            result="faile";
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return result;
+    }
     @RequestMapping(method = RequestMethod.POST, value = "/addCounter")
     public LoginCounterRest addConter(HttpServletRequest request) throws SQLException, AuthorizeException, ParseException {
         LoginCounterRest loginCounterRest = null;

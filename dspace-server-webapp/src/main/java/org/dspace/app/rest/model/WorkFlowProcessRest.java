@@ -75,7 +75,7 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String workflowTypeStr;
     @JsonProperty
     private String sendername;
-Add    @JsonProperty
+    @JsonProperty
     private String currentrecipient;
     @JsonProperty
     private String mode;

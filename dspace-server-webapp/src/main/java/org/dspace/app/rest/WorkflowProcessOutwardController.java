@@ -175,7 +175,7 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
             if (!WorkflowProcessEpersonRest.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
             }
-            WorkFlowType workFlowType = WorkFlowType.INWARD;
+            WorkFlowType workFlowType = WorkFlowType.OUTWARED;
             //status
             workFlowType.setWorkFlowStatus(WorkFlowStatus.DRAFT);
             WorkFlowAction create = WorkFlowAction.CREATE;

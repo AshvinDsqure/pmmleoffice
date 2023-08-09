@@ -460,7 +460,19 @@ public enum WorkFlowAction {
                     workFlowAction.setActionDate(new Date());
                     workFlowAction.setAction(workFlowProcessMasterValue);
                     workFlowAction.setWorkflowProcess(workflowProcess);
-                    workFlowAction.setComment("Dack Mode is " + workflowProcess.getDispatchmode().getPrimaryvalue());
+                    workFlowAction.setComment("Dack Mode is " + workflowProcess.getDispatchmode().getPrimaryvalue()+".");
+                    this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
+                }
+                if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue() != null &&  workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward") && workflowProcess.getWorkFlowProcessOutwardDetails()!=null && workflowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null) {
+                    //add Notsheet  Histoy
+                    workFlowAction = new WorkFlowProcessHistory();
+                    WorkFlowProcessMaster workFlowProcessMaster = MASTER.getMaster(context);
+                    workFlowAction.setWorkflowProcessEpeople(workflowProcessEperson);
+                    WorkFlowProcessMasterValue workFlowProcessMasterValue = this.getWorkFlowProcessMasterValueService().findByName(context, this.getAction(), workFlowProcessMaster);
+                    workFlowAction.setActionDate(new Date());
+                    workFlowAction.setAction(workFlowProcessMasterValue);
+                    workFlowAction.setWorkflowProcess(workflowProcess);
+                    workFlowAction.setComment("Outward Medium is " + workflowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()+".");
                     this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                 }
                 for (WorkflowProcessReferenceDoc doc : list) {
