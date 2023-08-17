@@ -94,9 +94,7 @@ public class EPersonConsumer implements Consumer {
                             adminEmail.addArgument(eperson.getFirstName() + " " + eperson.getLastName()); // Name
                             adminEmail.addArgument(eperson.getEmail());
                             adminEmail.addArgument(new Date());
-
                             adminEmail.setReplyTo(eperson.getEmail());
-
                             adminEmail.send();
 
                             log.info(LogHelper.getHeader(context, "registerion_alert", "user="

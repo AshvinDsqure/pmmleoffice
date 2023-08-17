@@ -1663,7 +1663,6 @@ prevent the generation of resource policy entry values with null dspace_object a
     @Override
     public List<Item> getDataTwoDateRangeDownload(Context context, String startdate, String endDate) throws SQLException {
         MetadataField metadataField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "accessioned");
-
         return itemDAO.getDataTwoDateRangeDownload(context,metadataField,startdate,endDate);
     }
 

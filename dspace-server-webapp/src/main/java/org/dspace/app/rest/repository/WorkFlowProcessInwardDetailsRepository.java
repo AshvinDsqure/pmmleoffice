@@ -75,7 +75,7 @@ public class WorkFlowProcessInwardDetailsRepository extends DSpaceObjectRestRepo
         log.info("::::::start::::createWorkFlowProcessInwardDetailsFromRestObject::::::::::");
         WorkFlowProcessInwardDetails workFlowProcessInwardDetails = new WorkFlowProcessInwardDetails();
         try {
-            workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(workFlowProcessInwardDetailsRest );
+            workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(context,workFlowProcessInwardDetailsRest);
             workFlowProcessInwardDetailsService.create(context, workFlowProcessInwardDetails);
         } catch (Exception e) {
             log.info("::::::error::::createWorkFlowProcessInwardDetailsFromRestObject::::::::::");
@@ -90,18 +90,15 @@ public class WorkFlowProcessInwardDetailsRepository extends DSpaceObjectRestRepo
                                              JsonNode jsonNode) throws SQLException, AuthorizeException {
         log.info("::::::start::::put::::::::::");
         WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest  = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessInwardDetailsRest.class);
-
         WorkFlowProcessInwardDetails workFlowProcessInwardDetails = workFlowProcessInwardDetailsService.find(context, id);
         if (workFlowProcessInwardDetails == null) {
             System.out.println("workFlowProcessInwardDetails id ::: is Null  workFlowProcessInwardDetails tye null"+id);
             throw new ResourceNotFoundException("workFlowProcessInwardDetails  field with id: " + id + " not found");
         }
-
-        workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(workFlowProcessInwardDetails,workFlowProcessInwardDetailsRest);
+        workFlowProcessInwardDetails=workFlowProcessInwardDetailsConverter.convert(context,workFlowProcessInwardDetails,workFlowProcessInwardDetailsRest);
         workFlowProcessInwardDetailsService.update(context, workFlowProcessInwardDetails);
         context.commit();
         log.info("::::::End::::put::::::::::");
-
         return converter.toRest(workFlowProcessInwardDetails, utils.obtainProjection());
     }
 

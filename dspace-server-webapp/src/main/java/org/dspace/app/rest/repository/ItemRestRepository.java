@@ -159,6 +159,8 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     @PreAuthorize("hasPermission(#id, 'ITEM', #patch)")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                          Patch patch) throws AuthorizeException, SQLException {
+
+        System.out.println("test patch::::::::::::::::::::::::");
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 
@@ -295,6 +297,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         String owningCollectionUuidString = req.getParameter("owningCollection");
         ObjectMapper mapper = new ObjectMapper();
         ItemRest itemRest = null;
+        System.out.println(":::::::::::::::::createAndReturn:::::::::::::::::::ITEM:::");
         try {
             ServletInputStream input = req.getInputStream();
             itemRest = mapper.readValue(input, ItemRest.class);
@@ -318,9 +321,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         item.setDiscoverable(itemRest.getDiscoverable());
         item.setLastModified(itemRest.getLastModified());
         metadataConverter.setMetadata(context, item, itemRest.getMetadata());
-
         Item itemToReturn = installItemService.installItem(context, workspaceItem);
-
         return converter.toRest(itemToReturn, utils.obtainProjection());
     }
 

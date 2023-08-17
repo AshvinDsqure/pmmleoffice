@@ -18,10 +18,7 @@ import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
-import org.dspace.app.rest.model.EPersonRest;
-import org.dspace.app.rest.model.WorkFlowProcessOutwardDetailsRest;
-import org.dspace.app.rest.model.WorkFlowProcessRest;
-import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
+import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
@@ -549,49 +546,27 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
-    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "callBack")
-    public WorkFlowProcessRest callBack(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "callback")
+    public WorkFlowProcessRest callback(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
-        WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
-
-        System.out.println("::::::::::IN::::::::::::CALL BACK API ::::::::::::::::::::::::::::::::::::::::::");
         try {
             Context context = ContextUtil.obtainContext(request);
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-            WorkflowProcessEperson currentOwner = workFlowProcess.getWorkflowProcessEpeople().stream()
-                    .filter(s -> s.getOwner() != null)
-                    .filter(d -> d.getOwner()).findFirst().get();
-
-            if (currentOwner != null) {
-                WorkflowProcessEperson currentOwner1 = workflowProcessEpersonService.find(context, currentOwner.getID());
-                if (currentOwner1 != null) {
-                    System.out.println("::::::::::IN::::::::::::CALL BACK API ::::CURRENT currentOwner IS" + currentOwner.getePerson().getEmail());
-                    currentOwner1.setSender(true);
-                    currentOwner1.setOwner(false);
-                    currentOwner.setIssequence(false);
-                    workflowProcessEpersonService.update(context, currentOwner1);
+                Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
+                if (workFlowTypeStatus.isPresent()) {
+                    workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
                 }
-            }
-            WorkflowProcessEperson currentuser = workFlowProcess.getWorkflowProcessEpeople().stream()
-                    .filter(s -> s.getePerson() != null)
-                    .filter(ss -> ss.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString()))
-                    .findFirst().get();
-            if (currentuser != null) {
-                WorkflowProcessEperson currentuser1 = workflowProcessEpersonService.find(context, currentuser.getID());
-                System.out.println("::::::::::IN::::::::::::CALL BACK API ::::CURRENT Users IS" + currentuser.getePerson().getEmail());
-                if (currentuser1 != null) {
-                    currentuser1.setSender(false);
-                    currentuser1.setOwner(true);
-                    workflowProcessEpersonService.update(context, currentuser1);
-                }
-            }
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            WorkFlowAction CALLBACK = WorkFlowAction.CALLBACK;
+            CALLBACK.perfomeAction(context, workFlowProcess, workFlowProcessRest);
             context.commit();
+            CALLBACK.setComment(null);
+            CALLBACK.setWorkflowProcessReferenceDocs(null);
             return workFlowProcessRest;
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            throw new UnprocessableEntityException("error in callback Server..");
         }
-        return null;
     }
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
@@ -793,8 +768,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatch")
-    public WorkFlowProcessRest dispatch(@PathVariable UUID uuid,
-                                        HttpServletRequest request, @RequestBody String comment) throws IOException, SQLException, AuthorizeException {
+    public WorkFlowProcessRest dispatch(@PathVariable UUID uuid, HttpServletRequest request, @RequestBody CommentRest comment) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
         try {
@@ -804,7 +778,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
-            if(workFlowProcess.getWorkFlowProcessOutwardDetails()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment()!=null) {
+            if (workFlowProcess.getWorkFlowProcessOutwardDetails() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment() != null) {
                 workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment().getMembers().forEach(e -> {
                     System.out.println("eperson:::" + e.getEmail());
                     WorkflowProcessEperson workflowProcessEpersonFromGroup = workFlowProcessEpersonConverter.convert(context, e);
@@ -822,8 +796,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             WorkFlowAction DISPATCH = WorkFlowAction.DISPATCH;
-            if (comment != null) {
-                DISPATCH.setComment(comment);
+            if (comment.getComment() != null) {
+                DISPATCH.setComment(comment.getComment());
             }
             DISPATCH.perfomeAction(context, workFlowProcess, workFlowProcessRest);
             workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
@@ -847,16 +821,16 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowProcess.getWorkFlowProcessOutwardDetails() == null || workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment() == null) {
                 throw new ResourceNotFoundException("Dispatch not found");
             }
-            if (workFlowProcess.getWorkFlowProcessOutwardDetails() != null &&  workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Physical")) {
+            if (workFlowProcess.getWorkFlowProcessOutwardDetails() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Physical")) {
                 WorkFlowProcessOutwardDetails workFlowProcessOutwardDetails = workFlowProcess.getWorkFlowProcessOutwardDetails();
                 workFlowProcessOutwardDetails.setAwbno(outwardDetailsRest.getAwbno());
                 workFlowProcessOutwardDetails.setServiceprovider(outwardDetailsRest.getServiceprovider());
                 workFlowProcessOutwardDetails.setDispatchdate(outwardDetailsRest.getDispatchdate());
                 workFlowProcess.setWorkFlowProcessOutwardDetails(workFlowProcessOutwardDetails);
             }
-            if(workFlowProcess.getWorkFlowProcessOutwardDetails()!=null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Electronic") && workFlowProcess.getWorkflowProcessSenderDiary()!=null && workFlowProcess.getWorkflowProcessSenderDiary().getEmail()!=null){
-                String emailid= workFlowProcess.getWorkflowProcessSenderDiary().getEmail();
-                System.out.println(":::::::::::::::::::::::sent Mail for this email"+emailid);
+            if (workFlowProcess.getWorkFlowProcessOutwardDetails() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Electronic") && workFlowProcess.getWorkflowProcessSenderDiary() != null && workFlowProcess.getWorkflowProcessSenderDiary().getEmail() != null) {
+                String emailid = workFlowProcess.getWorkflowProcessSenderDiary().getEmail();
+                System.out.println(":::::::::::::::::::::::sent Mail for this email" + emailid);
                 try {
                     feedbackService.sendEmail(context, request, emailid, "no-reply@d2t.co", "Your outward submtion successfully.", "page");
                 } catch (IOException | MessagingException e) {
@@ -889,30 +863,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
-            String comment = "Close";
+            String comment = null;
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
-            if(workFlowProcess.getWorkFlowProcessOutwardDetails()!=null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()!=null &&workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Electronic") && workFlowProcess.getWorkflowProcessSenderDiary()!=null && workFlowProcess.getWorkflowProcessSenderDiary().getEmail()!=null){
-                String emailid= workFlowProcess.getWorkflowProcessSenderDiary().getEmail();
-                System.out.println("::::::::::::::Mail Sent:::::::::::::::::::::::: "+emailid);
-                StringBuffer s=new StringBuffer("Dear "+workFlowProcess.getWorkflowProcessSenderDiary().getSendername()+". \n\n");
-                s.append("Please find attached following .");
-                for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workFlowProcess.getWorkflowProcessReferenceDocs()) {
-                    if (workflowProcessReferenceDoc.getDrafttype()!=null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("Reference Document")) {
-                        // InputStream out = null;
-                        if (workflowProcessReferenceDoc.getBitstream() != null) {
-                            String baseurl = configurationService.getProperty("dspace.server.url");
-                            s.append(baseurl+"/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content");
-                            s.append("\n\n");
-                        }
-                    }
-                }
-                try {
-                    feedbackService.sendEmail(context, request, emailid, "no-reply@d2t.co", s.toString(), "page");
-                } catch (IOException | MessagingException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-                System.out.println("::::::::::::   Mail sent  Done!   :::::::::::");
-            }
+            comment=sentMailElectronic(context,request,workFlowProcess);
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
@@ -1535,5 +1488,52 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             sb.append("</span><br><br>");
         }
 
+    }
+    public String sentMailElectronic(Context context,HttpServletRequest request,WorkflowProcess workFlowProcess){
+        EPerson currentuser = context.getCurrentUser();
+        String comment = null;
+        String receivername = null;
+        String subject = null;
+        String recipientEmail = null;
+        String senderName = null;
+        String senderDesignation = null;
+        String senderDepartment = null;
+        String senderOffice = null;
+
+        if (currentuser != null && currentuser.getFullName() != null) {
+            senderName = currentuser.getFullName();
+        }
+        if (currentuser != null && currentuser.getDesignation() != null && currentuser.getDesignation().getPrimaryvalue() != null) {
+            senderDesignation = currentuser.getDesignation().getPrimaryvalue();
+        }
+        if (currentuser != null && currentuser.getDepartment() != null && currentuser.getDepartment().getPrimaryvalue() != null) {
+            senderDepartment = currentuser.getDepartment().getPrimaryvalue();
+        }
+        if (currentuser != null && currentuser.getOffice() != null && currentuser.getOffice().getPrimaryvalue() != null) {
+            senderOffice = currentuser.getOffice().getPrimaryvalue();
+        }
+        if (workFlowProcess != null && workFlowProcess.getWorkFlowProcessOutwardDetails() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue().equalsIgnoreCase("Electronic") && workFlowProcess.getWorkflowProcessSenderDiary() != null && workFlowProcess.getWorkflowProcessSenderDiary().getEmail() != null) {
+            System.out.println("::::::::::::::::::::::::Sent mail.... ::::::::::::::::::::::::::::::");
+            if (workFlowProcess.getWorkflowProcessSenderDiary().getEmail() != null) {
+                recipientEmail = workFlowProcess.getWorkflowProcessSenderDiary().getEmail();
+                System.out.println("::::::::::::::::::::::::Sent mail to  ::::::::::::::::::::::::::::::" + recipientEmail);
+            }
+            if (workFlowProcess.getSubject() != null) {
+                subject = workFlowProcess.getSubject();
+            }
+            if (workFlowProcess.getWorkflowProcessSenderDiary().getSendername() != null) {
+                receivername = workFlowProcess.getWorkflowProcessSenderDiary().getSendername();
+                comment = "Mail sent to " + receivername + " .";
+            }
+            try {
+                List<Bitstream> bitstreamList = workFlowProcess.getWorkflowProcessReferenceDocs().stream().filter(d -> d.getBitstream() != null).map(dd -> dd.getBitstream()).collect(Collectors.toList());
+                workflowProcessService.sendEmail(context, request, recipientEmail, receivername, subject,bitstreamList);
+            } catch (IOException | MessagingException | SQLException | AuthorizeException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            System.out.println("::::::::::::   Mail sent  Done !   :::::::::::");
+        }
+        return comment;
     }
 }

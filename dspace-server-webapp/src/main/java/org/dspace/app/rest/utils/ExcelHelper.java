@@ -17,10 +17,20 @@ import org.dspace.app.rest.model.ExcelDTO;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ExcelHelper {
+
+    public static void main(String[] args) {
+        System.out.println("Formatted Date and Time: " + DateFormateddmmyyyy("2023-02-24T05:20:35Z"));
+    }
 
     public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     static String[] HEADERs = {
@@ -48,6 +58,7 @@ public class ExcelHelper {
                 row.createCell(0).setCellValue(i);
                 row.createCell(1).setCellValue(item.getCaseDetail());
                 row.createCell(2).setCellValue(item.getHierarchy());
+                System.out.println("item.getUploaddate():::::::::::::::::"+item.getUploaddate());
                 row.createCell(3).setCellValue(DateFormateddmmyyyy(item.getUploaddate()));
                 row.createCell(4).setCellValue(item.getUploadedby());
                 i++;
@@ -66,13 +77,13 @@ public class ExcelHelper {
     }
 
     public static String DateFormateddmmyyyy(String dates) {
-        Date date = null;
-        SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy");
         try {
-            date = outputFormat.parse(dates);
-            return outputFormat.format(date).toString();
-        } catch (ParseException e) {
-
+            Instant instant = Instant.parse(dates);
+            ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, java.time.ZoneId.of("UTC"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss");
+            String formattedDateTime = zonedDateTime.format(formatter);
+            return formattedDateTime;
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

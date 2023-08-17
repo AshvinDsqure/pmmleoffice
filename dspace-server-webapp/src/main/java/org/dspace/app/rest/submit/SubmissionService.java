@@ -2,16 +2,14 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.submit;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,24 +34,23 @@ import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.repository.WorkflowItemRestRepository;
 import org.dspace.app.rest.repository.WorkspaceItemRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.util.SubmissionConfig;
 import org.dspace.app.util.SubmissionConfigReader;
 import org.dspace.app.util.SubmissionConfigReaderException;
 import org.dspace.app.util.SubmissionStepConfig;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
-import org.dspace.content.Bitstream;
+import org.dspace.content.*;
 import org.dspace.content.Collection;
-import org.dspace.content.InProgressSubmission;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataValue;
-import org.dspace.content.WorkspaceItem;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.ItemService;
+import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.content.service.WorkspaceItemService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.Utils;
+import org.dspace.eperson.EPerson;
 import org.dspace.license.service.CreativeCommonsService;
 import org.dspace.services.ConfigurationService;
 import org.dspace.services.RequestService;
@@ -86,6 +83,8 @@ public class SubmissionService {
     @Autowired
     protected ItemService itemService;
     @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+    @Autowired
     protected WorkspaceItemService workspaceItemService;
     @Autowired
     protected WorkflowItemService<XmlWorkflowItem> workflowItemService;
@@ -93,6 +92,7 @@ public class SubmissionService {
     protected WorkflowService<XmlWorkflowItem> workflowService;
     @Autowired
     protected CreativeCommonsService creativeCommonsService;
+
     @Autowired
     private RequestService requestService;
     @Lazy
@@ -143,14 +143,65 @@ public class SubmissionService {
                 throw new RESTAuthorizationException("collectionUUID=" + collectionUUID + " not found");
             }
             wsi = workspaceItemService.create(context, collection, true);
+            Item i = wsi.getItem();
+            itemService.addMetadata(context, i, "dc", "title", null, null,getFileNumber(context));
+            itemService.addMetadata(context, i, "dc", "department", null, null, getDepartment(context));
+            itemService.addMetadata(context, i, "dc", "office", null, null,getOffice(context));
+
+            System.out.println(":::::::::::::::::::::::::::::::::done medata::::::::");
         } catch (SQLException e) {
             // wrap in a runtime exception as we cannot change the method signature
             throw new UncategorizedScriptException(e.getMessage(), e);
         } catch (AuthorizeException ae) {
             throw new RESTAuthorizationException(ae);
         }
-
         return wsi;
+    }
+    public  String getDepartment(Context context) throws SQLException {
+        WorkFlowProcessMasterValue department;
+        if (context.getCurrentUser() != null) {
+            department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
+            if (department.getPrimaryvalue() != null) {
+               return department.getPrimaryvalue();
+            }
+        }
+        return "-";
+    }
+    public  String getOffice(Context context) throws SQLException {
+        WorkFlowProcessMasterValue department;
+        if (context.getCurrentUser() != null) {
+            department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getOffice().getID());
+            if (department.getPrimaryvalue() != null) {
+                return department.getPrimaryvalue();
+            }
+        }
+        return "-";
+    }
+    public  String getFileNumber(Context context) {
+        {
+            String filenumber = null;
+            try {
+                EPerson currentuser = context.getCurrentUser();
+                StringBuffer sb = new StringBuffer();
+                WorkFlowProcessMasterValue department;
+                if (currentuser != null) {
+                    department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
+                    if (department.getPrimaryvalue() != null) {
+                        sb.append(department.getSecondaryvalue());
+                    }
+                }
+                sb.append("/File");
+                sb.append("/" + DateUtils.getFinancialYear());
+                int count = itemService.countTotal(context);
+                count = count + 1;
+                sb.append("/0000" + count);
+                filenumber = sb.toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error in getInwardNumber ");
+            }
+            return filenumber;
+        }
     }
 
     public void saveWorkspaceItem(Context context, WorkspaceItem wsi) {
@@ -189,14 +240,14 @@ public class SubmissionService {
             if (data.getMetadata()
                     .containsKey(Utils.standardize(metadataToCheck[0], metadataToCheck[1], metadataToCheck[2], "."))) {
                 data.getMetadata().get(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
-                                                         md.getMetadataField().getElement(),
-                                                         md.getMetadataField().getQualifier(), ".")).add(dto);
+                        md.getMetadataField().getElement(),
+                        md.getMetadataField().getQualifier(), ".")).add(dto);
             } else {
                 List<MetadataValueRest> listDto = new ArrayList<>();
                 listDto.add(dto);
                 data.getMetadata().put(Utils.standardize(md.getMetadataField().getMetadataSchema().getName(),
-                                                         md.getMetadataField().getElement(),
-                                                         md.getMetadataField().getQualifier(), "."), listDto);
+                        md.getMetadataField().getElement(),
+                        md.getMetadataField().getQualifier(), "."), listDto);
             }
 
         }
@@ -218,7 +269,7 @@ public class SubmissionService {
         data.setCheckSum(checksum);
         data.setSizeBytes(source.getSizeBytes());
         data.setUrl(configurationService.getProperty("dspace.server.url") + "/api/" + BitstreamRest.CATEGORY + "/" +
-                        English.plural(BitstreamRest.NAME) + "/" + source.getID() + "/content");
+                English.plural(BitstreamRest.NAME) + "/" + source.getID() + "/content");
         return data;
     }
 
@@ -267,7 +318,7 @@ public class SubmissionService {
             wi = workflowService.start(context, wsi);
         } catch (IOException e) {
             throw new RuntimeException("The workflow could not be started for workspaceItem with" +
-                                               " id:  " + id, e);
+                    " id:  " + id, e);
         }
 
         return wi;
@@ -317,7 +368,7 @@ public class SubmissionService {
      * Utility method used by the {@link WorkspaceItemRestRepository} and
      * {@link WorkflowItemRestRepository} to deal with the upload in an inprogress
      * submission
-     * 
+     *
      * @param context DSpace Context Object
      * @param request the http request containing the upload request
      * @param wsi     the inprogress submission current rest representation
@@ -326,10 +377,10 @@ public class SubmissionService {
      * @return the errors present in the resulting inprogress submission
      */
     public List<ErrorRest> uploadFileToInprogressSubmission(Context context, HttpServletRequest request,
-            AInprogressSubmissionRest wsi, InProgressSubmission source, MultipartFile file) {
+                                                            AInprogressSubmissionRest wsi, InProgressSubmission source, MultipartFile file) {
         List<ErrorRest> errors = new ArrayList<ErrorRest>();
         SubmissionConfig submissionConfig =
-            submissionConfigReader.getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
+                submissionConfigReader.getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
         List<Object[]> stepInstancesAndConfigs = new ArrayList<Object[]>();
         // we need to run the preProcess of all the appropriate steps and move on to the
         // upload and postProcess step
@@ -347,7 +398,7 @@ public class SubmissionService {
                 stepClass = loader.loadClass(stepConfig.getProcessingClassName());
                 if (UploadableStep.class.isAssignableFrom(stepClass)) {
                     Object stepInstance = stepClass.newInstance();
-                    stepInstancesAndConfigs.add(new Object[] {stepInstance, stepConfig});
+                    stepInstancesAndConfigs.add(new Object[]{stepInstance, stepConfig});
                 }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -385,7 +436,7 @@ public class SubmissionService {
      * Utility method used by the {@link WorkspaceItemRestRepository} and
      * {@link WorkflowItemRestRepository} to deal with the patch of an inprogress
      * submission
-     * 
+     *
      * @param context DSpace Context Object
      * @param request the http request
      * @param source  the current inprogress submission
@@ -394,7 +445,7 @@ public class SubmissionService {
      * @param op      the patch operation
      */
     public void evaluatePatchToInprogressSubmission(Context context, HttpServletRequest request,
-            InProgressSubmission source, AInprogressSubmissionRest wsi, String section, Operation op) {
+                                                    InProgressSubmission source, AInprogressSubmissionRest wsi, String section, Operation op) {
         boolean sectionExist = false;
         SubmissionConfig submissionConfig = submissionConfigReader
                 .getSubmissionConfigByName(wsi.getSubmissionDefinition().getName());
@@ -417,7 +468,7 @@ public class SubmissionService {
                 stepClass = loader.loadClass(stepConfig.getProcessingClassName());
                 if (RestProcessingStep.class.isAssignableFrom(stepClass)) {
                     Object stepInstance = stepClass.newInstance();
-                    stepInstancesAndConfigs.add(new Object[] { stepInstance, stepConfig });
+                    stepInstancesAndConfigs.add(new Object[]{stepInstance, stepConfig});
                 } else {
                     throw new DSpaceBadRequestException("The submission step class specified by '"
                             + stepConfig.getProcessingClassName()

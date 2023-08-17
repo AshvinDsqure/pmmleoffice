@@ -15,6 +15,7 @@ public class JBPM {
    public static  final String RESUMEPROCESS=CREATEPROCESS+"/resumetask";
    public static  final String REFERTASK=CREATEPROCESS+"/refertask";
    public static  final String RECEIVED=CREATEPROCESS+"/receiveditem";
+   public static  final String CALLBACK=CREATEPROCESS+"/callback";
    public static  final String GETTASKLIST=CREATEPROCESS+"/gettasklist";
 
 

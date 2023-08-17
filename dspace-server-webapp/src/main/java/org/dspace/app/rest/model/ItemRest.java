@@ -64,7 +64,6 @@ import org.dspace.eperson.EPerson;
     public static final String VERSION = "version";
     public static final String TEMPLATE_ITEM_OF = "templateItemOf";
     public static final String THUMBNAIL = "thumbnail";
-
     private boolean inArchive = false;
     private boolean discoverable = false;
     private boolean withdrawn = false;
@@ -73,7 +72,6 @@ import org.dspace.eperson.EPerson;
     private String caseDetail;
     private String uploaddate;
     private String uploadedby;
-
     private String hierarchy;
 
     @JsonProperty

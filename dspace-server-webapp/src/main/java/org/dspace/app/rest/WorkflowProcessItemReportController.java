@@ -12,12 +12,15 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
 import org.dspace.app.rest.model.CounterDTO;
+import org.dspace.app.rest.model.ExcelDTO;
 import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.LoginCounterRest;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.DateUtils;
+import org.dspace.app.rest.utils.ExcelHelper;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Item;
 import org.dspace.content.LoginCounter;
 import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.service.FeedbackService;
@@ -28,6 +31,11 @@ import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -41,6 +49,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller to upload bitstreams to a certain bundle, indicated by a uuid in the request
@@ -217,6 +226,40 @@ public class WorkflowProcessItemReportController {
         Map<String,String>map=new HashMap<>();
         map.put("filenumber",filenumber);
         return map;
+    }
+
+    @RequestMapping(method = RequestMethod.GET,value = "/downloadItemReport")
+    public  ResponseEntity<Resource> downloadItem(HttpServletRequest request,
+                                                  @Parameter(value = "startdate", required = true) String startdate,
+                                                  @Parameter(value = "enddate", required = true) String enddate) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            String filename = "ProductivityReport.xlsx";
+            List<Item> list = itemService.getDataTwoDateRangeDownload(context, startdate, enddate);
+            List<ExcelDTO> listDTo = list.stream().map(i -> {
+                String title = itemService.getMetadataFirstValue(i, "dc", "title", null, null);
+                String type = itemService.getMetadataFirstValue(i, "dc", "casetype", null, null);
+                String issued = itemService.getMetadataFirstValue(i, "dc", "caseyear", null, null);
+                type = (type != null) ? type : "-";
+                title = (title != null) ? title : "-";
+                issued = (issued != null) ? issued : "-";
+                String caseDetail = type + "/" + title + "/" + issued;
+                String uploaddate = itemService.getMetadataFirstValue(i, "dc", "date", "accessioned", null);
+                uploaddate=(uploaddate!=null)?uploaddate:"-";
+                String uploadedby = i.getSubmitter().getEmail();
+                String hierarchy = i.getOwningCollection().getName();
+                String email =(context.getCurrentUser()!=null)?context.getCurrentUser().getEmail():"-";
+                return new ExcelDTO(title, type, issued, caseDetail, uploaddate, uploadedby, hierarchy,email);
+            }).collect(Collectors.toList());
+            ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listDTo);
+            InputStreamResource file = new InputStreamResource(in);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(file);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
 

@@ -53,6 +53,29 @@ public class WorkFlowProcessOutwardDetails extends DSpaceObject implements DSpac
     @Column(name = "dispatchdate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dispatchdate;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category")
+    private WorkFlowProcessMasterValue category = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subcategory")
+    private WorkFlowProcessMasterValue subcategory = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lettercategory")
+    private WorkFlowProcessMasterValue lettercategory = null;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "officelocation")
+    private WorkFlowProcessMasterValue officelocation = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoriesoffile")
+    private WorkFlowProcessMasterValue categoriesoffile = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subcategoriesoffile")
+    private WorkFlowProcessMasterValue subcategoriesoffile = null;
     public String getOutwardNumber() {
         return outwardNumber;
     }
@@ -109,5 +132,53 @@ public class WorkFlowProcessOutwardDetails extends DSpaceObject implements DSpac
     }
     public void setOutwardmedium(WorkFlowProcessMasterValue outwardmedium) {
         this.outwardmedium = outwardmedium;
+    }
+
+    public WorkFlowProcessMasterValue getCategory() {
+        return category;
+    }
+
+    public void setCategory(WorkFlowProcessMasterValue category) {
+        this.category = category;
+    }
+
+    public WorkFlowProcessMasterValue getSubcategory() {
+        return subcategory;
+    }
+
+    public void setSubcategory(WorkFlowProcessMasterValue subcategory) {
+        this.subcategory = subcategory;
+    }
+
+    public WorkFlowProcessMasterValue getLettercategory() {
+        return lettercategory;
+    }
+
+    public void setLettercategory(WorkFlowProcessMasterValue lettercategory) {
+        this.lettercategory = lettercategory;
+    }
+
+    public WorkFlowProcessMasterValue getOfficelocation() {
+        return officelocation;
+    }
+
+    public void setOfficelocation(WorkFlowProcessMasterValue officelocation) {
+        this.officelocation = officelocation;
+    }
+
+    public WorkFlowProcessMasterValue getCategoriesoffile() {
+        return categoriesoffile;
+    }
+
+    public void setCategoriesoffile(WorkFlowProcessMasterValue categoriesoffile) {
+        this.categoriesoffile = categoriesoffile;
+    }
+
+    public WorkFlowProcessMasterValue getSubcategoriesoffile() {
+        return subcategoriesoffile;
+    }
+
+    public void setSubcategoriesoffile(WorkFlowProcessMasterValue subcategoriesoffile) {
+        this.subcategoriesoffile = subcategoriesoffile;
     }
 }

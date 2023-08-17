@@ -12,7 +12,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.app.rest.model.helper.MyDateConverter;
+import org.dspace.content.WorkFlowProcessMasterValue;
 
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import java.util.Date;
 
 public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
@@ -29,6 +33,20 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private Date inwardDate;
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date receivedDate;
+
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest categoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest subcategoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest lettercategoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest officelocationRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest categoriesoffileRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest subcategoriesoffileRest = null;
+
 
     public String getInwardNumber() {
         return inwardNumber;
@@ -72,5 +90,51 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
         return NAME;
     }
 
+    public WorkFlowProcessMasterValueRest getCategoryRest() {
+        return categoryRest;
+    }
 
+    public void setCategoryRest(WorkFlowProcessMasterValueRest categoryRest) {
+        this.categoryRest = categoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getSubcategoryRest() {
+        return subcategoryRest;
+    }
+
+    public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
+        this.subcategoryRest = subcategoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getLettercategoryRest() {
+        return lettercategoryRest;
+    }
+
+    public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
+        this.lettercategoryRest = lettercategoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getOfficelocationRest() {
+        return officelocationRest;
+    }
+
+    public void setOfficelocationRest(WorkFlowProcessMasterValueRest officelocationRest) {
+        this.officelocationRest = officelocationRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getCategoriesoffileRest() {
+        return categoriesoffileRest;
+    }
+
+    public void setCategoriesoffileRest(WorkFlowProcessMasterValueRest categoriesoffileRest) {
+        this.categoriesoffileRest = categoriesoffileRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getSubcategoriesoffileRest() {
+        return subcategoriesoffileRest;
+    }
+
+    public void setSubcategoriesoffileRest(WorkFlowProcessMasterValueRest subcategoriesoffileRest) {
+        this.subcategoriesoffileRest = subcategoriesoffileRest;
+    }
 }

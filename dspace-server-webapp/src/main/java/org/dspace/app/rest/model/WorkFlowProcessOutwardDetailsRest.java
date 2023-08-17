@@ -42,12 +42,27 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
     @NotNull
     @NotEmpty
     private String  serviceprovider;
+
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest categoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest subcategoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest lettercategoryRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest officelocationRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest categoriesoffileRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest subcategoriesoffileRest = null;
+
     public Date getDispatchdate() {
         return dispatchdate;
     }
     public void setDispatchdate(Date dispatchdate) {
         this.dispatchdate = dispatchdate;
     }
+
 
     public String getAwbno() {
         return awbno;
@@ -114,5 +129,53 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
 
     public void setOutwardmediumRest(WorkFlowProcessMasterValueRest outwardmediumRest) {
         this.outwardmediumRest = outwardmediumRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getCategoryRest() {
+        return categoryRest;
+    }
+
+    public void setCategoryRest(WorkFlowProcessMasterValueRest categoryRest) {
+        this.categoryRest = categoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getSubcategoryRest() {
+        return subcategoryRest;
+    }
+
+    public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
+        this.subcategoryRest = subcategoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getLettercategoryRest() {
+        return lettercategoryRest;
+    }
+
+    public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
+        this.lettercategoryRest = lettercategoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getOfficelocationRest() {
+        return officelocationRest;
+    }
+
+    public void setOfficelocationRest(WorkFlowProcessMasterValueRest officelocationRest) {
+        this.officelocationRest = officelocationRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getCategoriesoffileRest() {
+        return categoriesoffileRest;
+    }
+
+    public void setCategoriesoffileRest(WorkFlowProcessMasterValueRest categoriesoffileRest) {
+        this.categoriesoffileRest = categoriesoffileRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getSubcategoriesoffileRest() {
+        return subcategoriesoffileRest;
+    }
+
+    public void setSubcategoriesoffileRest(WorkFlowProcessMasterValueRest subcategoriesoffileRest) {
+        this.subcategoriesoffileRest = subcategoriesoffileRest;
     }
 }

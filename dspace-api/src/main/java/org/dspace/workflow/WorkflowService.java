@@ -12,12 +12,16 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
 import org.dspace.content.Collection;
 import org.dspace.content.WorkspaceItem;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.xmlworkflow.WorkflowConfigurationException;
+
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Service interface class for the WorkflowService framework.

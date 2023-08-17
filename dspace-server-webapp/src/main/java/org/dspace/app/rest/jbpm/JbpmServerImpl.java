@@ -173,6 +173,18 @@ public class JbpmServerImpl {
         HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess,headers);
         return restTemplate.exchange(baseurl+ JBPM.RECEIVED, HttpMethod.POST, entity, String.class).getBody();
     }
+    public String callback(WorkFlowProcessRest workflowProcess) throws  RuntimeException{
+        String baseurl=configurationService.getProperty("jbpm.server");
+        System.out.println("URL :"+baseurl+JBPM.CALLBACK);
+        JBPMProcess jbpmProcess=new JBPMProcess();
+        jbpmProcess.setQueueid(workflowProcess.getId());
+        jbpmProcess.setProcstatus("inprogress");
+        System.out.println("jbpm json::"+new Gson().toJson(jbpmProcess));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess,headers);
+        return restTemplate.exchange(baseurl+JBPM.CALLBACK, HttpMethod.POST, entity, String.class).getBody();
+    }
     public String gettasklist(String uuid) throws  RuntimeException{
         String baseurl=configurationService.getProperty("jbpm.server");
         HttpHeaders headers = new HttpHeaders();

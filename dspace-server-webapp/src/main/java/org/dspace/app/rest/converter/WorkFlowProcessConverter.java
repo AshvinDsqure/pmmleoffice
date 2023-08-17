@@ -122,8 +122,8 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getItems() != null) {
             workFlowProcessRest.setItemsRests(obj.getItems().stream().map(d -> {
                 ItemRest rest = itemConverter.convert(d, projection);
-                if(d.getItemtype()!=null){
-                    rest.setItemtypeRest(workFlowProcessMasterValueConverter.convert(d.getItemtype(),projection));
+                if (d.getItemtype() != null) {
+                    rest.setItemtypeRest(workFlowProcessMasterValueConverter.convert(d.getItemtype(), projection));
                 }
                 return rest;
             }).collect(Collectors.toList()));
@@ -161,7 +161,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workflowProcess.setWorkflowProcessSenderDiary(workflowProcessSenderDiaryConverter.convert(obj.getWorkflowProcessSenderDiaryRest()));
         }
         if (obj.getWorkFlowProcessInwardDetailsRest() != null) {
-            workflowProcess.setWorkFlowProcessInwardDetails(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetailsRest()));
+            workflowProcess.setWorkFlowProcessInwardDetails(workFlowProcessInwardDetailsConverter.convert(context,obj.getWorkFlowProcessInwardDetailsRest()));
         }
         if (obj.getWorkFlowProcessDraftDetailsRest() != null) {
             WorkFlowProcessDraftDetails draftDetails = workFlowProcessDraftDetailsService.create(context, workFlowProcessDraftDetailsConverter.convert(context, obj.getWorkFlowProcessDraftDetailsRest()));
@@ -224,13 +224,15 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         }
         return workflowProcess;
     }
+
     public WorkflowProcess convertByService(Context context, WorkFlowProcessRest rest) throws SQLException {
-      WorkflowProcess workflowProcess=null;
-        if(rest!= null && rest.getUuid() != null  && rest.getUuid().trim().length() !=0) {
+        WorkflowProcess workflowProcess = null;
+        if (rest != null && rest.getUuid() != null && rest.getUuid().trim().length() != 0) {
             workflowProcess = workflowProcessService.find(context, UUID.fromString(rest.getUuid()));
         }
         return workflowProcess;
     }
+
     public WorkflowProcess convertDraftwithID(WorkFlowProcessRest obj, Context context, UUID id) throws Exception {
         WorkflowProcess workflowProcess = workflowProcessService.find(context, id);
         if (obj.getWorkFlowProcessDraftDetailsRest() != null) {
@@ -266,17 +268,17 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
 
     public WorkFlowProcessRest convertByDashbord(Context context, WorkflowProcess obj, Projection projection) {
         WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
-        if (obj.getWorkflowType() != null && obj.getWorkflowType().getPrimaryvalue()!=null) {
+        if (obj.getWorkflowType() != null && obj.getWorkflowType().getPrimaryvalue() != null) {
             workFlowProcessRest.setWorkflowtype(obj.getWorkflowType().getPrimaryvalue());
             workFlowProcessRest.setWorkflowType(workFlowProcessMasterValueConverter.convert(obj.getWorkflowType(), projection));
         }
-        if (obj.getWorkflowStatus() != null && obj.getWorkflowStatus().getPrimaryvalue()!=null) {
+        if (obj.getWorkflowStatus() != null && obj.getWorkflowStatus().getPrimaryvalue() != null) {
             workFlowProcessRest.setWorkflowStatus(workFlowProcessMasterValueConverter.convert(obj.getWorkflowStatus(), projection));
             workFlowProcessRest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
         }
         workFlowProcessRest.setSubject(obj.getSubject());
         workFlowProcessRest.setInitDate(obj.getInitDate());
-        if (obj.getPriority() != null && obj.getPriority().getPrimaryvalue()!=null) {
+        if (obj.getPriority() != null && obj.getPriority().getPrimaryvalue() != null) {
             workFlowProcessRest.setPriorityRest(workFlowProcessMasterValueConverter.convert(obj.getPriority(), projection));
             workFlowProcessRest.setPriority(obj.getPriority().getPrimaryvalue());
         }
@@ -285,12 +287,12 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workFlowProcessRest.setDueDate(ownerRest.get().getAssignDate());
             workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
         }
-        if(ownerRest.isPresent() && ownerRest.get()!=null && ownerRest.get().getePerson()!=null&& ownerRest.get().getePerson().getFullName()!=null){
+        if (ownerRest.isPresent() && ownerRest.get() != null && ownerRest.get().getePerson() != null && ownerRest.get().getePerson().getFullName() != null) {
             workFlowProcessRest.setCurrentrecipient(ownerRest.get().getePerson().getFullName());
         }
-        if (obj.getWorkflowProcessEpeople() != null) {
+        if (obj.getWorkflowProcessEpeople() != null && obj.getWorkflowProcessEpeople().size()!=0 && !obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
             Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
-            if (senderRest.isPresent() && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
+            if (senderRest!=null && senderRest.isPresent() && senderRest.get() != null && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
                 workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
                 workFlowProcessRest.setSendername(senderRest.get().getePerson().getFullName());
             }
@@ -307,10 +309,10 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsConverter.convert(obj.getWorkFlowProcessDraftDetails(), projection));
             workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessDraftDetails().getDraftdate());
         }
-        if(obj.getDispatchmode()!=null && obj.getDispatchmode().getPrimaryvalue()!=null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")){
+        if (obj.getDispatchmode() != null && obj.getDispatchmode().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
             workFlowProcessRest.setMode(obj.getDispatchmode().getPrimaryvalue());
         }
-        if(obj.getWorkFlowProcessOutwardDetails()!=null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium()!=null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue()!=null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")){
+        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")) {
             workFlowProcessRest.setMode(obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue());
         }
         workFlowProcessRest.setUuid(obj.getID().toString());

@@ -237,7 +237,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
             List<MultipartFile> uploadfiles)
         throws SQLException, FileNotFoundException, IOException, AuthorizeException {
         List<WorkspaceItemRest> results = new ArrayList<>();
-
+        System.out.println(":::::::::::::::::::::upload:::::::::::::::::::::::::::::");
         String uuid = request.getParameter("owningCollection");
         if (StringUtils.isBlank(uuid)) {
             uuid = configurationService.getProperty("submission.default.collection");

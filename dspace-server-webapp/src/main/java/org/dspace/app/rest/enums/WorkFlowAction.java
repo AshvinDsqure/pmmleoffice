@@ -179,6 +179,21 @@ public enum WorkFlowAction {
     DELETE("Delete"),
     UPDATE("Update"),
     PENDING("Pending"),
+    CALLBACK("CallBack") {
+        @Override
+        public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
+            this.setIscallback(true);
+            String forwardResponce = this.getJbpmServer().callback(workFlowProcessRest);
+            System.out.println("CALLBACK::::::::responce String:::::::::" + forwardResponce);
+            JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+            System.out.println("jbpmResponse:: CALLBACK " + new Gson().toJson(jbpmResponse));
+            WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
+            this.setIscallback(false);
+            WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, currentOwner);
+            this.setComment(null);
+            return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
+        }
+    },
     COMPLETE("Complete") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
@@ -219,6 +234,9 @@ public enum WorkFlowAction {
 
     private Boolean isbackward = false;
     private Boolean isrefer = false;
+
+    private Boolean iscallback = false;
+
     private List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs;
     private WorkFlowProcessHistoryService workFlowProcessHistoryService;
     private WorkFlowProcessCommentService workFlowProcessCommentService;
@@ -268,6 +286,14 @@ public enum WorkFlowAction {
 
     public void setIsrefer(Boolean isrefer) {
         this.isrefer = isrefer;
+    }
+
+    public Boolean getIscallback() {
+        return iscallback;
+    }
+
+    public void setIscallback(Boolean iscallback) {
+        this.iscallback = iscallback;
     }
 
     WorkFlowAction(String action) {
@@ -404,17 +430,22 @@ public enum WorkFlowAction {
         workFlowAction.setWorkflowProcessEpeople(workflowProcessEperson);
         WorkFlowProcessMasterValue workFlowProcessMasterValue = this.getWorkFlowProcessMasterValueService().findByName(context, this.getAction(), workFlowProcessMaster);
         workFlowAction.setActionDate(new Date());
+        workFlowAction.setWorkflowProcess(workflowProcess);
         workFlowAction.setAction(workFlowProcessMasterValue);
         if (workFlowProcessMasterValue != null && workFlowProcessMasterValue.getPrimaryvalue() != null && workFlowProcessMasterValue.getPrimaryvalue().equalsIgnoreCase("Received")) {
             workFlowAction.setComment("Dack received by " + workflowProcessEperson.getePerson().getFullName() + ".");
+            return workFlowAction;
         }
-        workFlowAction.setWorkflowProcess(workflowProcess);
+        if (workFlowProcessMasterValue != null && workFlowProcessMasterValue.getPrimaryvalue() != null && workFlowProcessMasterValue.getPrimaryvalue().equalsIgnoreCase("CallBack")) {
+            workFlowAction.setComment(" Received.");
+            return workFlowAction;
+        }
         if (this.getComment() != null && !this.getComment().isEmpty()) {
-            String htmlcomment = "<div>" + this.getComment() + "</div>";
-            System.out.println("::::::html::::::::::" + htmlcomment);
-            System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
-            workFlowAction.setComment(PdfUtils.htmlToText(htmlcomment));
             if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
+                String htmlcomment = "<div>" + this.getComment() + "</div>";
+                System.out.println("::::::html::::::::::" + htmlcomment);
+                System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
+                workFlowAction.setComment(PdfUtils.htmlToText(htmlcomment));
                 WorkFlowProcessComment workFlowProcessComment = new WorkFlowProcessComment();
                 workFlowProcessComment.setComment(PdfUtils.htmlToText(htmlcomment));
                 workFlowProcessComment.setWorkFlowProcessHistory(workFlowAction);
@@ -436,6 +467,8 @@ public enum WorkFlowAction {
                     }
                 }
                 workFlowAction.setWorkFlowProcessComment(workFlowProcessComment);
+            }else{
+                workFlowAction.setComment(this.getComment());
             }
         }
         System.out.println("::::::OUT :storeWorkFlowHistory:::::::::: ");
@@ -610,6 +643,13 @@ public enum WorkFlowAction {
             } else {
                 currentOwner.setIssequence(true);
             }
+            if(this.iscallback){
+                System.out.println("in Call Back current owner");
+                currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getOwner()).findFirst().get();
+                currentOwner.setIssequence(false);
+                currentOwner.setOwner(false);
+                currentOwner.setSender(true);
+            }
             currentOwner.setOwner(false);
             currentOwner.setSender(true);
             this.getWorkflowProcessEpersonService().update(context, currentOwner);
@@ -633,6 +673,7 @@ public enum WorkFlowAction {
         }
         if (jbpmResponse.getNext_user() != null && jbpmResponse.getNext_user().trim().length() != 0) {
             WorkflowProcessEperson workflowProcessEpersonOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getNext_user()))).findFirst().get();
+            currentOwner=workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get();
             if (workflowProcessEpersonOwner.getePerson().getEmail() != null) {
                 System.out.println("getNext_user::::::::::::" + workflowProcessEpersonOwner.getePerson().getEmail());
             }

@@ -14,6 +14,8 @@ import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -93,5 +95,5 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
     int countByTypeAndStatus(Context context,UUID typeid,UUID statusid,UUID epersonid) throws SQLException;
     int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid) throws SQLException;
-
+    public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream) throws IOException, MessagingException, SQLException, AuthorizeException;
 }
