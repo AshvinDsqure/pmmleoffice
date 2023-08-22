@@ -29,4 +29,6 @@ public interface WorkFlowProcessInwardDetailsService extends DSpaceObjectService
     public int countRows(Context context) throws SQLException;
 
     WorkFlowProcessInwardDetails getByInwardNumber(Context context,String inwardnumber) throws SQLException;
+    List<WorkFlowProcessInwardDetails> searchInwardNumber(Context context, String name) throws SQLException;
+
 }

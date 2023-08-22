@@ -185,7 +185,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (currentuser.getTablenumber() != null) {
                 sb.append("/" + currentuser.getTablenumber());
             }
-            sb.append("/Inw");
+            sb.append("/INW");
             sb.append("/" + DateUtils.getFinancialYear());
             int count = workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.INWARD.getAction()).getID());
             count = count + 1;

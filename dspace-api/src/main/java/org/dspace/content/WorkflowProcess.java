@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.content;
@@ -40,16 +40,16 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
      * Wild card for Dublin Core metadata qualifiers/languages
      */
     public static final String ANY = "*";
-    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "workflowprocessinwarddetails_idf")
     private WorkFlowProcessInwardDetails workFlowProcessInwardDetails = null;
-    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "workflowprocessoutwarddetails_idf")
     private WorkFlowProcessOutwardDetails workFlowProcessOutwardDetails = null;
-    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "workflowprocesssenderdiary")
     private WorkflowProcessSenderDiary workflowProcessSenderDiary = null;
-    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.ALL})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     @JoinColumn(name = "workflowprocessdraftdetails_idf")
     private WorkFlowProcessDraftDetails workFlowProcessDraftDetails;
     /* Filling Details*/
@@ -70,7 +70,7 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @JoinColumn(name = "item")
     private Item item;
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess")
-    private List<Item> items=new ArrayList<>();
+    private List<Item> items = new ArrayList<>();
 
     /* Attechment  Details*/
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess")
@@ -97,10 +97,10 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @JoinColumn(name = "workflowprocessnote_idf")
     private WorkflowProcessNote workflowProcessNote;
     @Column(name = "isdelete")
-    private  Boolean isdelete =false;
+    private Boolean isdelete = false;
 
     @Column(name = "ismode")
-    private  Boolean ismode =false;
+    private Boolean ismode = false;
 
 
 //    @Column(name = "assignduedate", columnDefinition = "timestamp with time zone")
@@ -189,31 +189,15 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     public List<WorkflowProcessEperson> getWorkflowProcessEpeople() {
         return workflowProcessEpeople;
     }
-    public void setnewUser(WorkflowProcessEperson workflowProcessEperson) {
-        WorkflowProcessEperson workflowProcessEpersonmax = this.workflowProcessEpeople.stream().max(Comparator.comparing(WorkflowProcessEperson::getIndex)).orElseThrow(NoSuchElementException::new);
-        var nextindex=workflowProcessEpersonmax.getIndex()+1;
-        workflowProcessEperson.setIndex(nextindex);
-        workflowProcessEperson.setSequence(nextindex);
 
-        /* this code enable when multiuser flow work
-        if(workflowProcessEperson.getPersons().size()!=0) {
-            System.out.println("in Multiple user added"+nextindex);
-            for (EPerson e:workflowProcessEperson.getPersons()) {
-                WorkflowProcessEperson ep=new WorkflowProcessEperson();
-                ep.setePerson(e);
-                ep.setIndex(nextindex);
-                ep.setSequence(nextindex);
-                ep.setWorkflowProcess(workflowProcessEperson.getWorkflowProcess());
-                ep.setAssignDate(workflowProcessEperson.getAssignDate());
-                ep.setIssequence(workflowProcessEperson.getIssequence());
-                this.workflowProcessEpeople.add(workflowProcessEperson);
-                System.out.println("in Multiple user added");
-            }
-        }else{
-            this.workflowProcessEpeople.add(workflowProcessEperson);
-        }*/
+    public void setnewUser(WorkflowProcessEperson workflowProcessEperson) {
+       // WorkflowProcessEperson workflowProcessEpersonmax = this.workflowProcessEpeople.stream().max(Comparator.comparing(WorkflowProcessEperson::getIndex)).orElseThrow(NoSuchElementException::new);
+       // var nextindex = workflowProcessEpersonmax.getIndex() + 1;
+     /*   workflowProcessEperson.setIndex(nextindex);
+        workflowProcessEperson.setSequence(nextindex);*/
         this.workflowProcessEpeople.add(workflowProcessEperson);
-        System.out.println("workflowProcessEpersonmax index::"+workflowProcessEpersonmax.getIndex());
+        //this.workflowProcessEpeople.add(workflowProcessEperson);
+      //  System.out.println("workflowProcessEpersonmax index::" + workflowProcessEpersonmax.getIndex());
     }
 
     public void setWorkflowProcessEpeople(List<WorkflowProcessEperson> workflowProcessEpeople) {
@@ -279,6 +263,7 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     public Boolean getIsdelete() {
         return isdelete;
     }
+
     public void setIsndelete(Boolean isdelete) {
         this.isdelete = isdelete;
     }

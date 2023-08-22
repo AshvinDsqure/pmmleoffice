@@ -354,4 +354,13 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isOwner", true);
         return count(query);
     }
+
+    @Override
+    public List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException {
+        Query query = createQuery(context, "SELECT wp FROM WorkflowProcess as wp " +
+                "left join wp.workflowType as t where t.id=:workflowtypeid and lower(wp.Subject)  like :subject ");
+        query.setParameter("workflowtypeid", workflowtypeid);
+        query.setParameter("subject", "%"+subject.toLowerCase()+"%");
+        return query.getResultList();
+    }
 }

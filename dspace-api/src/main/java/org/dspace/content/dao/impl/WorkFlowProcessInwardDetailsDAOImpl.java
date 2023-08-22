@@ -16,6 +16,7 @@ import org.dspace.core.Context;
 
 import javax.persistence.Query;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 public class WorkFlowProcessInwardDetailsDAOImpl extends AbstractHibernateDAO<WorkFlowProcessInwardDetails> implements WorkFlowProcessInwardDetailsDAO {
@@ -38,5 +39,18 @@ public class WorkFlowProcessInwardDetailsDAOImpl extends AbstractHibernateDAO<Wo
         Query query = createQuery(context, "SELECT inward from  WorkFlowProcessInwardDetails as inward where inward.inwardNumber=:inwardnumber");
         query.setParameter("inwardnumber",inwardnumber);
         return (WorkFlowProcessInwardDetails) query.getSingleResult();
+    }
+
+    @Override
+    public List<WorkFlowProcessInwardDetails> searchInwardNumber(Context context, String name) throws SQLException {
+        try {
+            Query query = createQuery(context,"SELECT s from  WorkFlowProcessInwardDetails as s where lower(s.inwardNumber)  like :name ");
+            query.setParameter("name","%"+name.toLowerCase()+"%");
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("in error " + e.getMessage());
+            return null;
+        }
     }
 }

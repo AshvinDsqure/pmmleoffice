@@ -16,6 +16,7 @@ import org.dspace.core.Context;
 
 import javax.persistence.Query;
 import java.sql.SQLException;
+import java.util.List;
 
 public class WorkFlowProcessOutwardDetailsDAOImpl extends AbstractHibernateDAO<WorkFlowProcessOutwardDetails> implements WorkFlowProcessOutwardDetailsDAO {
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(WorkFlowProcessOutwardDetailsDAOImpl.class);
@@ -37,5 +38,18 @@ public class WorkFlowProcessOutwardDetailsDAOImpl extends AbstractHibernateDAO<W
         Query query = createQuery(context, "SELECT outward from  WorkFlowProcessOutwardDetails as outward where outward.outwardNumber=:outwardnumber");
         query.setParameter("outwardnumber",outwardnumber);
         return (WorkFlowProcessOutwardDetails) query.getSingleResult();
+    }
+
+    @Override
+    public List<WorkFlowProcessOutwardDetails> searchOutwardNumber(Context context, String name) throws SQLException {
+        try {
+            Query query = createQuery(context,"SELECT s from  WorkFlowProcessOutwardDetails as s where lower(s.outwardNumber)  like :name ");
+            query.setParameter("name","%"+name.toLowerCase()+"%");
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("in error " + e.getMessage());
+            return null;
+        }
     }
 }

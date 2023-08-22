@@ -372,4 +372,24 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         return workflowProcess;
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "searchByTypeandSubject")
+    public Page<WorkFlowProcessRest> searchByTypeandSubject(@Parameter(value = "workflowtypeid", required = true) UUID workflowtypeid,@Parameter(value = "subject", required = true) String subject, Pageable pageable) {
+        List<WorkFlowProcessRest>workflowsRes=null;
+        try {
+            System.out.println("sear>>>>>>>>>>>" + subject);
+            Context context = obtainContext();
+            Optional<List<WorkflowProcess>> workflowProcesses = Optional.ofNullable(workflowProcessService.searchSubjectByWorkflowTypeandSubject(context, workflowtypeid,subject));
+            if (workflowProcesses.isPresent()) {
+                workflowsRes = workflowProcesses.get().stream().map(d -> {
+                    return workFlowProcessConverter.convertsearchBySubject(d);
+                }).collect(toList());
+                return new PageImpl(workflowsRes, pageable,9999);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

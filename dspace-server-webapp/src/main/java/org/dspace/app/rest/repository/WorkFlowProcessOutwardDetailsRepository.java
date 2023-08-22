@@ -11,17 +11,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.Parameter;
+import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkFlowProcessOutwardDetailsConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkFlowProcessOutwardDetailsRest;
+import org.dspace.app.rest.model.WorkflowProcessSenderDiaryRest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.WorkFlowProcessOutwardDetails;
+import org.dspace.content.WorkflowProcessSenderDiary;
 import org.dspace.content.service.WorkFlowProcessOutwardDetailsService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -129,9 +134,7 @@ public class WorkFlowProcessOutwardDetailsRepository extends DSpaceObjectRestRep
         List<WorkFlowProcessOutwardDetails>  workFlowProcessOutwardDetails= workFlowProcessOutwardDetailsService.findAll(context,
                 Math.toIntExact(pageable.getPageSize()), Math.toIntExact(pageable.getOffset()));
         return converter.toRestPage(workFlowProcessOutwardDetails, pageable, total, utils.obtainProjection());
-
     }
-
     protected void delete(Context context, UUID id) throws AuthorizeException {
         log.info("::::::in::::delete::::::::::");
         WorkFlowProcessOutwardDetails workFlowProcessOutwardDetails = null;
@@ -141,7 +144,6 @@ public class WorkFlowProcessOutwardDetailsRepository extends DSpaceObjectRestRep
                 log.info("::::::id not found::::delete::::::::::");
                 throw new ResourceNotFoundException(WorkFlowProcessOutwardDetailsRest.CATEGORY + "." + WorkFlowProcessOutwardDetailsRest.NAME +
                         " with id: " + id + " not found");
-
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -153,6 +155,21 @@ public class WorkFlowProcessOutwardDetailsRepository extends DSpaceObjectRestRep
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "searchByOutwardNumber")
+    public Page<WorkFlowProcessOutwardDetailsRest> searchByOutwardNumber(@Parameter(value = "outwardnumber", required = true) String name, Pageable pageable) {
+        try {
+            System.out.println("sear>>>>>>>>>>>" + name);
+            Context context = obtainContext();
+            Optional<List<WorkFlowProcessOutwardDetails>> workFlowProcessOutwardDetails = Optional.ofNullable(workFlowProcessOutwardDetailsService.searchOutwardNumber(context, name));
+            if (workFlowProcessOutwardDetails.isPresent()) {
+                return converter.toRestPage(workFlowProcessOutwardDetails.get(), pageable, 999, utils.obtainProjection());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override

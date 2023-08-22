@@ -32,11 +32,11 @@ public class JbpmServerImpl {
     public RestTemplate restTemplate;
     @Autowired
     private ConfigurationService configurationService;
-    public String startProcess(WorkFlowProcessRest workflowProcessw,List<String> users) throws  RuntimeException{
+    public String startProcess(WorkFlowProcessRest workflowProcessw,List<Object> users) throws  RuntimeException{
         System.out.println("::::::::::::::CREATE ACTION::::::::::::::::::::::");
         String baseurl=configurationService.getProperty("jbpm.server");
         JBPMProcess jbpmProcess=new JBPMProcess(workflowProcessw);
-        jbpmProcess.setUsers(new ArrayList<Object>(users));
+        jbpmProcess.setUsers(users);
         jbpmProcess.setWorkflowType(workflowProcessw.getWorkflowType().getPrimaryvalue());
         System.out.println("jbpm json::Request"+new Gson().toJson(jbpmProcess));
         HttpHeaders headers = new HttpHeaders();
@@ -46,7 +46,7 @@ public class JbpmServerImpl {
         return restTemplate.exchange(baseurl+ JBPM.CREATEPROCESS, HttpMethod.POST, entity, String.class).getBody();
 
     }
-    public String   forwardTask(WorkFlowProcessRest workflowProcess,List<String> users) throws  RuntimeException{
+    public String   forwardTask(WorkFlowProcessRest workflowProcess,List<Object> users) throws  RuntimeException{
         System.out.println("::::::::::::::FORWARD ACTION::::::::::::::::::::::");
         String baseurl=configurationService.getProperty("jbpm.server");
         JBPMProcess jbpmProcess=new JBPMProcess();
@@ -86,7 +86,6 @@ public class JbpmServerImpl {
         System.out.println("usersobj current user:"+new Gson().toJson(usersobj));
         usersobj.add(dispatchUsers);
         System.out.println("user"+dispatchUsers);
-
         System.out.println("final make objeck like "+usersobj);
         jbpmProcess.setUsers(usersobj);
         jbpmProcess.setProcstatus("inprogress");
@@ -179,6 +178,7 @@ public class JbpmServerImpl {
         JBPMProcess jbpmProcess=new JBPMProcess();
         jbpmProcess.setQueueid(workflowProcess.getId());
         jbpmProcess.setProcstatus("inprogress");
+        jbpmProcess.setWorkflowType(null);
         System.out.println("jbpm json::"+new Gson().toJson(jbpmProcess));
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));

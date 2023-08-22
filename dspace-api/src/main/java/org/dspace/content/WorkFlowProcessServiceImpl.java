@@ -284,4 +284,9 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             email.send();
         }
     }
+
+    @Override
+    public List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException {
+        return workflowProcessDAO.searchSubjectByWorkflowTypeandSubject(context,workflowtypeid,subject);
+    }
 }

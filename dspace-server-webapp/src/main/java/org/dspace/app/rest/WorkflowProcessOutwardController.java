@@ -150,7 +150,7 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
             if (currentuser.getTablenumber() != null) {
                 sb.append("/"+currentuser.getTablenumber());
             }
-            sb.append("/Out");
+            sb.append("/OUT");
             sb.append("/"+DateUtils.getFinancialYear());
             int count = workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.OUTWARED.getAction()).getID());
             count = count + 1;

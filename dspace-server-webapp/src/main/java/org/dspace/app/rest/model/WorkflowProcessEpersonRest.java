@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.model.helper.MyDateConverter;
+import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.eperson.EPerson;
 import org.springframework.data.annotation.Transient;
 
@@ -57,7 +58,8 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest dispatchModeRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest eligibleForFilingRest = null;
-
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest responsebyallusersRest = null;
     @JsonProperty
     private ItemRest itemRest = null;
     @JsonProperty
@@ -70,6 +72,8 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     private Integer sequence;
     @JsonProperty
     private  Boolean isOwner;
+    @JsonProperty
+    private  Boolean isapproved=false;
 
     @JsonProperty
     private  Boolean issequence=false;
@@ -241,5 +245,21 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setEligibleForFilingRest(WorkFlowProcessMasterValueRest eligibleForFilingRest) {
         this.eligibleForFilingRest = eligibleForFilingRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getResponsebyallusersRest() {
+        return responsebyallusersRest;
+    }
+
+    public void setResponsebyallusersRest(WorkFlowProcessMasterValueRest responsebyallusersRest) {
+        this.responsebyallusersRest = responsebyallusersRest;
+    }
+
+    public Boolean getIsapproved() {
+        return isapproved;
+    }
+
+    public void setIsapproved(Boolean isapproved) {
+        this.isapproved = isapproved;
     }
 }

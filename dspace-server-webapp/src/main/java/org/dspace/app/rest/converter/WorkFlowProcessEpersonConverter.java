@@ -56,18 +56,21 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if (obj.getUsertype() != null) {
             workflowProcessDefinitionEpersonRest.setUserType(workFlowProcessMasterValueConverter.convert(obj.getUsertype(), projection));
         }
+        if (obj.getResponsebyallusers() != null) {
+            workflowProcessDefinitionEpersonRest.setResponsebyallusersRest(workFlowProcessMasterValueConverter.convert(obj.getResponsebyallusers(), projection));
+        }
         if(obj.getInitiator()!=null) {
             workflowProcessDefinitionEpersonRest.setInitiator(obj.getInitiator());
         }
-        if(obj.getPersons()!=null){
-            workflowProcessDefinitionEpersonRest.setePersonRests(obj.getPersons().stream().map(d->{return ePersonConverter.convert(d,projection);}).collect(Collectors.toList()));
-        }
+
         workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
         workflowProcessDefinitionEpersonRest.setSequence(obj.getSequence());
         workflowProcessDefinitionEpersonRest.setOwner(obj.getOwner());
         workflowProcessDefinitionEpersonRest.setIsrefer(obj.getIsrefer());
+        workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+
         return workflowProcessDefinitionEpersonRest;
     }
 
@@ -93,22 +96,14 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if (rest.getUserType() != null) {
             workflowProcessEperson.setUsertype(workFlowProcessMasterValueConverter.convert(context, rest.getUserType()));
         }
+        if (rest.getResponsebyallusersRest() != null) {
+            workflowProcessEperson.setResponsebyallusers(workFlowProcessMasterValueConverter.convert(context, rest.getResponsebyallusersRest()));
+        }
         if(rest.getAssignDate() != null){
             workflowProcessEperson.setAssignDate(rest.getAssignDate());
         }
         if(rest.getInitiator()!=null) {
             workflowProcessEperson.setInitiator(rest.getInitiator());
-        }
-        if(rest.getePersonRests()!=null) {
-            workflowProcessEperson.setPersons(rest.getePersonRests().stream().filter(d->d.getId()!=null).map(s->
-                    {
-                        try {
-                         return  ePersonConverter.convert(context,s);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-            ).collect(Collectors.toList()));
         }
         workflowProcessEperson.setIssequence(rest.getIssequence());
         workflowProcessEperson.setSequence(rest.getSequence());

@@ -104,4 +104,9 @@ public class WorkFlowProcessOutwardDetailsServiceImpl extends DSpaceObjectServic
     public WorkFlowProcessOutwardDetails getByOutwardNumber(Context context, String outwardnumber) throws SQLException {
         return workFlowProcessOutwardDetailsDAO.getByOutwardNumber(context,outwardnumber);
     }
+
+    @Override
+    public List<WorkFlowProcessOutwardDetails> searchOutwardNumber(Context context, String name) throws SQLException {
+        return workFlowProcessOutwardDetailsDAO.searchOutwardNumber(context,name);
+    }
 }

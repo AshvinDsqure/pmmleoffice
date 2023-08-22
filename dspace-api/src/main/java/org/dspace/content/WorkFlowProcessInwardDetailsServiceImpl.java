@@ -105,4 +105,9 @@ public class WorkFlowProcessInwardDetailsServiceImpl extends DSpaceObjectService
     public WorkFlowProcessInwardDetails getByInwardNumber(Context context, String inwardnumber) throws SQLException {
         return workFlowProcessInwardDetailsDAO.getByInwardNumber(context,inwardnumber);
     }
+
+    @Override
+    public List<WorkFlowProcessInwardDetails> searchInwardNumber(Context context, String name) throws SQLException {
+        return workFlowProcessInwardDetailsDAO.searchInwardNumber(context,name);
+    }
 }

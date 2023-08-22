@@ -205,7 +205,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
-    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft1")
     public WorkFlowProcessRest forwordDraft(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
@@ -319,9 +319,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
 
-/*
+
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
-    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft1")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft")
     public WorkFlowProcessRest forwordDraft1(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
@@ -331,94 +331,41 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             System.out.println("workFlowProcessRest" + new Gson().toJson(workFlowProcessRest));
             String comment = workFlowProcessRest.getComment();
             System.out.println("Comment::::::::::::::::::::::::::" + comment);
-
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-            if (workFlowProcess.getItem() == null && workFlowProcessRest.getItemRest() != null) {
+            if (workFlowProcessRest!=null && workFlowProcessRest.getItemRest() != null) {
                 workFlowProcess.setItem(itemConverter.convert(workFlowProcessRest.getItemRest(), context));
             }
-
-            System.out.println("all list " + workFlowProcessRest.getWorkflowProcessEpersonRests().size());
+            System.out.println("add user " + workFlowProcessRest.getWorkflowProcessEpersonRests().size());
             for (WorkflowProcessEpersonRest newEpeson : workFlowProcessRest.getWorkflowProcessEpersonRests()) {
-                System.out.println("test list" + newEpeson.getePersonRests().size());
-                for (EPersonRest e : newEpeson.getePersonRests()) {
-                    System.out.println("idd" + e.getId());
-                }
-            }
-            //find already added user old user
-            List<String> olduser = null;
-            List<WorkflowProcessEperson> olduserlistuuid = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
-            if (olduserlistuuid != null && olduserlistuuid.size() != 0) {
-                olduser = olduserlistuuid.stream()
-                        .filter(d -> d.getePerson() != null)
-                        .filter(d -> d.getePerson().getID() != null)
-                        .map(d -> d.getePerson().getID().toString()).collect(Collectors.toList());
-            }
-            System.out.println("old user list" + olduserlistuuid);
-            //find new added user
-            List<String> newuserlist = new ArrayList<>();
-            for (WorkflowProcessEpersonRest e : workFlowProcessRest.getWorkflowProcessEpersonRests()) {
-                if (!e.getIssequence() && e.getePersonRest() != null && e.getePersonRest().getId() != null) {
-                    EPerson ee = ePersonConverter.convert(context, e.getePersonRest());
-                    if (ee != null) {
-                        newuserlist.add(ee.getID().toString());
-                    }
-                }
-            }
-            System.out.println("new  user list" + newuserlist);
-            //this list used to add new user and already added user not process just new user add in epersion
-            List<String> processlistlist = new ArrayList<>();
-            if (newuserlist != null && newuserlist.size() != 0) {
-                for (String s : newuserlist) {
-                    if (olduser != null && olduser.contains(s)) {
-                    } else {
-                        processlistlist.add(s);
-                    }
-                }
-            }
-            List<WorkflowProcessEperson> newUserList = new ArrayList<>();
-            if (processlistlist != null && processlistlist.size() != 0) {
-                for (WorkflowProcessEpersonRest newEpeson : workFlowProcessRest.getWorkflowProcessEpersonRests()) {
-                    if (!newEpeson.getIssequence() && newEpeson.getePersonRest() != null && newEpeson.getePersonRest().getId() != null && processlistlist.contains(newEpeson.getePersonRest().getId())) {
-                        newUserList.add(workFlowProcessEpersonConverter.convert(context, newEpeson));
-                    }
-                    if (newEpeson.getePersonRests() != null) {
-                        System.out.println("add multiple user ");
-                        newUserList.add(workFlowProcessEpersonConverter.convert(context, newEpeson));
-                    }
-                }
-            }
-            //add
-            List<WorkflowProcessEpersonRest> list1 = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getePersonRests() != null).collect(Collectors.toList());
-            if (list1 != null) {
-                for (WorkflowProcessEpersonRest newEpeson : list1) {
-                    newUserList.add(workFlowProcessEpersonConverter.convert(context, newEpeson));
-                }
-            }
+              WorkflowProcessEperson workflowProcessEperson =  workFlowProcessEpersonConverter.convert(context, newEpeson);
 
-            System.out.println("size  new list :" + newUserList.size());
-            if (newUserList.size() != 0) {
-                Comparator<WorkflowProcessEperson> c = (a, b) -> a.getIndex().compareTo(b.getIndex());
-                List<WorkflowProcessEperson> list = newUserList.stream().sorted(c).collect(Collectors.toList());
-                for (WorkflowProcessEperson workflowProcessEperson : list) {
-                    System.out.println("new user  index " + workflowProcessEperson.getIndex());
-                    workflowProcessEperson.setWorkflowProcess(workFlowProcess);
-                    Optional<WorkFlowProcessMasterValue> userTypeOption = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
-                    if (userTypeOption.isPresent()) {
-                        workflowProcessEperson.setUsertype(userTypeOption.get());
-                    }
-                    workFlowProcess.setnewUser(workflowProcessEperson);
-                    workflowProcessService.create(context, workFlowProcess);
+                System.out.println("new user index "+workflowProcessEperson.getIndex());
+                workflowProcessEperson.setWorkflowProcess(workFlowProcess);
+                Optional<WorkFlowProcessMasterValue> userTypeOption = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
+                if (userTypeOption.isPresent()) {
+                    workflowProcessEperson.setUsertype(userTypeOption.get());
                 }
+                workFlowProcess.setnewUser(workflowProcessEperson);
+                workflowProcessService.create(context, workFlowProcess);
             }
             WorkFlowAction action = WorkFlowAction.FORWARD;
+            //user not select any next user then flow go initiator
             if (workFlowProcessRest.getWorkflowProcessEpersonRests().size() == 0 && workFlowProcess.getWorkflowProcessEpeople() != null) {
-                System.out.println("in initiasasasas");
                 Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
                 if (workflowPro.isPresent()) {
-                    System.out.println("in initiasasasas");
                     action.setInitiator(true);
                 } else {
                     action.setInitiator(false);
+                }
+            }
+            //one flow completed after next time forward initiator to next user
+            if (workFlowProcess.getWorkflowProcessEpeople() != null) {
+                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
+                if (workflowPro.isPresent() && workflowPro.get().getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                    System.out.println("::::::::::::::::::::::::::::setInitiatorForward::::::::true::::::::::::::::::::");
+                    action.setInitiatorForward(true);
+                } else {
+                    action.setInitiatorForward(false);
                 }
             }
             if (comment != null) {
@@ -444,7 +391,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
 
     }
-*/
+
 
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
@@ -712,7 +659,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
-
             Item item = workFlowProcess.getItem();
             if (item != null) {
                 workFlowProcess.getWorkflowProcessReferenceDocs().forEach(wd -> {

@@ -58,6 +58,9 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "office_id")
     private WorkFlowProcessMasterValue office = null;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsebyallusers")
+    private WorkFlowProcessMasterValue responsebyallusers = null;
     @JsonProperty
     @Column(name = "sequence")
     private Integer sequence;
@@ -68,6 +71,8 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     private List<WorkFlowProcessHistory> workFlowProcessHistories = new ArrayList<>();
     @Column(name = "isowner")
     private  Boolean isOwner;
+    @Column(name = "isapproved")
+    private  Boolean isapproved=false;
     @Column(name = "issender")
     private  Boolean isSender=false;
     @Column(name = "initiator")
@@ -227,5 +232,21 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setPersons(List<EPerson> persons) {
         Persons = persons;
+    }
+
+    public WorkFlowProcessMasterValue getResponsebyallusers() {
+        return responsebyallusers;
+    }
+
+    public void setResponsebyallusers(WorkFlowProcessMasterValue responsebyallusers) {
+        this.responsebyallusers = responsebyallusers;
+    }
+
+    public Boolean getIsapproved() {
+        return isapproved;
+    }
+
+    public void setIsapproved(Boolean isapproved) {
+        this.isapproved = isapproved;
     }
 }

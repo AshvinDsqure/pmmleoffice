@@ -19,15 +19,14 @@ import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.content.service.WorkflowProcessSenderDiaryService;
 import org.dspace.content.service.WorkflowProcessService;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.sql.SQLException;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public enum WorkFlowType {
@@ -49,7 +48,7 @@ public enum WorkFlowType {
             }
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
-            if(workFlowProcessRest.getWorkflowProcessReferenceDocRests()!=null) {
+            if (workFlowProcessRest.getWorkflowProcessReferenceDocRests() != null) {
                 workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
                     try {
                         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
@@ -130,6 +129,7 @@ public enum WorkFlowType {
             this.getWorkFlowAction().perfomeAction(context, workflowProcess, workFlowProcessRest);
             return workFlowProcessRest;
         }
+
         @Override
         public WorkFlowProcessRest storeWorkFlowProcessDraft(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
             workFlowProcessRest.setWorkflowTypeStr("OUTWARED");
@@ -192,6 +192,7 @@ public enum WorkFlowType {
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             return workFlowProcessRest;
         }
+
         @Override
         public WorkFlowProcessRest storeWorkFlowProcessDraft(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
             workFlowProcessRest.setWorkflowTypeStr("DRAFT");

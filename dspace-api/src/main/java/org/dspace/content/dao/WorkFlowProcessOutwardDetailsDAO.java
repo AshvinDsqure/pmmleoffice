@@ -13,9 +13,11 @@ import org.dspace.content.WorkFlowProcessOutwardDetails;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public interface WorkFlowProcessOutwardDetailsDAO extends DSpaceObjectLegacySupportDAO<WorkFlowProcessOutwardDetails>{
     int countRows(Context context) throws SQLException;
     WorkFlowProcessOutwardDetails getByOutwardNumber(Context context, String outwardnumber) throws SQLException;
+    List<WorkFlowProcessOutwardDetails> searchOutwardNumber(Context context, String name) throws SQLException;
 
 }

@@ -11,17 +11,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.Parameter;
+import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkFlowProcessInwardDetailsConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkFlowProcessInwardDetailsRest;
+import org.dspace.app.rest.model.WorkFlowProcessOutwardDetailsRest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.WorkFlowProcessInwardDetails;
+import org.dspace.content.WorkFlowProcessOutwardDetails;
 import org.dspace.content.service.WorkFlowProcessInwardDetailsService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -101,13 +106,25 @@ public class WorkFlowProcessInwardDetailsRepository extends DSpaceObjectRestRepo
         log.info("::::::End::::put::::::::::");
         return converter.toRest(workFlowProcessInwardDetails, utils.obtainProjection());
     }
-
-
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "searchByInwardNumber")
+    public Page<WorkFlowProcessOutwardDetailsRest> searchByInwardNumber(@Parameter(value = "inwardnumber", required = true) String name, Pageable pageable) {
+        try {
+            System.out.println("sear>>>>>>>>>>>" + name);
+            Context context = obtainContext();
+            Optional<List<WorkFlowProcessInwardDetails>> workFlowProcessInwardDetails = Optional.ofNullable(workFlowProcessInwardDetailsService.searchInwardNumber(context, name));
+            if (workFlowProcessInwardDetails.isPresent()) {
+                return converter.toRestPage(workFlowProcessInwardDetails.get(), pageable, 999, utils.obtainProjection());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     @Override
     public WorkFlowProcessInwardDetailsRest findOne(Context context, UUID uuid) {
         WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest =null;
         log.info("::::::start::::findOne::::::::::");
-
         try {
             Optional<WorkFlowProcessInwardDetails> workFlowProcessInwardDetails = Optional.ofNullable(workFlowProcessInwardDetailsService.find(context, uuid));
             if (workFlowProcessInwardDetails.isPresent()) {
