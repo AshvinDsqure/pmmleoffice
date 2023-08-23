@@ -66,6 +66,9 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (obj.getSubcategoriesoffile() != null) {
             rest.setSubcategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getSubcategoriesoffile(), projection));
         }
+        if (obj.getInwardmode() != null) {
+            rest.setInwardmodeRest(workFlowProcessMasterValueConverter.convert(obj.getInwardmode(), projection));
+        }
         rest.setUuid(obj.getID().toString());
         return rest;
     }
@@ -98,6 +101,9 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getSubcategoriesoffileRest() != null) {
             obj.setSubcategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoriesoffileRest()));
         }
+        if (rest.getInwardmodeRest() != null) {
+            obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));
+        }
         return obj;
     }
 
@@ -129,6 +135,9 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (rest.getSubcategoriesoffileRest() != null) {
             obj.setSubcategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoriesoffileRest()));
+        }
+        if (rest.getInwardmodeRest() != null) {
+            obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));
         }
         return obj;
     }

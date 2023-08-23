@@ -66,6 +66,10 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     @JoinColumn(name = "subcategoriesoffile")
     private WorkFlowProcessMasterValue subcategoriesoffile = null;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inwardmode")
+    private WorkFlowProcessMasterValue inwardmode = null;
+
 
     public String getInwardNumber() {
         return inwardNumber;
@@ -155,5 +159,13 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
 
     public void setSubcategoriesoffile(WorkFlowProcessMasterValue subcategoriesoffile) {
         this.subcategoriesoffile = subcategoriesoffile;
+    }
+
+    public WorkFlowProcessMasterValue getInwardmode() {
+        return inwardmode;
+    }
+
+    public void setInwardmode(WorkFlowProcessMasterValue inwardmode) {
+        this.inwardmode = inwardmode;
     }
 }

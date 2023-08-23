@@ -338,7 +338,39 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                         "for non \"password\" authentication");
             }
         }
-        patchDSpaceObject(apiCategory, model, uuid, patch);
+        System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
+        EPerson ePerson = es.find(context, uuid);
+        for (Operation operation : patch.getOperations()) {
+            System.out.println("value getOp " + operation.getOp());
+            System.out.println("value getPath " + operation.getPath());
+            if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
+                WorkFlowProcessMasterValueRest rest=new WorkFlowProcessMasterValueRest();
+                rest.setUuid(operation.getValue().toString());
+                ePerson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest));
+            } else if (operation.getPath().equalsIgnoreCase("/officeRest")) {
+                WorkFlowProcessMasterValueRest rest=new WorkFlowProcessMasterValueRest();
+                rest.setUuid(operation.getValue().toString());
+                ePerson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest));
+            } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.lastname/0/value")) {
+                ePerson.setLastName(context, operation.getValue().toString());
+            } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.firstname/0/value")) {
+                ePerson.setFirstName(context, operation.getValue().toString());
+            } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
+                ePerson.setEmployeeid(operation.getValue().toString());
+            } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
+                ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
+            } else if (operation.getPath().equalsIgnoreCase("/email")) {
+                ePerson.setEmail(operation.getValue().toString());
+            } else if (operation.getPath().equalsIgnoreCase("/password")) {
+                if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
+                    throw new PasswordNotValidException();
+                }
+                es.setPassword(ePerson, operation.getValue().toString());
+            }
+        }
+        es.update(context, ePerson);
+        context.commit();
+        System.out.println(":::::::::::::::::::::::::::::::::   DONE UPDATE EPERSON  ! ::::::::::::::::::::::::::::::;");
     }
 
     @Override
@@ -362,9 +394,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             @Parameter(value = "searchdepartmentorofficeid", required = true) UUID searchdepartmentorofficeid,
             Pageable pageable) {
         try {
-            System.out.println("search value :"+searchdepartmentorofficeid);
+            System.out.println("search value :" + searchdepartmentorofficeid);
             Context context = obtainContext();
-            List<EPerson> witems =es.getByDepartment(context,searchdepartmentorofficeid);
+            List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
             return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -372,8 +404,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             throw new RuntimeException(e);
         }
     }
-
-
 
 
     @Override

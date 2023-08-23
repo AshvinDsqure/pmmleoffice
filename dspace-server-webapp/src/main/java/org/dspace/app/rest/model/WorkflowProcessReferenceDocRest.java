@@ -48,6 +48,8 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     @JsonProperty
     private String description;
+    @JsonProperty
+    private Integer page;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest workFlowProcessReferenceDocType;
@@ -216,5 +218,13 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setIssignature(Boolean issignature) {
         this.issignature = issignature;
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
     }
 }

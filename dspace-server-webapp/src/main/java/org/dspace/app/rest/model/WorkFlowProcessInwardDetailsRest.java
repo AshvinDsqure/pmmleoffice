@@ -46,7 +46,8 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private WorkFlowProcessMasterValueRest categoriesoffileRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest subcategoriesoffileRest = null;
-
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest inwardmodeRest = null;
 
     public String getInwardNumber() {
         return inwardNumber;
@@ -136,5 +137,13 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
 
     public void setSubcategoriesoffileRest(WorkFlowProcessMasterValueRest subcategoriesoffileRest) {
         this.subcategoriesoffileRest = subcategoriesoffileRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getInwardmodeRest() {
+        return inwardmodeRest;
+    }
+
+    public void setInwardmodeRest(WorkFlowProcessMasterValueRest inwardmodeRest) {
+        this.inwardmodeRest = inwardmodeRest;
     }
 }

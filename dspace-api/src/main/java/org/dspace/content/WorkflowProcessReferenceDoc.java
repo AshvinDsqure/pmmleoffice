@@ -84,7 +84,8 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     @Column(name = "description")
     private String description;
-
+    @Column(name = "page")
+    private Integer page;
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "workflowprocesscomment")
     private WorkFlowProcessComment workflowprocesscomment;
@@ -226,5 +227,13 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setIssignature(Boolean issignature) {
         this.issignature = issignature;
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
     }
 }
