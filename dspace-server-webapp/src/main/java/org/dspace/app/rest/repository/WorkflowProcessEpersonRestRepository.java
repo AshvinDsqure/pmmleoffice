@@ -94,14 +94,22 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
     @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
     protected WorkflowProcessEpersonRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                           JsonNode jsonNode) throws SQLException, AuthorizeException {
-        WorkflowProcessEpersonRest WorkflowProcessEpersonRest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessEpersonRest.class);
-        WorkflowProcessEperson WorkflowProcessEperson = workflowProcessEpersonService.find(context, id);
-        if (WorkflowProcessEperson == null) {
+        WorkflowProcessEpersonRest rest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessEpersonRest.class);
+
+        System.out.println(":::::::::::::::E persion Update");
+        WorkflowProcessEperson workflowProcessEperson = workflowProcessEpersonService.find(context, id);
+        if (workflowProcessEperson == null) {
             System.out.println("documentTypeRest id ::: is Null  document tye null");
             throw new ResourceNotFoundException("metadata field with id: " + id + " not found");
         }
-        workflowProcessEpersonService.update(context, WorkflowProcessEperson);
-        return converter.toRest(WorkflowProcessEpersonRest, utils.obtainProjection());
+        if(workflowProcessEperson.getIsapproved()){
+            System.out.println("already Approved !");
+        }else{
+            workflowProcessEperson.setIsapproved(true);
+        }
+        workflowProcessEpersonService.update(context, workflowProcessEperson);
+        System.out.println("::::::::::::::E persion Update done!");
+        return converter.toRest(workflowProcessEperson, utils.obtainProjection());
     }
     @Override
     @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")

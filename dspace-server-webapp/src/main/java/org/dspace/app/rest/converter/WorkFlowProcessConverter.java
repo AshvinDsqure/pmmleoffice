@@ -132,7 +132,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             List<WorkflowProcessEpersonRest> list = obj.getWorkflowProcessEpeople().stream().map(we -> {
                 return workFlowProcessEpersonConverter.convert(we, projection);
             }).collect(Collectors.toList());
-            list.sort(comparator);
+                    list.sort(comparator);
             workFlowProcessRest.setWorkflowProcessEpersonRests(list);
         }
         workFlowProcessRest.setInitDate(obj.getInitDate());

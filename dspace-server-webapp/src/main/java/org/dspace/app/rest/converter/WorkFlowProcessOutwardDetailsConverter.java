@@ -86,7 +86,9 @@ public class WorkFlowProcessOutwardDetailsConverter extends DSpaceObjectConverte
         if (obj.getSubcategoriesoffile() != null) {
             rest.setSubcategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getSubcategoriesoffile(), projection));
         }
-
+        if(obj.getDispatchdate()!=null){
+            rest.setDispatchdate(obj.getDispatchdate());
+        }
         return rest;
     }
 

@@ -42,19 +42,14 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
     BitstreamService bitstreamService;
     @Autowired
     BitstreamConverter bitstreamConverter;
-
     @Autowired
     EPersonConverter ePersonConverter;
-
-
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
-
     @Autowired
     ItemConverter itemConverter;
     @Autowired
     WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
-
     public WorkflowProcessReferenceDocRest convert(WorkflowProcessReferenceDoc obj, Projection projection) {
         WorkflowProcessReferenceDocRest workflowProcessDefinitionRest = new WorkflowProcessReferenceDocRest();
         if (obj.getBitstream() != null) {
@@ -66,9 +61,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (obj.getDrafttype() != null) {
             workflowProcessDefinitionRest.setDrafttypeRest(workFlowProcessMasterValueConverter.convert(obj.getDrafttype(), projection));
         }
-        if (obj.getLatterCategory() != null) {
+        /*if (obj.getLatterCategory() != null) {
             workflowProcessDefinitionRest.setLatterCategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLatterCategory(), projection));
-        }
+        }*/
         if (obj.getSubject() != null) {
             workflowProcessDefinitionRest.setSubject(obj.getSubject());
         }
@@ -97,7 +92,6 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         workflowProcessDefinitionRest.setUuid(obj.getID().toString());
         return workflowProcessDefinitionRest;
     }
-
     public WorkflowProcessReferenceDocRest convertForWorkFlow(WorkflowProcessReferenceDoc obj, Projection projection) {
         WorkflowProcessReferenceDocRest workflowProcessDefinitionRest = super.convert(obj, projection);
         if (obj.getBitstream() != null) {
@@ -114,7 +108,6 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
     public Class<WorkflowProcessReferenceDoc> getModelClass() {
         return WorkflowProcessReferenceDoc.class;
     }
-
     public WorkflowProcessReferenceDoc convert(Context context, WorkflowProcessReferenceDocRest rest) throws SQLException {
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = new WorkflowProcessReferenceDoc();
         if (rest.getReferenceNumber() != null) {
@@ -130,9 +123,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
             PdfUtils.htmlToText(rest.getEditortext());
             workflowProcessReferenceDoc.setEditortext(rest.getEditortext());
         }
-        if (rest.getLatterCategoryRest() != null) {
+       /* if (rest.getLatterCategoryRest() != null) {
             workflowProcessReferenceDoc.setLatterCategory(workFlowProcessMasterValueConverter.convert(context, rest.getLatterCategoryRest()));
-        }
+        }*/
         if (rest.getWorkFlowProcessReferenceDocType() != null) {
             workflowProcessReferenceDoc.setWorkFlowProcessReferenceDocType(workFlowProcessMasterValueConverter.convert(context, rest.getWorkFlowProcessReferenceDocType()));
         }
@@ -175,9 +168,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
             PdfUtils.htmlToText(rest.getEditortext());
             workflowProcessReferenceDoc.setEditortext(rest.getEditortext());
         }
-        if (rest.getLatterCategoryRest() != null) {
+      /*  if (rest.getLatterCategoryRest() != null) {
             workflowProcessReferenceDoc.setLatterCategory(workFlowProcessMasterValueConverter.convert(context, rest.getLatterCategoryRest()));
-        }
+        }*/
         if (rest.getWorkFlowProcessReferenceDocType() != null) {
             workflowProcessReferenceDoc.setWorkFlowProcessReferenceDocType(workFlowProcessMasterValueConverter.convert(context, rest.getWorkFlowProcessReferenceDocType()));
         }
@@ -202,15 +195,12 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (rest.getPage() != null) {
             workflowProcessReferenceDoc.setPage(rest.getPage());
         }
-
         workflowProcessReferenceDoc.setIssignature(rest.getIssignature());
         return workflowProcessReferenceDoc;
     }
-
     public WorkflowProcessReferenceDoc convertByService(Context context, WorkflowProcessReferenceDocRest rest) throws SQLException {
         return workflowProcessReferenceDocService.find(context, UUID.fromString(rest.getUuid()));
     }
-
     public WorkflowProcessReferenceDoc convert(WorkflowProcessReferenceDocRest obj, Context context) throws Exception {
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = new WorkflowProcessReferenceDoc();
         if (obj.getSubject() != null) {
@@ -230,9 +220,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (obj.getWorkFlowProcessReferenceDocType() != null) {
             workflowProcessReferenceDoc.setWorkFlowProcessReferenceDocType(workFlowProcessMasterValueConverter.convert(context, obj.getWorkFlowProcessReferenceDocType()));
         }
-        if (obj.getLatterCategoryRest() != null) {
+       /* if (obj.getLatterCategoryRest() != null) {
             workflowProcessReferenceDoc.setLatterCategory(workFlowProcessMasterValueConverter.convert(context, obj.getLatterCategoryRest()));
-        }
+        }*/
         if (obj.getBitstreamRest() != null) {
             workflowProcessReferenceDoc.setBitstream(bitstreamService.find(context, UUID.fromString(obj.getBitstreamRest().getId())));
         }

@@ -57,6 +57,8 @@ public class EPersonRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest designationRest=null;
     @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
+    @JsonProperty
+    private String fullname;
 
     @Override
     @JsonProperty(access = Access.READ_ONLY)
@@ -168,5 +170,13 @@ public class EPersonRest extends DSpaceObjectRest {
 
     public void setDesignationRest(WorkFlowProcessMasterValueRest designationRest) {
         this.designationRest = designationRest;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 }

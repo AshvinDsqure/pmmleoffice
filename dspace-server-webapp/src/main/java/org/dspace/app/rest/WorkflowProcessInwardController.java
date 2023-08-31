@@ -18,10 +18,7 @@ import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.MissingParameterException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
-import org.dspace.app.rest.model.EPersonRest;
-import org.dspace.app.rest.model.RestAddressableModel;
-import org.dspace.app.rest.model.WorkFlowProcessRest;
-import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
+import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
@@ -40,10 +37,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is a specialized controller to provide access to the bitstream binary
@@ -109,8 +104,8 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
-            Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
-            if (!WorkflowProcessEpersonRest.isPresent()) {
+            Optional<WorkflowProcessEpersonRest> workflowProcessEpersonRest_ = Optional.ofNullable((getSubmitor(context)));
+            if (!workflowProcessEpersonRest_.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
             }
             WorkFlowType workFlowType = WorkFlowType.INWARD;
@@ -122,10 +117,36 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             //set action
             workFlowType.setWorkFlowAction(create);
             workFlowType.setProjection(utils.obtainProjection());
-            workFlowProcessRest.getWorkflowProcessEpersonRests().add(WorkflowProcessEpersonRest.get());
+            workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest_.get());
+            List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d->d.getIndex()!=0).collect(Collectors.toList());
+            int i = 0;
+            System.out.println("" + getInwardNumber());
+
+            for (WorkflowProcessEpersonRest workflowProcessEpersonRest : templist) {
+                workFlowProcessRest.setWorkflowProcessEpersonRests(null);
+                System.out.println("inward:::::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
+                List<WorkflowProcessEpersonRest> list1 = new ArrayList<>();
+                //nextuser
+                list1.add(0, workflowProcessEpersonRest_.get());
+                workflowProcessEpersonRest.setIndex(1);
+                list1.add(1, workflowProcessEpersonRest);
+                workFlowProcessRest.setWorkflowProcessEpersonRests(list1);
+                System.out.println("inisitor::::::" + workflowProcessEpersonRest_.get().getePersonRest().getId());
+                if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null && workFlowProcessRest.getWorkFlowProcessInwardDetailsRest().getInwardNumber() != null && i > 0) {
+                    System.out.println("in inward number update ::::::::::::");
+                    System.out.println("inward::a:::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
+                    WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
+                    workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
+                    workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
+                    workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                } else {
+                    workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                }
+                context.commit();
+                i++;
+            }
             //perfome and stor to db
-            workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-            context.commit();
+            // workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -168,7 +189,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getInwardNumber")
-    public Map<String,String> getInwardNumber() throws Exception {
+    public Map<String, String> getInwardNumber() throws Exception {
         String inwardnumber = null;
         try {
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
@@ -195,8 +216,8 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             e.printStackTrace();
             System.out.println("Error in getInwardNumber ");
         }
-        Map<String,String>map=new HashMap<>();
-        map.put("inwardnumber",inwardnumber);
+        Map<String, String> map = new HashMap<>();
+        map.put("inwardnumber", inwardnumber);
         return map;
     }
 

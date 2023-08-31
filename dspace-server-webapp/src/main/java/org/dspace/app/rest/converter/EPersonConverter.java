@@ -65,6 +65,39 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         }
         return eperson;
     }
+    public EPersonRest convertBYUSer(EPerson obj, Projection projection) {
+        EPersonRest eperson = new EPersonRest();
+        eperson.setLastActive(obj.getLastActive());
+        eperson.setNetid(obj.getNetid());
+        eperson.setCanLogIn(obj.canLogIn());
+        eperson.setRequireCertificate(obj.getRequireCertificate());
+        eperson.setSelfRegistered(obj.getSelfRegistered());
+        eperson.setEmail(obj.getEmail());
+        eperson.setUuid(obj.getID().toString());
+        if(obj.getTablenumber()!=null){
+            eperson.setTablenumber(obj.getTablenumber());
+        }
+        if(obj.getEmployeeid()!=null) {
+            eperson.setEmployeeid(obj.getEmployeeid());
+        }
+        if(obj.getDepartment()!=null && obj.getDepartment().getID()!=null){
+            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(),projection));
+        }
+        if(obj.getOffice()!=null && obj.getOffice().getID()!=null){
+            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(),projection));
+        }
+        if(obj.getDesignation()!=null){
+            eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(),projection));
+        }
+        if(obj.getFullName()!=null){
+            if(obj.getDesignation()!=null && obj.getDesignation().getPrimaryvalue()!=null) {
+                eperson.setFullname(obj.getFullName() + " (" + obj.getDesignation().getPrimaryvalue() + ").");
+            }else{
+                eperson.setFullname(obj.getFullName()+".");
+            }
+        }
+        return eperson;
+    }
 
     public EPerson convert(Context context, EPersonRest rest) throws SQLException {
         if(rest!=null && rest.getId()!=null){

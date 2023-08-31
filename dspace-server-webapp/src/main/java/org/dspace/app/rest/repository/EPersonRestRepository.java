@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.DiscoverableEndpointsService;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.EPersonConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
@@ -47,11 +48,14 @@ import org.dspace.eperson.service.RegistrationDataService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+
+import static java.util.stream.Collectors.toList;
 
 
 /**
@@ -85,6 +89,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     private RegistrationDataService registrationDataService;
 
     private final EPersonService es;
+
+    @Autowired
+    EPersonConverter ePersonConverter;
 
 
     public EPersonRestRepository(EPersonService dsoService) {
@@ -172,6 +179,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
      */
     private EPersonRest createAndReturn(Context context, EPersonRest epersonRest, String token)
             throws AuthorizeException, SQLException {
+
+
         if (!AuthorizeUtil.authorizeNewAccountRegistration(context, requestService
                 .getCurrentRequest().getHttpServletRequest())) {
             throw new DSpaceBadRequestException(
@@ -246,11 +255,16 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     public Page<EPersonRest> findAll(Context context, Pageable pageable) {
+        List<EPersonRest> ePersonRests;
         try {
             long total = es.countTotal(context);
             List<EPerson> epersons = es.findAll(context, EPerson.EMAIL, pageable.getPageSize(),
                     Math.toIntExact(pageable.getOffset()));
-            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
+            ePersonRests = epersons.stream().map(d -> {
+                return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(ePersonRests, pageable,total);
+           // return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -321,56 +335,83 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @PreAuthorize("hasPermission(#uuid, 'EPERSON', #patch)")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
-        boolean passwordChangeFound = false;
-        for (Operation operation : patch.getOperations()) {
-            if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
-                passwordChangeFound = true;
-            }
-        }
-        if (StringUtils.isNotBlank(request.getParameter("token"))) {
-            if (!passwordChangeFound) {
-                throw new AccessDeniedException("Refused to perform the EPerson patch based on a token without " +
-                        "changing the password");
-            }
-        } else {
-            if (passwordChangeFound && !StringUtils.equals(context.getAuthenticationMethod(), "password")) {
-                throw new AccessDeniedException("Refused to perform the EPerson patch based to change the password " +
-                        "for non \"password\" authentication");
-            }
-        }
-        System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
-        EPerson ePerson = es.find(context, uuid);
-        for (Operation operation : patch.getOperations()) {
-            System.out.println("value getOp " + operation.getOp());
-            System.out.println("value getPath " + operation.getPath());
-            if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
-                WorkFlowProcessMasterValueRest rest=new WorkFlowProcessMasterValueRest();
-                rest.setUuid(operation.getValue().toString());
-                ePerson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest));
-            } else if (operation.getPath().equalsIgnoreCase("/officeRest")) {
-                WorkFlowProcessMasterValueRest rest=new WorkFlowProcessMasterValueRest();
-                rest.setUuid(operation.getValue().toString());
-                ePerson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest));
-            } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.lastname/0/value")) {
-                ePerson.setLastName(context, operation.getValue().toString());
-            } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.firstname/0/value")) {
-                ePerson.setFirstName(context, operation.getValue().toString());
-            } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
-                ePerson.setEmployeeid(operation.getValue().toString());
-            } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
-                ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
-            } else if (operation.getPath().equalsIgnoreCase("/email")) {
-                ePerson.setEmail(operation.getValue().toString());
-            } else if (operation.getPath().equalsIgnoreCase("/password")) {
-                if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
-                    throw new PasswordNotValidException();
+        try {
+
+
+            boolean passwordChangeFound = false;
+            for (Operation operation : patch.getOperations()) {
+                if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
+                    passwordChangeFound = true;
                 }
-                es.setPassword(ePerson, operation.getValue().toString());
             }
+            if (StringUtils.isNotBlank(request.getParameter("token"))) {
+                if (!passwordChangeFound) {
+                    throw new AccessDeniedException("Refused to perform the EPerson patch based on a token without " +
+                            "changing the password");
+                }
+            } else {
+                if (passwordChangeFound && !StringUtils.equals(context.getAuthenticationMethod(), "password")) {
+                    throw new AccessDeniedException("Refused to perform the EPerson patch based to change the password " +
+                            "for non \"password\" authentication");
+                }
+            }
+            System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
+
+
+            EPerson ePerson = es.find(context, uuid);
+            for (Operation operation : patch.getOperations()) {
+                System.out.println("value getOp " + operation.getOp());
+                System.out.println("value getPath " + operation.getPath());
+                if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.end-user")) {
+                    System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
+                    patchDSpaceObject(apiCategory, model, uuid, patch);
+                    System.out.println(":::::::::::::::::::::::::::::::::out aggrement:done:::::::::::::::::::::::::::;");
+                } else if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.cookies")) {
+                    System.out.println(":::::::::::::::::::::::::::::::cookies::::::::::::::::::::::::::;");
+                    patchDSpaceObject(apiCategory, model, uuid, patch);
+                    System.out.println("::::::::::::::::::::::::::::::::cookies::done:::::::::::::::::::::::::::;");
+                } else if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
+                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                    rest.setUuid(operation.getValue().toString());
+                    ePerson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest));
+                } else if (operation.getPath().equalsIgnoreCase("/officeRest")) {
+                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                    rest.setUuid(operation.getValue().toString());
+                    ePerson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest));
+                } else if (operation.getPath().equalsIgnoreCase("/designationRest")) {
+                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                    rest.setUuid(operation.getValue().toString());
+                    ePerson.setDesignation(workFlowProcessMasterValueConverter.convert(context, rest));
+                } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.lastname/0/value")) {
+                    ePerson.setLastName(context, operation.getValue().toString());
+                } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.firstname/0/value")) {
+                    ePerson.setFirstName(context, operation.getValue().toString());
+                } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
+                    ePerson.setEmployeeid(operation.getValue().toString());
+                } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
+                    if (StringUtils.isNotBlank(operation.getValue().toString())) {
+                        ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
+                    } else {
+                        ePerson.setTablenumber(null);
+                    }
+                } else if (operation.getPath().equalsIgnoreCase("/email")) {
+                    ePerson.setEmail(operation.getValue().toString());
+                } else if (operation.getPath().equalsIgnoreCase("/password")) {
+                    if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
+                        throw new PasswordNotValidException();
+                    }
+                    es.setPassword(ePerson, operation.getValue().toString());
+                }else{
+                    patchDSpaceObject(apiCategory, model, uuid, patch);
+                }
+            }
+            es.update(context, ePerson);
+            context.commit();
+            System.out.println(":::::::::::::::::::::::::::::::::   DONE UPDATE EPERSON  ! ::::::::::::::::::::::::::::::;");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("errr" + e.getMessage());
         }
-        es.update(context, ePerson);
-        context.commit();
-        System.out.println(":::::::::::::::::::::::::::::::::   DONE UPDATE EPERSON  ! ::::::::::::::::::::::::::::::;");
     }
 
     @Override
@@ -393,11 +434,15 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     public Page<EPersonRest> searchByDepartment(
             @Parameter(value = "searchdepartmentorofficeid", required = true) UUID searchdepartmentorofficeid,
             Pageable pageable) {
+        List<EPersonRest> ePersonRests=null;
         try {
             System.out.println("search value :" + searchdepartmentorofficeid);
             Context context = obtainContext();
             List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
-            return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
+            ePersonRests = witems.stream().map(d -> {
+                return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(ePersonRests, pageable,witems.size());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         } catch (Exception e) {

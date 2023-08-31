@@ -319,7 +319,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
 
-
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft")
     public WorkFlowProcessRest forwordDraft1(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
@@ -332,25 +331,40 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             String comment = workFlowProcessRest.getComment();
             System.out.println("Comment::::::::::::::::::::::::::" + comment);
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-            if (workFlowProcessRest!=null && workFlowProcessRest.getItemRest() != null) {
+            if (workFlowProcessRest != null && workFlowProcessRest.getItemRest() != null) {
                 workFlowProcess.setItem(itemConverter.convert(workFlowProcessRest.getItemRest(), context));
             }
+            List<String> olduser = null;
+            List<WorkflowProcessEperson> olduserlistuuid = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
+            if (olduserlistuuid != null && olduserlistuuid.size() != 0) {
+                olduser = olduserlistuuid.stream()
+                        .filter(d -> d.getePerson() != null)
+                        .filter(d -> d.getePerson().getID() != null)
+                        .filter(d -> !d.getIssequence())
+                        .map(d -> d.getePerson().getID().toString()).collect(Collectors.toList());
+            }
+            System.out.println("old User issequense false :::::::::" + olduser);
             System.out.println("add user " + workFlowProcessRest.getWorkflowProcessEpersonRests().size());
             for (WorkflowProcessEpersonRest newEpeson : workFlowProcessRest.getWorkflowProcessEpersonRests()) {
-              WorkflowProcessEperson workflowProcessEperson =  workFlowProcessEpersonConverter.convert(context, newEpeson);
-
-                System.out.println("new user index "+workflowProcessEperson.getIndex());
+                WorkflowProcessEperson workflowProcessEperson = workFlowProcessEpersonConverter.convert(context, newEpeson);
+                System.out.println("new user index " + workflowProcessEperson.getIndex());
                 workflowProcessEperson.setWorkflowProcess(workFlowProcess);
                 Optional<WorkFlowProcessMasterValue> userTypeOption = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
                 if (userTypeOption.isPresent()) {
                     workflowProcessEperson.setUsertype(userTypeOption.get());
                 }
-                workFlowProcess.setnewUser(workflowProcessEperson);
-                workflowProcessService.create(context, workFlowProcess);
+                if (newEpeson.getePersonRest() != null && newEpeson.getePersonRest().getId() != null && olduser != null && olduser.contains(newEpeson.getePersonRest().getId())) {
+                    System.out.println("in Eperson allredy added " + workflowProcessEperson.getePerson().getEmail());
+                } else {
+                    System.out.println("in Eperson ADd new  ");
+                    workFlowProcess.setnewUser(workflowProcessEperson);
+                    workflowProcessService.create(context, workFlowProcess);
+                }
             }
             WorkFlowAction action = WorkFlowAction.FORWARD;
             //user not select any next user then flow go initiator
-            if (workFlowProcessRest.getWorkflowProcessEpersonRests().size() == 0 && workFlowProcess.getWorkflowProcessEpeople() != null) {
+            if (olduser==null&& workFlowProcessRest.getWorkflowProcessEpersonRests() == null) {
+                System.out.println("::::::::::::::::::::::::::::setInitiator :::::::true::::::::::::::::::::");
                 Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
                 if (workflowPro.isPresent()) {
                     action.setInitiator(true);
@@ -391,7 +405,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
 
     }
-
 
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
@@ -499,10 +512,10 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         try {
             Context context = ContextUtil.obtainContext(request);
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-                Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
-                if (workFlowTypeStatus.isPresent()) {
-                    workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
-                }
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
+            if (workFlowTypeStatus.isPresent()) {
+                workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
+            }
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             WorkFlowAction CALLBACK = WorkFlowAction.CALLBACK;
             CALLBACK.perfomeAction(context, workFlowProcess, workFlowProcessRest);
@@ -729,6 +742,11 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     System.out.println("eperson:::" + e.getEmail());
                     WorkflowProcessEperson workflowProcessEpersonFromGroup = workFlowProcessEpersonConverter.convert(context, e);
                     try {
+                        WorkflowProcessEperson workflowProcessEpersonmax = workFlowProcess.getWorkflowProcessEpeople().stream().max(Comparator.comparing(WorkflowProcessEperson::getIndex)).orElseThrow(NoSuchElementException::new);
+                        if(workflowProcessEpersonmax!=null && workflowProcessEpersonmax.getIndex()!=null){
+                            System.out.println("indexs: ::::::::::"+workflowProcessEpersonmax.getIndex()+1);
+                           workflowProcessEpersonFromGroup.setIndex(workflowProcessEpersonmax.getIndex()+1);
+                        }
                         Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.DISPATCH.getUserTypeFromMasterValue(context);
                         if (workFlowUserTypOptional.isPresent()) {
                             workflowProcessEpersonFromGroup.setUsertype(workFlowUserTypOptional.get());
@@ -811,7 +829,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             Context context = ContextUtil.obtainContext(request);
             String comment = null;
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
-            comment=sentMailElectronic(context,request,workFlowProcess);
+            comment = sentMailElectronic(context, request, workFlowProcess);
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
@@ -1435,7 +1453,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
 
     }
-    public String sentMailElectronic(Context context,HttpServletRequest request,WorkflowProcess workFlowProcess){
+
+    public String sentMailElectronic(Context context, HttpServletRequest request, WorkflowProcess workFlowProcess) {
         EPerson currentuser = context.getCurrentUser();
         String comment = null;
         String receivername = null;
@@ -1473,7 +1492,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             try {
                 List<Bitstream> bitstreamList = workFlowProcess.getWorkflowProcessReferenceDocs().stream().filter(d -> d.getBitstream() != null).map(dd -> dd.getBitstream()).collect(Collectors.toList());
-                workflowProcessService.sendEmail(context, request, recipientEmail, receivername, subject,bitstreamList);
+                workflowProcessService.sendEmail(context, request, recipientEmail, receivername, subject, bitstreamList);
             } catch (IOException | MessagingException | SQLException | AuthorizeException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e.getMessage(), e);
