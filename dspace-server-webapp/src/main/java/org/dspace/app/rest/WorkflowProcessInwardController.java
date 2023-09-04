@@ -99,8 +99,10 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @ExceptionHandler(MissingParameterException.class)
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD})
-    public ResponseEntity create(@RequestBody @Valid WorkFlowProcessRest workFlowProcessRest) throws Exception {
+    public ResponseEntity create(@RequestBody @Valid WorkFlowProcessRest workFlowProcessRest1) throws Exception {
+        WorkFlowProcessRest workFlowProcessRest=workFlowProcessRest1;
         try {
+
             System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
@@ -120,8 +122,6 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest_.get());
             List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d->d.getIndex()!=0).collect(Collectors.toList());
             int i = 0;
-            System.out.println("" + getInwardNumber());
-
             for (WorkflowProcessEpersonRest workflowProcessEpersonRest : templist) {
                 workFlowProcessRest.setWorkflowProcessEpersonRests(null);
                 System.out.println("inward:::::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
@@ -131,10 +131,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 workflowProcessEpersonRest.setIndex(1);
                 list1.add(1, workflowProcessEpersonRest);
                 workFlowProcessRest.setWorkflowProcessEpersonRests(list1);
-                System.out.println("inisitor::::::" + workflowProcessEpersonRest_.get().getePersonRest().getId());
                 if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null && workFlowProcessRest.getWorkFlowProcessInwardDetailsRest().getInwardNumber() != null && i > 0) {
-                    System.out.println("in inward number update ::::::::::::");
-                    System.out.println("inward::a:::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
                     WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
                     workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
                     workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
@@ -145,9 +142,6 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 context.commit();
                 i++;
             }
-            //perfome and stor to db
-            // workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-
         } catch (Exception e) {
             e.printStackTrace();
         }

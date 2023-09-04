@@ -132,7 +132,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             List<WorkflowProcessEpersonRest> list = obj.getWorkflowProcessEpeople().stream().map(we -> {
                 return workFlowProcessEpersonConverter.convert(we, projection);
             }).collect(Collectors.toList());
-                    list.sort(comparator);
+            list.sort(comparator);
             workFlowProcessRest.setWorkflowProcessEpersonRests(list);
         }
         workFlowProcessRest.setInitDate(obj.getInitDate());
@@ -288,14 +288,39 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
         }
         if (ownerRest.isPresent() && ownerRest.get() != null && ownerRest.get().getePerson() != null && ownerRest.get().getePerson().getFullName() != null) {
-            workFlowProcessRest.setCurrentrecipient(ownerRest.get().getePerson().getFullName());
-        }
-        if (obj.getWorkflowProcessEpeople() != null && obj.getWorkflowProcessEpeople().size() != 0 && !obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
-            Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
-            if (senderRest != null && senderRest.isPresent() && senderRest.get() != null && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
-                workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
-                workFlowProcessRest.setSendername(senderRest.get().getePerson().getFullName());
+            List<WorkflowProcessEperson> ownerlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).collect(Collectors.toList());
+            StringBuffer sb = new StringBuffer();
+            int i = 0;
+            for (WorkflowProcessEperson ownerRest1 : ownerlist) {
+                if (ownerRest1.getePerson() != null && ownerRest1.getePerson().getFullName() != null) {
+                    if (i == 0) {
+                        sb.append(ownerRest1.getePerson().getFullName());
+                    } else {
+                        sb.append("," + ownerRest1.getePerson().getFullName());
+                    }
+                }
+                i++;
             }
+            workFlowProcessRest.setCurrentrecipient(sb.toString());
+        }
+        Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
+        if (senderRest != null && senderRest.isPresent() && senderRest.get() != null && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
+            workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
+            List<WorkflowProcessEperson> senderlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getSender() != null).filter(w -> w.getSender()).collect(Collectors.toList());
+            StringBuffer sb = new StringBuffer();
+            int i = 0;
+            for (WorkflowProcessEperson sender : senderlist) {
+                if (sender.getePerson() != null && sender.getePerson().getFullName() != null) {
+                    if (i == 0) {
+                        sb.append(sender.getePerson().getFullName());
+                    } else {
+                        sb.append("," + sender.getePerson().getFullName());
+                    }
+                    System.out.println("sender names :"+sender.getePerson().getFullName());
+                }
+                i++;
+            }
+            workFlowProcessRest.setSendername(sb.toString());
         }
         if (obj.getWorkFlowProcessInwardDetails() != null && obj.getWorkFlowProcessInwardDetails().getInwardDate() != null) {
             workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));

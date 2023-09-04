@@ -210,6 +210,7 @@ public enum WorkFlowAction {
     },
     DELETE("Delete"),
     UPDATE("Update"),
+    APPROVED("Approved"),
     PENDING("Pending"),
     CALLBACK("CallBack") {
         @Override
@@ -768,7 +769,9 @@ public enum WorkFlowAction {
         if (jbpmResponse.getNext_group() != null && jbpmResponse.getNext_group().size() != 0) {
             List<WorkflowProcessEperson> workflowProcessEpersonOwners = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> jbpmResponse.getNext_group().stream().map(d -> d).anyMatch(d -> d.equals(we.getID().toString()))).collect(Collectors.toList());
             workflowProcessEpersonOwners.stream().forEach(d -> {
-                System.out.println("next Group" + d.getID());
+                if(d.getePerson()!=null && d.getePerson().getEmail()!=null){
+                    System.out.println("next Group :::"+d.getePerson().getEmail());
+                }
                 d.setOwner(true);
                 d.setSender(false);
                 d.setIssequence(true);

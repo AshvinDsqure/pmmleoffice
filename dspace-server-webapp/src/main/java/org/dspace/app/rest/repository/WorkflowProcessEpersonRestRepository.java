@@ -14,6 +14,7 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkFlowProcessEpersonConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
+import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkFlowProcessDefinitionRest;
@@ -22,8 +23,9 @@ import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocVersionRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.WorkflowProcessEperson;
-import org.dspace.content.WorkflowProcessReferenceDoc;
+import org.dspace.content.*;
+import org.dspace.content.service.WorkFlowProcessHistoryService;
+import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.content.service.WorkflowProcessEpersonService;
 import org.dspace.core.Context;
 import org.dspace.eperson.service.EPersonService;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,7 +55,13 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
     @Autowired
     private WorkflowProcessEpersonService workflowProcessEpersonService;
     @Autowired
+    private WorkFlowProcessHistoryService workFlowProcessHistoryService;
+    @Autowired
     private EPersonService ePersonService;
+
+    @Autowired
+    private WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
     @Autowired
     private WorkFlowProcessEpersonConverter workflowProcessEpersonConverter;
     @Autowired
@@ -93,10 +102,10 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
     @Override
     @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
     protected WorkflowProcessEpersonRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                          JsonNode jsonNode) throws SQLException, AuthorizeException {
+                                          JsonNode jsonNode) throws Exception {
         WorkflowProcessEpersonRest rest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessEpersonRest.class);
 
-        System.out.println(":::::::::::::::E persion Update");
+        System.out.println(":::::::::::::::E persion Update:::::::::");
         WorkflowProcessEperson workflowProcessEperson = workflowProcessEpersonService.find(context, id);
         if (workflowProcessEperson == null) {
             System.out.println("documentTypeRest id ::: is Null  document tye null");
@@ -108,6 +117,7 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
             workflowProcessEperson.setIsapproved(true);
         }
         workflowProcessEpersonService.update(context, workflowProcessEperson);
+        storeWorkFlowHistoryForApprovedPerralare(context,workflowProcessEperson);
         System.out.println("::::::::::::::E persion Update done!");
         return converter.toRest(workflowProcessEperson, utils.obtainProjection());
     }
@@ -137,5 +147,22 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public void storeWorkFlowHistoryForApprovedPerralare(Context context,WorkflowProcessEperson workflowProcessEperson) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistory:ApprovedPerralare:::::: ");
+        WorkFlowProcessHistory workFlowAction = null;
+        WorkflowProcess workflowProcess = workflowProcessEperson.getWorkflowProcess();
+        workFlowAction = new WorkFlowProcessHistory();
+        WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+        workFlowAction.setWorkflowProcessEpeople(workflowProcessEperson);
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.APPROVED.getAction(), workFlowProcessMaster);
+        workFlowAction.setActionDate(new Date());
+        workFlowAction.setAction(workFlowProcessMasterValue);
+        workFlowAction.setWorkflowProcess(workflowProcess);
+        workflowProcess.getWorkflowProcessNote().getSubject();
+        workFlowAction.setComment("Approved By "+workflowProcessEperson.getePerson().getFullName()+".");
+        workFlowProcessHistoryService.create(context, workFlowAction);
+        System.out.println("::::::OUT :storeWorkFlowHistory::ApprovedPerralare::: ");
     }
 }

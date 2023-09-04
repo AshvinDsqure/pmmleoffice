@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
+import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.model.CounterDTO;
 import org.dspace.app.rest.model.ExcelDTO;
 import org.dspace.app.rest.model.ItemRest;
@@ -20,13 +21,8 @@ import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.ExcelHelper;
 import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.Item;
-import org.dspace.content.LoginCounter;
-import org.dspace.content.WorkFlowProcessMasterValue;
-import org.dspace.content.service.FeedbackService;
-import org.dspace.content.service.ItemService;
-import org.dspace.content.service.LoginCounterService;
-import org.dspace.content.service.WorkFlowProcessMasterValueService;
+import org.dspace.content.*;
+import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
@@ -78,6 +74,8 @@ public class WorkflowProcessItemReportController {
     @Autowired
     ConfigurationService configurationService;
 
+    @Autowired
+    WorkflowProcessNoteService workflowProcessNoteService;
     @Autowired
     private FeedbackService feedbackService;
     @Autowired
@@ -262,6 +260,61 @@ public class WorkflowProcessItemReportController {
         }
     }
 
+
+    @RequestMapping(method = RequestMethod.GET,value = "/margedDocumentanddownload")
+    public  ResponseEntity<Resource> margedDocumentanddownload(HttpServletRequest request,
+                                                  @Parameter(value = "itemid", required = true) String itemid) {
+        try {
+            System.out.println("::::::::::::::::::::::::::::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
+            Context context = ContextUtil.obtainContext(request);
+            String filename = "AllDoc.pdf";
+            Item item = itemService.find(context,UUID.fromString( itemid));
+            List<Bundle> bundles = item.getBundles("ORIGINAL");
+            List<Bitstream> listofcorrospondenceBitstream=new ArrayList<>();
+            List<Bitstream> listofnotesheetsBitsream=new ArrayList<>();
+            if (bundles.size() != 0) {
+                listofcorrospondenceBitstream=bundles.stream().findFirst().get().getBitstreams();
+            }
+            //corrospondence bitstream list
+            listofcorrospondenceBitstream= listofcorrospondenceBitstream.stream().filter(f->!f.getName().contains("Note#")).collect(Collectors.toList());
+            //NoteSheet Doc List
+            UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            List<WorkflowProcessNote> listofnotesheets = workflowProcessNoteService.getDocumentByItemid(context, UUID.fromString(itemid),statusid, 0,9999);
+            System.out.println("listofnotesheets::::::::::::::::"+listofnotesheets.size());
+            for (WorkflowProcessNote workflowProcessNote:listofnotesheets) {
+                if(workflowProcessNote.getWorkflowProcessReferenceDocs()!=null){
+                    System.out.println("1::::::::::::::::");
+
+                    for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc :workflowProcessNote.getWorkflowProcessReferenceDocs()) {
+                        System.out.println("2::::::::::workflowProcessReferenceDoc::::::");
+
+                       if(workflowProcessReferenceDoc.getDrafttype()!=null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue()!=null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note")){
+                           if(workflowProcessReferenceDoc.getBitstream()!=null){
+                               listofnotesheetsBitsream.add(workflowProcessReferenceDoc.getBitstream());
+                           }
+                       }
+                       else {
+                           System.out.println("3::::::::::flowProcessReferenceDoc.getDrafttype(::::::");
+
+                       }
+                    }
+                }
+            }
+            System.out.println("::listofnotesheetsBitsream::size"+listofnotesheetsBitsream.size());
+            System.out.println("::listofcorrospondenceBitstream::size"+listofcorrospondenceBitstream.size());
+           /* ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listDTo);
+            InputStreamResource file = new InputStreamResource(in);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(file);*/
+            System.out.println("::::done::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return  null;
+    }
 
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
