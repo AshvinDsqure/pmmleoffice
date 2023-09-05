@@ -125,6 +125,7 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'READ')")
     @Override
     public WorkspaceItemRest findOne(Context context, Integer id) {
+        System.out.println(":::::::::::::::::get Items Validation :::::::::::::");
         WorkspaceItem witem = null;
         try {
             witem = wis.find(context, id);
@@ -201,6 +202,8 @@ public class WorkspaceItemRestRepository extends DSpaceRestRepository<WorkspaceI
     @Override
     public void patch(Context context, HttpServletRequest request, String apiCategory, String model, Integer id,
                       Patch patch) throws SQLException, AuthorizeException {
+
+        System.out.println("Item :::::::::::::::create ::::::::::::::::::::page");
         List<Operation> operations = patch.getOperations();
         WorkspaceItemRest wsi = findOne(context, id);
         WorkspaceItem source = wis.find(context, id);

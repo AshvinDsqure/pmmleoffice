@@ -63,6 +63,13 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         if(obj.getDesignation()!=null){
             eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(),projection));
         }
+        if(obj.getFullName()!=null){
+            if(obj.getDesignation()!=null && obj.getDesignation().getPrimaryvalue()!=null) {
+                eperson.setFullname(obj.getFullName() + " (" + obj.getDesignation().getPrimaryvalue() + ").");
+            }else{
+                eperson.setFullname(obj.getFullName()+".");
+            }
+        }
         return eperson;
     }
     public EPersonRest convertBYUSer(EPerson obj, Projection projection) {

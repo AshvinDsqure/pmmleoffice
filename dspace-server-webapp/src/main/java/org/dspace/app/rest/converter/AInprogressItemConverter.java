@@ -102,7 +102,11 @@ public abstract class AInprogressItemConverter<T extends InProgressSubmission,
                         DataProcessingStep stepProcessing =
                             (DataProcessingStep) stepClass.newInstance();
                         for (ErrorRest error : stepProcessing.validate(submissionService, obj, stepConfig)) {
-                            addError(witem.getErrors(), error);
+                            System.out.println("error "+error.getMessage());
+                            System.out.println("error getPaths "+error.getPaths());
+                            if(!error.getMessage().equalsIgnoreCase("error.validation.filerequired")){
+                               addError(witem.getErrors(), error);
+                            }
                         }
                         witem.getSections()
                             .put(sections.getId(), stepProcessing.getData(submissionService, obj, stepConfig));

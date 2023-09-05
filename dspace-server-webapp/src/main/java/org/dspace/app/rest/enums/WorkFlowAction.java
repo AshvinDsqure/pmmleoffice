@@ -708,6 +708,12 @@ public enum WorkFlowAction {
 
     public WorkflowProcessEperson changeOwnership(Context context, JBPMResponse_ jbpmResponse, WorkflowProcess workflowProcess) throws SQLException, AuthorizeException {
         WorkflowProcessEperson currentOwner = null;
+        for (WorkflowProcessEperson w:workflowProcess.getWorkflowProcessEpeople()) {
+            System.out.println("All false");
+            w.setSender(false);
+            w.setOwner(false);
+            this.getWorkflowProcessEpersonService().update(context, w);
+        }
         if (jbpmResponse.getPerformed_by_user() != null && !jbpmResponse.getPerformed_by_user().isEmpty()) {
             currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getPerformed_by_user()))).findFirst().get();
             if (this.isrefer) {

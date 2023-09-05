@@ -104,20 +104,15 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
     protected WorkflowProcessEpersonRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                           JsonNode jsonNode) throws Exception {
         WorkflowProcessEpersonRest rest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessEpersonRest.class);
-
         System.out.println(":::::::::::::::E persion Update:::::::::");
         WorkflowProcessEperson workflowProcessEperson = workflowProcessEpersonService.find(context, id);
         if (workflowProcessEperson == null) {
             System.out.println("documentTypeRest id ::: is Null  document tye null");
             throw new ResourceNotFoundException("metadata field with id: " + id + " not found");
         }
-        if(workflowProcessEperson.getIsapproved()){
-            System.out.println("already Approved !");
-        }else{
-            workflowProcessEperson.setIsapproved(true);
-        }
+        workflowProcessEperson.setIsapproved(true);
         workflowProcessEpersonService.update(context, workflowProcessEperson);
-        storeWorkFlowHistoryForApprovedPerralare(context,workflowProcessEperson);
+        storeWorkFlowHistoryForApprovedPerralare(context,workflowProcessEperson,rest.getComment());
         System.out.println("::::::::::::::E persion Update done!");
         return converter.toRest(workflowProcessEperson, utils.obtainProjection());
     }
@@ -149,7 +144,7 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         }
     }
 
-    public void storeWorkFlowHistoryForApprovedPerralare(Context context,WorkflowProcessEperson workflowProcessEperson) throws Exception {
+    public void storeWorkFlowHistoryForApprovedPerralare(Context context,WorkflowProcessEperson workflowProcessEperson,String comment) throws Exception {
         System.out.println("::::::IN :storeWorkFlowHistory:ApprovedPerralare:::::: ");
         WorkFlowProcessHistory workFlowAction = null;
         WorkflowProcess workflowProcess = workflowProcessEperson.getWorkflowProcess();
@@ -161,7 +156,7 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
         workflowProcess.getWorkflowProcessNote().getSubject();
-        workFlowAction.setComment("Approved By "+workflowProcessEperson.getePerson().getFullName()+".");
+        workFlowAction.setComment(comment);
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::ApprovedPerralare::: ");
     }

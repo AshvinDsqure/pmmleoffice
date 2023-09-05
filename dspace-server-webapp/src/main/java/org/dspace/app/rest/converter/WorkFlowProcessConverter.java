@@ -316,7 +316,6 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                     } else {
                         sb.append("," + sender.getePerson().getFullName());
                     }
-                    System.out.println("sender names :"+sender.getePerson().getFullName());
                 }
                 i++;
             }
