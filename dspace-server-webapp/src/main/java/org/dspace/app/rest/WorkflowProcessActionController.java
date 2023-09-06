@@ -977,9 +977,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     if (version.getBitstream() != null && version.getBitstream().getName() != null) {
                         out = bitstreamService.retrieve(context, version.getBitstream());
                         if (out != null) {
-                            // MargedDocUtils.DocOneWrite(notecount);
-                            //  MargedDocUtils.DocTwoWrite(out);
-                            DocToPdfConverter.copyInInputStreamToDocx(out);
+                            MargedDocUtils.DocOneWrite(notecount);
+                            MargedDocUtils.DocTwoWrite(out);
+                            //DocToPdfConverter.copyInInputStreamToDocx(out);
                         }
                     }
                     if (version.getEditortext() != null && !version.getEditortext().isEmpty()) {
@@ -1181,11 +1181,11 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             return margedoc;
         } else {
             System.out.println(":::::::::In Document flow:::::::::::::::");
-            // MargedDocUtils.DocthreWrite(map);
-            //MargedDocUtils.finalwriteDocument(tempFileDoc.getAbsolutePath());
-            DocToPdfConverter.genarateDocumentFlowNote(map, tempFileDoc.getAbsolutePath(), notecount);
-            System.out.println("tmp path :" + tempFileDoc.getAbsolutePath());
-            System.out.println("tmp tempFile1html :" + tempFileDoc.getAbsolutePath());
+            MargedDocUtils.DocthreWrite(map);
+            MargedDocUtils.finalwriteDocument(tempFileDoc.getAbsolutePath());
+            //DocToPdfConverter.genarateDocumentFlowNote(map, tempFileDoc.getAbsolutePath(), notecount);
+            System.out.println("tempFileDoc:" + tempFileDoc.getAbsolutePath());
+            System.out.println("tempFileDoc :" + tempFileDoc.getAbsolutePath());
             WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
             margedoc.setSubject(workflowProcess.getSubject());
             margedoc.setDescription(workflowProcess.getSubject() + " for " + tempFileDoc.getName());

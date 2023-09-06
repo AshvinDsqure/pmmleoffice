@@ -49,6 +49,7 @@ public enum WorkFlowType {
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             if (workFlowProcessRest.getWorkflowProcessReferenceDocRests() != null) {
+                System.out.println("::::::::::::in workflow save doc ::::::::::::::>>>>:");
                 workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
                     try {
                         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
@@ -59,6 +60,9 @@ public enum WorkFlowType {
                     }
                 }).collect(Collectors.toList()));
             }
+            System.out.println("::::::::getWorkflowProcessReferenceDocRests:::"+workFlowProcessRest.getWorkflowProcessReferenceDocRests().size());
+
+            System.out.println("::::::::::doc size ::::::::::"+workflowProcess.getWorkflowProcessReferenceDocs().size());
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             this.getWorkFlowAction().perfomeAction(context, workflowProcess, workFlowProcessRest);

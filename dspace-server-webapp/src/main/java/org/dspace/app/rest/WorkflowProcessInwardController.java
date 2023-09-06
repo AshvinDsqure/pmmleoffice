@@ -104,7 +104,6 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRestTemp=null;
         try {
              System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
-
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
             Optional<WorkflowProcessEpersonRest> workflowProcessEpersonRest_ = Optional.ofNullable((getSubmitor(context)));
@@ -112,24 +111,18 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 return ResponseEntity.badRequest().body("no user found");
             }
             WorkFlowType workFlowType = WorkFlowType.INWARD;
-            //status
             workFlowType.setWorkFlowStatus(WorkFlowStatus.INPROGRESS);
             WorkFlowAction create = WorkFlowAction.CREATE;
-            //set comment
-            // create.setComment(workFlowProcessRest.getComment());
-            //set action
             workFlowType.setWorkFlowAction(create);
             workFlowType.setProjection(utils.obtainProjection());
             workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest_.get());
             List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d->d.getIndex()!=0).collect(Collectors.toList());
             int i = 0;
             for (WorkflowProcessEpersonRest workflowProcessEpersonRest : templist) {
-                workFlowProcessRest.setWorkflowProcessReferenceDocRests(workFlowProcessRest1.getWorkflowProcessReferenceDocRests());
-                workFlowProcessRestTemp=new WorkFlowProcessRest();
+                context = ContextUtil.obtainContext(request);;
                 workFlowProcessRest.setWorkflowProcessEpersonRests(null);
                 System.out.println("inward:::::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
                 List<WorkflowProcessEpersonRest> list1 = new ArrayList<>();
-                //nextuser
                 list1.add(0, workflowProcessEpersonRest_.get());
                 workflowProcessEpersonRest.setIndex(1);
                 list1.add(1, workflowProcessEpersonRest);
@@ -139,10 +132,11 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                     workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
                     workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
                     workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                    context.commit();
                 } else {
                     workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                    context.commit();
                 }
-                context.commit();
                 i++;
             }
         } catch (Exception e) {

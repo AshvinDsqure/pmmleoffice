@@ -569,7 +569,7 @@ public enum WorkFlowAction {
                     workFlowAction.setActionDate(new Date());
                     workFlowAction.setAction(workFlowProcessMasterValue);
                     workFlowAction.setWorkflowProcess(workflowProcess);
-                    workFlowAction.setComment("Dack Mode is " + workflowProcess.getDispatchmode().getPrimaryvalue() + ".");
+                    workFlowAction.setComment("Inward Mode is " + workflowProcess.getDispatchmode().getPrimaryvalue() + ".");
                     this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                 }
                 if (workflowProcess.getWorkFlowProcessOutwardDetails() != null && workflowProcess.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null) {

@@ -85,7 +85,6 @@ public class WorkflowProcessItemReportController {
     LoginCounterConverter loginCounterConverter;
 
 
-
     @Autowired
     ItemConverter itemConverter;
     @Autowired
@@ -131,7 +130,7 @@ public class WorkflowProcessItemReportController {
         Integer counter = 0;
         try {
             Context context = ContextUtil.obtainContext(request);
-            counter=loginCounterService.countRows(context);
+            counter = loginCounterService.countRows(context);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -141,40 +140,42 @@ public class WorkflowProcessItemReportController {
     @RequestMapping(method = RequestMethod.GET, value = "/getCounters")
     public List<CounterDTO> getCounters(HttpServletRequest request) throws SQLException {
         System.out.println("in counters");
-        List<CounterDTO>rest=new ArrayList<>();
-       try {
-           Context context = ContextUtil.obtainContext(request);
-           List<Object[]> list = loginCounterService.filter(context);
-           for(int i=0; i<list.size(); i++) {
-               CounterDTO d=new CounterDTO();
-               Object[] row = (Object[]) list.get(i);
-               d.setMonth(row[0].toString()!=null?row[0].toString():"-");
-               d.setYear(row[1].toString()!=null?row[1].toString():"-");
-               d.setCount(row[2].toString()!=null?row[2].toString():"-");
-               System.out.println(row[0]+", "+ row[1]);
-               rest.add(d);
-           }
-           return rest;
-       }catch (Exception e){
-           e.printStackTrace();
-           System.out.println("error counters");
-           return  null;
-       }
+        List<CounterDTO> rest = new ArrayList<>();
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<Object[]> list = loginCounterService.filter(context);
+            for (int i = 0; i < list.size(); i++) {
+                CounterDTO d = new CounterDTO();
+                Object[] row = (Object[]) list.get(i);
+                d.setMonth(row[0].toString() != null ? row[0].toString() : "-");
+                d.setYear(row[1].toString() != null ? row[1].toString() : "-");
+                d.setCount(row[2].toString() != null ? row[2].toString() : "-");
+                System.out.println(row[0] + ", " + row[1]);
+                rest.add(d);
+            }
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error counters");
+            return null;
+        }
     }
+
     @RequestMapping(method = RequestMethod.GET, value = "/sent")
     public String sent(HttpServletRequest request) throws SQLException {
         Context context = ContextUtil.obtainContext(request);
-        String result="";
+        String result = "";
         try {
             feedbackService.sendEmail(context, request, "ashvinmajethiya22@gmail.com", "no-reply@d2t.co", "Email ", "page");
-            result="success";
+            result = "success";
         } catch (IOException | MessagingException e) {
-           e.printStackTrace();
-            result="faile";
+            e.printStackTrace();
+            result = "faile";
             throw new RuntimeException(e.getMessage(), e);
         }
         return result;
     }
+
     @RequestMapping(method = RequestMethod.POST, value = "/addCounter")
     public LoginCounterRest addConter(HttpServletRequest request) throws SQLException, AuthorizeException, ParseException {
         LoginCounterRest loginCounterRest = null;
@@ -195,7 +196,7 @@ public class WorkflowProcessItemReportController {
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber")
-    public Map<String,String> getFileNumber(HttpServletRequest request) throws Exception {
+    public Map<String, String> getFileNumber(HttpServletRequest request) throws Exception {
         String filenumber = null;
         try {
             Context context = ContextUtil.obtainContext(request);
@@ -221,15 +222,15 @@ public class WorkflowProcessItemReportController {
             e.printStackTrace();
             System.out.println("Error in getInwardNumber ");
         }
-        Map<String,String>map=new HashMap<>();
-        map.put("filenumber",filenumber);
+        Map<String, String> map = new HashMap<>();
+        map.put("filenumber", filenumber);
         return map;
     }
 
-    @RequestMapping(method = RequestMethod.GET,value = "/downloadItemReport")
-    public  ResponseEntity<Resource> downloadItem(HttpServletRequest request,
-                                                  @Parameter(value = "startdate", required = true) String startdate,
-                                                  @Parameter(value = "enddate", required = true) String enddate) {
+    @RequestMapping(method = RequestMethod.GET, value = "/downloadItemReport")
+    public ResponseEntity<Resource> downloadItem(HttpServletRequest request,
+                                                 @Parameter(value = "startdate", required = true) String startdate,
+                                                 @Parameter(value = "enddate", required = true) String enddate) {
         try {
             Context context = ContextUtil.obtainContext(request);
             String filename = "ProductivityReport.xlsx";
@@ -243,11 +244,11 @@ public class WorkflowProcessItemReportController {
                 issued = (issued != null) ? issued : "-";
                 String caseDetail = type + "/" + title + "/" + issued;
                 String uploaddate = itemService.getMetadataFirstValue(i, "dc", "date", "accessioned", null);
-                uploaddate=(uploaddate!=null)?uploaddate:"-";
+                uploaddate = (uploaddate != null) ? uploaddate : "-";
                 String uploadedby = i.getSubmitter().getEmail();
                 String hierarchy = i.getOwningCollection().getName();
-                String email =(context.getCurrentUser()!=null)?context.getCurrentUser().getEmail():"-";
-                return new ExcelDTO(title, type, issued, caseDetail, uploaddate, uploadedby, hierarchy,email);
+                String email = (context.getCurrentUser() != null) ? context.getCurrentUser().getEmail() : "-";
+                return new ExcelDTO(title, type, issued, caseDetail, uploaddate, uploadedby, hierarchy, email);
             }).collect(Collectors.toList());
             ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listDTo);
             InputStreamResource file = new InputStreamResource(in);
@@ -261,47 +262,40 @@ public class WorkflowProcessItemReportController {
     }
 
 
-    @RequestMapping(method = RequestMethod.GET,value = "/margedDocumentanddownload")
-    public  ResponseEntity<Resource> margedDocumentanddownload(HttpServletRequest request,
-                                                  @Parameter(value = "itemid", required = true) String itemid) {
+    @RequestMapping(method = RequestMethod.GET, value = "/margedDocumentanddownload")
+    public ResponseEntity<Resource> margedDocumentanddownload(HttpServletRequest request,
+                                                              @Parameter(value = "itemid", required = true) String itemid) {
         try {
             System.out.println("::::::::::::::::::::::::::::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
             Context context = ContextUtil.obtainContext(request);
             String filename = "AllDoc.pdf";
-            Item item = itemService.find(context,UUID.fromString( itemid));
+            Item item = itemService.find(context, UUID.fromString(itemid));
             List<Bundle> bundles = item.getBundles("ORIGINAL");
-            List<Bitstream> listofcorrospondenceBitstream=new ArrayList<>();
-            List<Bitstream> listofnotesheetsBitsream=new ArrayList<>();
+            List<Bitstream> listofcorrospondenceBitstream = new ArrayList<>();
+            List<Bitstream> listofnotesheetsBitsream = new ArrayList<>();
             if (bundles.size() != 0) {
-                listofcorrospondenceBitstream=bundles.stream().findFirst().get().getBitstreams();
+                listofcorrospondenceBitstream = bundles.stream().findFirst().get().getBitstreams();
             }
             //corrospondence bitstream list
-            listofcorrospondenceBitstream= listofcorrospondenceBitstream.stream().filter(f->!f.getName().contains("Note#")).collect(Collectors.toList());
+            listofcorrospondenceBitstream = listofcorrospondenceBitstream.stream().filter(f -> !f.getName().contains("Note#")).collect(Collectors.toList());
             //NoteSheet Doc List
-            UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            List<WorkflowProcessNote> listofnotesheets = workflowProcessNoteService.getDocumentByItemid(context, UUID.fromString(itemid),statusid, 0,9999);
-            System.out.println("listofnotesheets::::::::::::::::"+listofnotesheets.size());
-            for (WorkflowProcessNote workflowProcessNote:listofnotesheets) {
-                if(workflowProcessNote.getWorkflowProcessReferenceDocs()!=null){
-                    System.out.println("1::::::::::::::::");
-
-                    for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc :workflowProcessNote.getWorkflowProcessReferenceDocs()) {
-                        System.out.println("2::::::::::workflowProcessReferenceDoc::::::");
-
-                       if(workflowProcessReferenceDoc.getDrafttype()!=null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue()!=null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note")){
-                           if(workflowProcessReferenceDoc.getBitstream()!=null){
-                               listofnotesheetsBitsream.add(workflowProcessReferenceDoc.getBitstream());
-                           }
-                       }
-                       else {
-                           System.out.println("3::::::::::flowProcessReferenceDoc.getDrafttype(::::::");
-
-                       }
+            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            List<WorkflowProcessNote> listofnotesheets = workflowProcessNoteService.getDocumentByItemid(context, UUID.fromString(itemid), statusid, 0, 50);
+            System.out.println("listofnotesheets::::::::::::::::" + listofnotesheets.size());
+            for (WorkflowProcessNote workflowProcessNote : listofnotesheets) {
+                if (workflowProcessNote.getWorkflowProcessReferenceDocs() != null) {
+                    for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workflowProcessNote.getWorkflowProcessReferenceDocs()) {
+                        if (workflowProcessReferenceDoc.getDrafttype() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note")) {
+                            if (workflowProcessReferenceDoc.getBitstream() != null) {
+                                listofnotesheetsBitsream.add(workflowProcessReferenceDoc.getBitstream());
+                            }
+                        } else {
+                        }
                     }
                 }
             }
-            System.out.println("::listofnotesheetsBitsream::size"+listofnotesheetsBitsream.size());
-            System.out.println("::listofcorrospondenceBitstream::size"+listofcorrospondenceBitstream.size());
+            System.out.println("::listofnotesheetsBitsream::size" + listofnotesheetsBitsream.size());
+            System.out.println("::listofcorrospondenceBitstream::size" + listofcorrospondenceBitstream.size());
            /* ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listDTo);
             InputStreamResource file = new InputStreamResource(in);
             return ResponseEntity.ok()
@@ -313,7 +307,7 @@ public class WorkflowProcessItemReportController {
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return  null;
+        return null;
     }
 
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {

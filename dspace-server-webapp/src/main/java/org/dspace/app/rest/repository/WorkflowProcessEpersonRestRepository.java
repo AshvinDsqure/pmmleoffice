@@ -22,6 +22,7 @@ import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocVersionRest;
 import org.dspace.app.rest.model.patch.Patch;
+import org.dspace.app.rest.utils.PdfUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.WorkFlowProcessHistoryService;
@@ -151,12 +152,20 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         workFlowAction = new WorkFlowProcessHistory();
         WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
         workFlowAction.setWorkflowProcessEpeople(workflowProcessEperson);
-        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.APPROVED.getAction(), workFlowProcessMaster);
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.FORWARD.getAction(), workFlowProcessMaster);
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
         workflowProcess.getWorkflowProcessNote().getSubject();
         workFlowAction.setComment(comment);
+        //add comment
+        WorkFlowProcessComment workFlowProcessComment = new WorkFlowProcessComment();
+        workFlowProcessComment.setComment(comment);
+        workFlowProcessComment.setWorkFlowProcessHistory(workFlowAction);
+        workFlowProcessComment.setSubmitter(context.getCurrentUser());
+        workFlowProcessComment.setWorkFlowProcess(workflowProcess);
+        workFlowAction.setWorkFlowProcessComment(workFlowProcessComment);
+
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::ApprovedPerralare::: ");
     }

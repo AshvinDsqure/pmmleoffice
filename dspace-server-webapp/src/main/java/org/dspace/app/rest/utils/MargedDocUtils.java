@@ -106,7 +106,7 @@ public class MargedDocUtils {
             doc.close();
             out.close();
             System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::" + pdfPath);
-            setcolor(pdfPath);
+           //setcolor(pdfPath);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::" + e.getMessage());
@@ -114,7 +114,7 @@ public class MargedDocUtils {
     }
 
     public static  void setcolor(String pathe) throws IOException {
-
+        System.out.println("set color in pdf ");
         PDDocument document = PDDocument.load(new File(pathe));
         PDPage originalPage = document.getPage(0); // Assuming you want to work with the first page (index 0)
         PDPage newPage = new PDPage(originalPage.getMediaBox());
@@ -124,8 +124,9 @@ public class MargedDocUtils {
         contentStream.setNonStrokingColor(backgroundColor);
         contentStream.fillRect(0, 0, PDRectangle.A4.getWidth(), PDRectangle.A4.getHeight());
         contentStream.close();
-        document.save("d://output.pdf");
+        document.save("D://test12.pdf");
         document.close();
+        System.out.println("done set pdf color ");
 
     }
 
