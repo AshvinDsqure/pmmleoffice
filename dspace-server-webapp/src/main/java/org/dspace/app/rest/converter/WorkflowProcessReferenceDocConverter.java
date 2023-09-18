@@ -235,6 +235,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (obj.getPage() != null) {
             workflowProcessReferenceDoc.setPage(obj.getPage());
         }
+        if(obj.getItemname()!=null){
+            workflowProcessReferenceDoc.setItemname(obj.getItemname());
+        }
         return workflowProcessReferenceDoc;
     }
 }

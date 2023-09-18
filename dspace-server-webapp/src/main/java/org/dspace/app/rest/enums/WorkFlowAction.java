@@ -35,8 +35,7 @@ public enum WorkFlowAction {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
             if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Inward")) {
-                System.out.println("in inward flow  create ");
-                System.out.println("size :::::::::::::::::" + workflowProcess.getWorkflowProcessEpeople().size());
+                System.out.println(":::::::::::::in inward flow  create:::::Action ");
                 Optional<WorkflowProcessEpersonRest> optionalWorkflowProcessEpersonRest = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() == 1).findFirst();
                 if (optionalWorkflowProcessEpersonRest.isPresent()) {
                     List<String> sss = new ArrayList<>();
@@ -447,6 +446,7 @@ public enum WorkFlowAction {
                 .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.INITIATOR.getAction()))
                 .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).collect(Collectors.toList());
         List<Integer> indexAllEpersonList = removeInitiatorafterlist.stream().map(d -> d.getIndex()).collect(Collectors.toList());
+
         //this check how many time dublicate index
         Map<Integer, Long> multipleusersameindex = indexAllEpersonList.stream().collect(Collectors.groupingBy(i -> i, Collectors.counting()));
         System.out.println("::::::::::::::size::::::::::::::::::" + removeInitiatorafterlist.size());
@@ -646,8 +646,12 @@ public enum WorkFlowAction {
                         workFlowAction.setActionDate(new Date());
                         workFlowAction.setAction(workFlowProcessMasterValue);
                         workFlowAction.setWorkflowProcess(workflowProcess);
-                        String[] s = doc.getItemname().split(":");
-                        workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " " + s[0]);
+                        if (doc.getItemname() != null) {
+                            String[] s = doc.getItemname().split(":");
+                            workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue() + " " + s[0]);
+                        } else {
+                            workFlowAction.setComment("Attached " + doc.getDrafttype().getPrimaryvalue());
+                        }
                         this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
                     }
                     if (doc.getDrafttype() != null && doc.getDrafttype().getPrimaryvalue() != null && doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Inward")) {
@@ -708,11 +712,13 @@ public enum WorkFlowAction {
 
     public WorkflowProcessEperson changeOwnership(Context context, JBPMResponse_ jbpmResponse, WorkflowProcess workflowProcess) throws SQLException, AuthorizeException {
         WorkflowProcessEperson currentOwner = null;
-        for (WorkflowProcessEperson w:workflowProcess.getWorkflowProcessEpeople()) {
-            System.out.println("All false");
-            w.setSender(false);
-            w.setOwner(false);
-            this.getWorkflowProcessEpersonService().update(context, w);
+        if (!this.getAction().equalsIgnoreCase("Received")) {
+            for (WorkflowProcessEperson w : workflowProcess.getWorkflowProcessEpeople()) {
+                System.out.println("All false");
+                w.setSender(false);
+                w.setOwner(false);
+                this.getWorkflowProcessEpersonService().update(context, w);
+            }
         }
         if (jbpmResponse.getPerformed_by_user() != null && !jbpmResponse.getPerformed_by_user().isEmpty()) {
             currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getPerformed_by_user()))).findFirst().get();
@@ -775,8 +781,8 @@ public enum WorkFlowAction {
         if (jbpmResponse.getNext_group() != null && jbpmResponse.getNext_group().size() != 0) {
             List<WorkflowProcessEperson> workflowProcessEpersonOwners = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> jbpmResponse.getNext_group().stream().map(d -> d).anyMatch(d -> d.equals(we.getID().toString()))).collect(Collectors.toList());
             workflowProcessEpersonOwners.stream().forEach(d -> {
-                if(d.getePerson()!=null && d.getePerson().getEmail()!=null){
-                    System.out.println("next Group :::"+d.getePerson().getEmail());
+                if (d.getePerson() != null && d.getePerson().getEmail() != null) {
+                    System.out.println("next Group :::" + d.getePerson().getEmail());
                 }
                 d.setOwner(true);
                 d.setSender(false);

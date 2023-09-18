@@ -87,11 +87,13 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     public void addAuthenticationDataForUser(HttpServletRequest request, HttpServletResponse response,
                                              DSpaceAuthentication authentication, boolean addCookie) throws IOException {
         try {
-            System.out.println("in login----->");
+            System.out.println("in login----->"+authentication.getName());
             Context context = ContextUtil.obtainContext(request);
             context.setCurrentUser(ePersonService.findByEmail(context, authentication.getName()));
             String token = loginJWTTokenHandler.createTokenForEPerson(context, request,authentication.getPreviousLoginDate());
            // AddCounter(context,token);
+            System.out.println("login :::::::"+token);
+            System.out.println("login Email ID:::::::::"+context.getCurrentUser().getEmail());
             context.commit();
             // Add newly generated auth token to the response
             addTokenToResponse(request, response, token, addCookie);
@@ -157,14 +159,8 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     @Override
     public void invalidateAuthenticationData(HttpServletRequest request, HttpServletResponse response,
                                              Context context) throws Exception {
+        System.out.println("::::::::::::::::::::logout::::::::::::::::::::::");
         String token = getLoginToken(request, response);
-        System.out.println("in logout");
-        /*LoginCounter loginCounter = loginCounterService.getbyToken(context, token);
-        if (loginCounter != null) {
-            System.out.println("in LoginCounter Update!");
-            loginCounter.setLogoutdate(new Date());
-            loginCounterService.create(context, loginCounter);
-        }*/
         loginJWTTokenHandler.invalidateToken(token, request, context);
         // Reset our CSRF token, generating a new one
         resetCSRFToken(request, response);
@@ -376,6 +372,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
         // We do this as we want the token to change anytime you login or logout
         csrfTokenRepository.saveToken(null, request, response);
         CsrfToken newToken = csrfTokenRepository.generateToken(request);
+        System.out.println("new token "+newToken);
         csrfTokenRepository.saveToken(newToken, request, response);
     }
 

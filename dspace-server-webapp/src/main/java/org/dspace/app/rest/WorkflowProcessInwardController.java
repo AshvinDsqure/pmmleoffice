@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.WorkFlowProcessConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessEpersonConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
+import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
@@ -23,6 +24,8 @@ import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.LinkRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.DateUtils;
+import org.dspace.app.rest.utils.Utils;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
@@ -95,17 +98,24 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
+    @Autowired
+    protected Utils utils;
+    @Autowired
+    WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
+
+    @Autowired
+    WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
 
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @ExceptionHandler(MissingParameterException.class)
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD})
     public ResponseEntity create(@RequestBody @Valid WorkFlowProcessRest workFlowProcessRest1) throws Exception {
-        WorkFlowProcessRest workFlowProcessRest=workFlowProcessRest1;
-        WorkFlowProcessRest workFlowProcessRestTemp=null;
+        WorkFlowProcessRest workFlowProcessRest = workFlowProcessRest1;
+        WorkFlowProcessRest workFlowProcessRestTemp = null;
+        HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
+        Context context = ContextUtil.obtainContext(request);
         try {
-             System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
-            HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
-            Context context = ContextUtil.obtainContext(request);
+            System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             Optional<WorkflowProcessEpersonRest> workflowProcessEpersonRest_ = Optional.ofNullable((getSubmitor(context)));
             if (!workflowProcessEpersonRest_.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
@@ -115,35 +125,57 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             WorkFlowAction create = WorkFlowAction.CREATE;
             workFlowType.setWorkFlowAction(create);
             workFlowType.setProjection(utils.obtainProjection());
-            workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest_.get());
-            List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d->d.getIndex()!=0).collect(Collectors.toList());
-            int i = 0;
-            for (WorkflowProcessEpersonRest workflowProcessEpersonRest : templist) {
-                context = ContextUtil.obtainContext(request);;
+            List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() != 0).collect(Collectors.toList());
+            List<WorkflowProcessReferenceDocRest> tempdoclist = workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d->{
+                try {
+                    WorkflowProcessReferenceDoc workflowProcessReferenceDoc=workflowProcessReferenceDocConverter.convertByService(context,d);
+                   return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc,utils.obtainProjection());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+            int ii = 0;
+            for (WorkflowProcessEpersonRest nextEpersonrest : templist) {
+             Context context1 = ContextUtil.obtainContext(request);
                 workFlowProcessRest.setWorkflowProcessEpersonRests(null);
-                System.out.println("inward:::::::::::::::::::::" + getInwardNumber().get("inwardnumber"));
-                List<WorkflowProcessEpersonRest> list1 = new ArrayList<>();
-                list1.add(0, workflowProcessEpersonRest_.get());
-                workflowProcessEpersonRest.setIndex(1);
-                list1.add(1, workflowProcessEpersonRest);
-                workFlowProcessRest.setWorkflowProcessEpersonRests(list1);
-                if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null && workFlowProcessRest.getWorkFlowProcessInwardDetailsRest().getInwardNumber() != null && i > 0) {
+                workFlowProcessRest.setWorkflowProcessReferenceDocRests(null);
+                List<WorkflowProcessEpersonRest> initeatorandnextuserlist = new ArrayList<>();
+                initeatorandnextuserlist.add(0, workflowProcessEpersonRest_.get());
+                nextEpersonrest.setIndex(1);
+                initeatorandnextuserlist.add(1, nextEpersonrest);
+                workFlowProcessRest.setWorkflowProcessEpersonRests(initeatorandnextuserlist);
+                if (ii > 0) {
                     WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
                     workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
                     workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
+                    List<WorkflowProcessReferenceDocRest> doclist = tempdoclist.stream().map(d -> {
+                        try {
+                            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(d,context1);
+                            workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context1, workflowProcessReferenceDoc);
+                            System.out.println("document create success " + workflowProcessReferenceDoc.getID());
+                            return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                        } catch (SQLException | AuthorizeException e) {
+                            throw new RuntimeException(e);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).collect(Collectors.toList());
+                    workFlowProcessRest.setWorkflowProcessReferenceDocRests(doclist);
                     workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-                    context.commit();
+                    context1.commit();
                 } else {
+                    workFlowProcessRest.setWorkflowProcessReferenceDocRests(tempdoclist);
                     workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-                    context.commit();
+                    context1.commit();
                 }
-                i++;
+                ii++;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.ok(workFlowProcessRestTemp);
     }
+
     @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/draft")
     public ResponseEntity draft(@RequestBody WorkFlowProcessRest workFlowProcessRest) throws Exception {

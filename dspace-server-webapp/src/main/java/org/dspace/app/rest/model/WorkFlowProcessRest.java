@@ -377,4 +377,41 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     public void setCurrentrecipient(String currentrecipient) {
         this.currentrecipient = currentrecipient;
     }
+
+    @Override
+    public String toString() {
+        return "WorkFlowProcessRest{" +
+                "workFlowProcessDraftDetailsRest=" + workFlowProcessDraftDetailsRest +
+                ", workflowProcessNoteRest=" + workflowProcessNoteRest +
+                ", workFlowProcessInwardDetailsRest=" + workFlowProcessInwardDetailsRest +
+                ", workFlowProcessOutwardDetailsRest=" + workFlowProcessOutwardDetailsRest +
+                ", workflowProcessSenderDiaryRest=" + workflowProcessSenderDiaryRest +
+                ", dispatchModeRest=" + dispatchModeRest +
+                ", workflowStatus=" + workflowStatus +
+                ", workflowType=" + workflowType +
+                ", eligibleForFilingRest=" + eligibleForFilingRest +
+                ", owner=" + owner +
+                ", sender=" + sender +
+                ", itemRest=" + itemRest +
+                ", Subject='" + Subject + '\'' +
+                ", workflowTypeStr='" + workflowTypeStr + '\'' +
+                ", sendername='" + sendername + '\'' +
+                ", currentrecipient='" + currentrecipient + '\'' +
+                ", mode='" + mode + '\'' +
+                ", ismode=" + ismode +
+                ", isDraft=" + isDraft +
+                ", comment='" + comment + '\'' +
+                ", workflowtype='" + workflowtype + '\'' +
+                ", workflowstatus='" + workflowstatus + '\'' +
+                ", priority='" + priority + '\'' +
+                ", itemsRests=" + itemsRests +
+                ", workflowProcessReferenceDocRests=" + workflowProcessReferenceDocRests +
+                ", workflowProcessEpersonRests=" + workflowProcessEpersonRests +
+                ", InitDate=" + InitDate +
+                ", dateRecived=" + dateRecived +
+                ", dueDate=" + dueDate +
+                ", priorityRest=" + priorityRest +
+                ", entityType='" + entityType + '\'' +
+                '}';
+    }
 }

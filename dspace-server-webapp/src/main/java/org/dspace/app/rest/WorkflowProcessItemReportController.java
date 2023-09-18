@@ -227,6 +227,20 @@ public class WorkflowProcessItemReportController {
         return map;
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getYear")
+    public Map<String, String> getYear(HttpServletRequest request) throws Exception {
+        try {
+            Map<String, String> map = new HashMap<>();
+            map.put("year", DateUtils.getFinancialYear());
+            return map;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in get Year ");
+        }
+        return null;
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/downloadItemReport")
     public ResponseEntity<Resource> downloadItem(HttpServletRequest request,
                                                  @Parameter(value = "startdate", required = true) String startdate,
@@ -263,9 +277,10 @@ public class WorkflowProcessItemReportController {
 
 
     @RequestMapping(method = RequestMethod.GET, value = "/margedDocumentanddownload")
-    public ResponseEntity<Resource> margedDocumentanddownload(HttpServletRequest request,
-                                                              @Parameter(value = "itemid", required = true) String itemid) {
+    public String margedDocumentanddownload(HttpServletRequest request,
+                                            @Parameter(value = "itemid", required = true) String itemid) {
         try {
+            System.out.println("generateRandomText(6);:::::::::" + generateRandomText(6));
             System.out.println("::::::::::::::::::::::::::::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
             Context context = ContextUtil.obtainContext(request);
             String filename = "AllDoc.pdf";
@@ -307,12 +322,23 @@ public class WorkflowProcessItemReportController {
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return null;
+        return generateRandomText(6);
     }
 
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
         String s = formatter.format(date);
         return new SimpleDateFormat("dd-MM-yyyy hh:mm:ss").parse(s);
+    }
+
+    private static String generateRandomText(int length) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(characters.length());
+            sb.append(characters.charAt(index));
+        }
+        return sb.toString();
     }
 }

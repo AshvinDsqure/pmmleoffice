@@ -69,17 +69,21 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
 
     @Override
-    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
+    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
-                "join wp.workflowProcessEpeople as ep " +
-                "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st join wp.workflowType as t where ep.isOwner=:isOwner and p.id=:eperson and st.id not IN(:statusid) and t.id =:draftid and wp.isdelete=:isdelete");
-        query.setParameter("isOwner", false);
-        query.setParameter("eperson", eperson);
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p " +
+                "left join wp.workflowStatus as st " +
+                "left join wp.workflowType as t " +
+                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "and st.id NOT IN(:statusid) and t.id=:draftid " +
+                "and wp.isdelete=:isdelete ");
+        query.setParameter("isOwner", true);
         query.setParameter("isdelete", false);
+        query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
-        query.setParameter("draftid", draftid);
+        query.setParameter("draftid", inwardoutwarttypeid);
         return count(query);
     }
 
@@ -258,9 +262,9 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             System.out.println("key : " + map.getKey() + " value : " + map.getValue());
             if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
                 if (i == 0) {
-                    sb.append("wp.Subject=:" + map.getKey());
+                    sb.append("wp.Subject like :" + map.getKey());
                 } else {
-                    sb.append("and wp.Subject=:" + map.getKey());
+                    sb.append("and wp.Subject like :" + map.getKey());
                 }
             }
             if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
@@ -324,7 +328,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         Query query = createQuery(context, sb.toString());
         for (Map.Entry<String, String> map : perameter.entrySet()) {
             if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
-                query.setParameter(map.getKey(), map.getValue());
+                query.setParameter(map.getKey(),"%"+map.getValue()+"%");
             } else {
                 query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
             }
