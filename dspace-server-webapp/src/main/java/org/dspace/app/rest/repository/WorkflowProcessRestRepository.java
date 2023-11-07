@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -15,10 +15,12 @@ import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.*;
 import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
+import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
+import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
@@ -32,13 +34,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidatorFactory;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -52,22 +58,16 @@ import static java.util.stream.Collectors.toList;
 public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<WorkflowProcess, WorkFlowProcessRest> {
 
     private static final Logger log = LogManager.getLogger(WorkflowProcessRestRepository.class);
-
     @Autowired
     WorkFlowProcessConverter workFlowProcessConverter;
-
     @Autowired
     GroupService groupService;
-
     @Autowired
     WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
-
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
-
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
-
     @Autowired
     private WorkflowProcessService workflowProcessService;
     @Autowired
@@ -79,246 +79,105 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @Autowired
     JbpmServerImpl jbpmServer;
     @Autowired
-    ModelMapper modelMapper ;
+    ModelMapper modelMapper;
     @Autowired
     private ValidatorFactory validatorFactory;
+
     public WorkflowProcessRestRepository(WorkflowProcessService dsoService) {
         super(dsoService);
     }
+
     @Override
     @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
     public WorkFlowProcessRest findOne(Context context, UUID id) throws SQLException {
-        WorkflowProcess workflowProcess= workflowProcessService.find(context,id);
-        return workFlowProcessConverter.convert(workflowProcess,utils.obtainProjection());
+        WorkFlowProcessRest workFlowProcessRest = null;
+        WorkflowProcess workflowProcess = workflowProcessService.find(context, id);
+        workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
+        try {
+            if (!workflowProcess.getIsread()) {
+                System.out.println("in update is read true");
+                workflowProcess.setIsread(true);
+                workflowProcessService.update(context, workflowProcess);
+                context.commit();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return workFlowProcessRest;
     }
 
     @Override
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     public Page<WorkFlowProcessRest> findAll(Context context, Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        log.info("in get All Workflow start");
         try {
-            UUID statusid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            System.out.println("status id:"+statusid);
-            WorkFlowProcessMaster workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Workflow Type");
-            UUID statusdraftid=null;
-            if(workFlowProcessMaster!=null){
-                statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
+            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-            int count=workflowProcessService.countfindNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.findNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,statusdraftid,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-           workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-
-           return new PageImpl(workflowsRes, pageable,count);
-            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-
-
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "getByWorkFlowType")
-    public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        System.out.println("in workflow type ");
-        try {
-            Context context = obtainContext();
-            UUID statusid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            int count=workflowProcessService.countfindNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,typeid);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.findNotCompletedByUser(context,context.getCurrentUser().getID(),statusid,typeid,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
-            return new PageImpl(workflowsRes, pageable,count);
-           // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
+            log.info("in get All Workflow stop");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
             e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "gethistory")
-    public Page<WorkflowProcessDTO> gethistory(Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        try {
-            Context context = obtainContext();
-            UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count=workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-            return new PageImpl(workflowsRes, pageable,count);
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "dashboard")
-    public Page<WorkFlowProcessRest> dashboard(Context context, Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        try {
-            UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            System.out.println("Statis id isDraft"+statusid);
-            int count=workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByNotOwnerAndNotDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-            return new PageImpl(workflowsRes, pageable,count);
-            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-
-
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "getDraft")
-    public Page<WorkFlowProcessRest> getDraft(Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        try {
-            Context context = obtainContext();
-            UUID statusid=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            System.out.println("Draft Id"+statusid);
-            int count=workflowProcessService.countgetHistoryByOwnerAndIsDraft(context,context.getCurrentUser().getID(),statusid);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.getHistoryByOwnerAndIsDraft(context,context.getCurrentUser().getID(),statusid,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-            return new PageImpl(workflowsRes, pageable,count);
-
-            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "getDraftNotePendingWorkflow")
-    public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        try {
-            Context context = obtainContext();
-            UUID statuscloseid=WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusdraft=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            WorkFlowProcessMaster workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Workflow Type");
-            UUID statusdraftid=null;
-            if(workFlowProcessMaster!=null){
-                statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
-            }
-            System.out.println("statuscloseid>>"+statuscloseid);
-            System.out.println("statusdraftid>>"+statusdraftid);
-            System.out.println("statusdraft>>"+statusdraft);
-            int count=workflowProcessService.countfindDraftPending(context,context.getCurrentUser().getID(),statuscloseid,statusdraftid,statusdraft);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.findDraftPending(context,context.getCurrentUser().getID(),statuscloseid,statusdraftid,statusdraft,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-            return new PageImpl(workflowsRes, pageable,count);
-            // return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "getReferWorkflow")
-    public Page<WorkflowProcessDTO> getReferWorkflow(Pageable pageable) {
-        List<WorkFlowProcessRest> workflowsRes=new ArrayList<WorkFlowProcessRest>();
-        List<WorkflowProcessDTO> workflowsRes1=new ArrayList<WorkflowProcessDTO>();
-        try {
-            Context context = obtainContext();
-            UUID referstatusid=WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusdraft=WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            WorkFlowProcessMaster workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Workflow Type");
-            UUID statusdraftid=null;
-            if(workFlowProcessMaster!=null){
-                statusdraftid= workFlowProcessMasterValueService.findByName(context,"Draft",workFlowProcessMaster).getID();
-            }
-            System.out.println("statuscloseid>>"+referstatusid);
-            System.out.println("statusdraftid>>"+statusdraftid);
-            System.out.println("statusdraft>>"+statusdraft);
-            int count=workflowProcessService.countRefer(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft);
-            List<WorkflowProcess> workflowProcesses= workflowProcessService.findReferList(context,context.getCurrentUser().getID(),referstatusid,statusdraftid,statusdraft,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
-            }).collect(toList());
-
-            return new PageImpl(workflowsRes, pageable,count);
-
-            //return converter.toRestPage(workflowProcesses, pageable,count , utils.obtainProjection());
-        }catch (Exception e){
-            e.printStackTrace();
-            throw  new RuntimeException(e.getMessage(),e);
-        }
-    }
-    @SearchRestMethod(name = "getDocumentByItemID")
-    public WorkFlowProcessRest getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid) {
-        try {
-            Context context = obtainContext();
-            WorkflowProcess witems = workflowProcessService.getNoteByItemsid(context, itemid);
-            return workFlowProcessConverter.convert(witems, utils.obtainProjection());
-        } catch (SQLException e) {
+            log.error("in get All Workflow Error" + e.getMessage());
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
     @Override
     public Class<WorkFlowProcessRest> getDomainClass() {
         return null;
     }
+
     @Override
     @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
-    protected WorkFlowProcessRest createAndReturn(Context context)
-            throws AuthorizeException {
+    protected WorkFlowProcessRest createAndReturn(Context context) throws AuthorizeException {
         // this need to be revisited we should receive an EPersonRest as input
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
         WorkFlowProcessRest workFlowProcessRest = null;
-        WorkflowProcess workflowProcess=null;
+        WorkflowProcess workflowProcess = null;
         try {
             workFlowProcessRest = mapper.readValue(req.getInputStream(), WorkFlowProcessRest.class);
-
-            System.out.println(">>>>>>>>>>>>>>>>>>>json"+workFlowProcessRest);
-            Set<ConstraintViolation<WorkFlowProcessRest>> violations=validatorFactory.getValidator().validate(workFlowProcessRest);
-            if (!violations.isEmpty()){
+            Set<ConstraintViolation<WorkFlowProcessRest>> violations = validatorFactory.getValidator().validate(workFlowProcessRest);
+            if (!violations.isEmpty()) {
                 //throw new WorkFlowValiDationException(violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList()));
             }
-            boolean isDraft=workFlowProcessRest.getDraft();
-            if(isDraft){
+            boolean isDraft = workFlowProcessRest.getDraft();
+            if (isDraft) {
                 workFlowProcessRest.getWorkflowProcessEpersonRests().clear();
                 //clear user if workflowis Draft
             }
             //set submitorUser
-            if(context.getCurrentUser() != null && !isDraft){
-                WorkflowProcessEpersonRest workflowProcessEpersonSubmitor=new WorkflowProcessEpersonRest();
-                EPersonRest ePersonRest=new EPersonRest();
+            if (context.getCurrentUser() != null && !isDraft) {
+                WorkflowProcessEpersonRest workflowProcessEpersonSubmitor = new WorkflowProcessEpersonRest();
+                EPersonRest ePersonRest = new EPersonRest();
                 ePersonRest.setUuid(context.getCurrentUser().getID().toString());
                 workflowProcessEpersonSubmitor.setIndex(0);
                 Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
-                if(workFlowUserTypOptional.isPresent()){
-                    workflowProcessEpersonSubmitor.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(),utils.obtainProjection()));
+                if (workFlowUserTypOptional.isPresent()) {
+                    workflowProcessEpersonSubmitor.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(), utils.obtainProjection()));
                 }
                 workflowProcessEpersonSubmitor.setePersonRest(ePersonRest);
                 workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonSubmitor);
             }
-            workflowProcess= createworkflowProcessFromRestObject(context,workFlowProcessRest);
-            workFlowProcessRest=workFlowProcessConverter.convert(workflowProcess,utils.obtainProjection());
+            workflowProcess = createworkflowProcessFromRestObject(context, workFlowProcessRest);
+            workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
             try {
-                System.out.println("isDraft:::"+isDraft);
-                if(!isDraft) {
-                    WorkFlowAction create= WorkFlowAction.CREATE;
-                    create.perfomeAction(context,workflowProcess,workFlowProcessRest);
+                if (!isDraft) {
+                    WorkFlowAction create = WorkFlowAction.CREATE;
+                    create.perfomeAction(context, workflowProcess, workFlowProcessRest);
                 }
                 context.commit();
-            }catch (RuntimeException | SQLException e){
+            } catch (RuntimeException | SQLException e) {
                 e.printStackTrace();
                 throw new UnprocessableEntityException("error parsing the body... maybe this is not the right error code");
             }
@@ -330,29 +189,27 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
         return workFlowProcessRest;
     }
+
     private WorkflowProcess createworkflowProcessFromRestObject(Context context, WorkFlowProcessRest workFlowProcessRest) throws AuthorizeException {
-        WorkflowProcess workflowProcess =null;
+        WorkflowProcess workflowProcess = null;
         try {
 
-            workflowProcess=workFlowProcessConverter.convert(workFlowProcessRest,context);
-            Optional<WorkflowProcessSenderDiary> workflowProcessSenderDiaryOptional=Optional.ofNullable(workflowProcessSenderDiaryService.findByEmailID(context,workflowProcess.getWorkflowProcessSenderDiary().getEmail()));
-            if(workflowProcessSenderDiaryOptional.isPresent()){
+            workflowProcess = workFlowProcessConverter.convert(workFlowProcessRest, context);
+            Optional<WorkflowProcessSenderDiary> workflowProcessSenderDiaryOptional = Optional.ofNullable(workflowProcessSenderDiaryService.findByEmailID(context, workflowProcess.getWorkflowProcessSenderDiary().getEmail()));
+            if (workflowProcessSenderDiaryOptional.isPresent()) {
                 workflowProcess.setWorkflowProcessSenderDiary(workflowProcessSenderDiaryOptional.get());
             }
-            WorkFlowProcessMasterValue workflowstatusopOptionalWorkFlowProcessMasterValue=null;
-            System.out.println("workFlowProcessRest.getDraft()::"+workFlowProcessRest.getDraft());
-            if(!workFlowProcessRest.getDraft()){
-                System.out.println(">>>>>>>>>>>>>>>>>>>>"+WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getPrimaryvalue());
-                workflowstatusopOptionalWorkFlowProcessMasterValue =WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get();
-            }else{
-                workflowstatusopOptionalWorkFlowProcessMasterValue =WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get();
+            WorkFlowProcessMasterValue workflowstatusopOptionalWorkFlowProcessMasterValue = null;
+            if (!workFlowProcessRest.getDraft()) {
+                workflowstatusopOptionalWorkFlowProcessMasterValue = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get();
+            } else {
+                workflowstatusopOptionalWorkFlowProcessMasterValue = WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get();
             }
-            if(workflowstatusopOptionalWorkFlowProcessMasterValue!=null) {
-                System.out.println(">>>>>>>>>>>>>>>>>{{}}>>>"+workflowstatusopOptionalWorkFlowProcessMasterValue.getPrimaryvalue());
+            if (workflowstatusopOptionalWorkFlowProcessMasterValue != null) {
 
                 workflowProcess.setWorkflowStatus(workflowstatusopOptionalWorkFlowProcessMasterValue);
             }
-            workflowProcess = workflowProcessService.create(context,workflowProcess);
+            workflowProcess = workflowProcessService.create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
                 try {
@@ -363,8 +220,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                     throw new RuntimeException(e);
                 }
             }).collect(toList()));
-            System.out.println("workflowProcess::: update ......");
-            workflowProcessService.update(context,workflowProcess);
+            workflowProcessService.update(context, workflowProcess);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
@@ -373,23 +229,306 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
 
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    @SearchRestMethod(name = "searchByTypeandSubject")
-    public Page<WorkFlowProcessRest> searchByTypeandSubject(@Parameter(value = "workflowtypeid", required = true) UUID workflowtypeid,@Parameter(value = "subject", required = true) String subject, Pageable pageable) {
-        List<WorkFlowProcessRest>workflowsRes=null;
+    @SearchRestMethod(name = "getByWorkFlowType")
+    public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        log.info("in getByWorkFlowType start inward or outward start");
         try {
-            System.out.println("sear>>>>>>>>>>>" + subject);
             Context context = obtainContext();
-            Optional<List<WorkflowProcess>> workflowProcesses = Optional.ofNullable(workflowProcessService.searchSubjectByWorkflowTypeandSubject(context, workflowtypeid,subject));
-            if (workflowProcesses.isPresent()) {
-                workflowsRes = workflowProcesses.get().stream().map(d -> {
-                    return workFlowProcessConverter.convertsearchBySubject(d);
-                }).collect(toList());
-                return new PageImpl(workflowsRes, pageable,9999);
+            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getByWorkFlowType start inward or outward stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in getByWorkFlowType Error " + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "gethistory")
+    public Page<WorkflowProcessDTO> gethistory(Pageable pageable) {
+        log.info("in gethistory start ");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in gethistory stop! ");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in dashboard Error " + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "dashboard")
+    public Page<WorkFlowProcessRest> dashboard(Context context, Pageable pageable) {
+        log.info("in dashboard start");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in dashboard start");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in dashboard Error " + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "getDraft")
+    public Page<WorkFlowProcessRest> getDraft(Pageable pageable) {
+        log.info("in getDraft start");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getDraft stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in getDraft Error" + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "filterbyInwardAndOutWard")
+    public Page<WorkFlowProcessRest> filterbyInwardAndOutWard(
+            @Parameter(value = "subject",required = false)String subject,
+            @Parameter(value = "priority",required = false)String priority,
+            @Parameter(value = "status",required = false)String status,
+            @Parameter(value = "type",required = false)String type,
+            @Parameter(value = "department",required = false)String department,
+            @Parameter(value = "categoryRest",required = false)String categoryRest,
+            @Parameter(value = "subcategoryRest",required = false)String subcategoryRest,
+            @Parameter(value = "officeRest",required = false)String officeRest,
+            @Parameter(value = "inwardmodeRest",required = false)String inwardmodeRest,
+            @Parameter(value = "outwardmodeRest",required = false)String outwardmodeRest,
+            @Parameter(value = "outwardmedium",required = false)String outwardmedium,
+            @Parameter(value = "designation",required = false)String designation,
+            @Parameter(value = "inwarddate",required = false)String inwarddate,
+            @Parameter(value = "outwarddate",required = false)String outwarddate,
+            @Parameter(value = "receiveddate",required = false)String receiveddate,
+            @Parameter(value = "username",required = false)String username,
+            @Parameter(value = "user",required = false)String user,
+            @Parameter(value = "sendername",required = false)String sendername,
+            @Parameter(value = "senderphonenumber",required = false)String senderphonenumber,
+            @Parameter(value = "senderaddress",required = false)String senderaddress,
+            @Parameter(value = "sendercity",required = false)String sendercity,
+            @Parameter(value = "sendercountry",required = false)String sendercountry,
+            @Parameter(value = "senderpincode",required = false)String senderpincode,
+            @Parameter(value = "inward",required = false)String inward,
+            @Parameter(value = "outward",required = false)String outward,
+            Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
+            HashMap<String, String> map = new HashMap<>();
+            if (priority != null) {
+                map.put("priority", priority);
             }
+            if (status != null) {
+                map.put("status", status);
+            }
+            if (type != null) {
+                map.put("type", type);
+            }
+            if (department != null) {
+                map.put("department",department);
+            }
+            if (categoryRest != null) {
+                map.put("categoryRest", categoryRest);
+            }
+            if (subcategoryRest != null) {
+                map.put("subcategoryRest", subcategoryRest);
+            }
+            if (officeRest != null) {
+                map.put("officeRest",officeRest);
+            }
+            if (inwardmodeRest!= null) {
+                map.put("inwardmodeRest", inwardmodeRest);
+            }
+            if (outwardmodeRest!= null) {
+                map.put("outwardmodeRest", outwardmodeRest);
+            }
+            if (outwardmedium!= null) {
+                map.put("outwardmedium", outwardmedium);
+            }
+            if (designation != null) {
+                map.put("designation", designation);
+            }
+            if (user != null) {
+                map.put("user", user);
+            }
+            //text
+            if (subject!= null) {
+                map.put("subject", subject);
+            }
+            if (inwarddate!= null) {
+                map.put("inwarddate", inwarddate);
+            }
+            if (outwarddate != null) {
+                map.put("outwarddate", outwarddate);
+            }
+            if (receiveddate!= null) {
+                map.put("receiveddate", receiveddate);
+            }
+            if (username != null) {
+                map.put("username", username);
+            }
+            if (sendername!= null) {
+                map.put("sendername", sendername);
+            }
+            if (senderphonenumber!= null) {
+                map.put("senderphonenumber", senderphonenumber);
+            }
+            if (senderaddress != null) {
+                map.put("senderaddress", senderaddress);
+            }
+            if (sendercity != null) {
+                map.put("sendercity",sendercity);
+            }
+            if (sendercountry!= null) {
+                map.put("sendercountry",sendercountry);
+            }
+            if (senderpincode!= null) {
+                map.put("senderpincode", senderpincode);
+            }
+            if (inward!= null) {
+                map.put("inward", inward);
+            }
+            if (outward!= null) {
+                map.put("outward", outward);
+            }
+            UUID workflowtype_draftid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            String uui=workflowtype_draftid.toString();
+            map.put("draftid",uui);
+            System.out.println(map);
+            int count = workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> list = workflowProcessService.filterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+            List<WorkFlowProcessRest> rests = list.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context,d, utils.obtainProjection());
+            }).collect(Collectors.toList());
+            System.out.println("::::::::::::::::::::stop filterbyInwardAndOutWard :::::::::::::::::::");
+            return new PageImpl(rests, pageable,count);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "getDraftNotePendingWorkflow")
+    public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(Pageable pageable) {
+        log.info("in getDraftNotePendingWorkflow start");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            UUID statuscloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
+            }
+            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getDraftNotePendingWorkflow stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in getDraftNotePendingWorkflow Error" + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "getReferWorkflow")
+    public Page<WorkflowProcessDTO> getReferWorkflow(Pageable pageable) {
+        log.info("in getReferWorkflow start!");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        List<WorkflowProcessDTO> workflowsRes1 = new ArrayList<WorkflowProcessDTO>();
+        try {
+            Context context = obtainContext();
+            UUID referstatusid = WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
+            }
+            int count = workflowProcessService.countRefer(context, context.getCurrentUser().getID(), referstatusid, statusdraftid, statusdraft);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findReferList(context, context.getCurrentUser().getID(), referstatusid, statusdraftid, statusdraft, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getReferWorkflow stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("in getReferWorkflow Error " + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @SearchRestMethod(name = "getDocumentByItemID")
+    public WorkFlowProcessRest getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid) {
+        log.info("in getDocumentByItemID start!");
+        try {
+            Context context = obtainContext();
+            WorkflowProcess witems = workflowProcessService.getNoteByItemsid(context, itemid);
+            log.info("in getDocumentByItemID stop!");
+            return workFlowProcessConverter.convert(witems, utils.obtainProjection());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            log.info("in getDocumentByItemID Error" + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @SearchRestMethod(name = "searchByTypeandSubject")
+    public Page<WorkFlowProcessRest> searchByTypeandSubject(@Parameter(value = "workflowtypeid", required = true) UUID workflowtypeid, @Parameter(value = "subject", required = true) String subject, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes = null;
+        try {
+            Context context = obtainContext();
+            Optional<List<WorkflowProcess>> workflowProcesses = Optional.ofNullable(workflowProcessService.searchSubjectByWorkflowTypeandSubject(context, workflowtypeid, subject));
+            if (workflowProcesses.isPresent()) {
+                workflowsRes = workflowProcesses.get().stream().map(d -> {
+                    return workFlowProcessConverter.convertsearchBySubject(d);
+                }).collect(toList());
+                return new PageImpl(workflowsRes, pageable, 9999);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

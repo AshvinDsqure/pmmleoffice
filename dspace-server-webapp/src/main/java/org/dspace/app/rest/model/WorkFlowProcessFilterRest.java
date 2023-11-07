@@ -45,26 +45,60 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest workflowStatusRest;
     @JsonProperty
     private WorkFlowProcessMasterValueRest workflowTypeRest;
-
     @JsonProperty
     private WorkFlowProcessMasterValueRest departmentRest;
-
     @JsonProperty
-    private EPersonRest ePersonRest ;
-
-
+    private EPersonRest ePersonRest;
     @JsonProperty
     private String subject;
-
     @JsonProperty
     private String inward;
     @JsonProperty
     private String outward;
+    @JsonProperty
+    private String inwarddate;
+    @JsonProperty
+    private String outwarddate;
+    @JsonProperty
+    private String receiveddate;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest categoryRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest subcategoryRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest officeRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest inwardmodeRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest outwardmodeRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest outwardmediumRest;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest designationRest;
+    @JsonProperty
+    private String username;
+    @JsonProperty
 
+    private String sendername;
+    @JsonProperty
+    private String senderemail;
+    @JsonProperty
+    private String senderphonenumber;
+    @JsonProperty
+    private String senderorganization;
+    @JsonProperty
+    private String senderaddress;
+    @JsonProperty
+    private String sendercity;
+    @JsonProperty
+    private String sendercountry;
+    @JsonProperty
+    private String senderpincode;
     @Override
     public String getCategory() {
         return "workflowprocessefilter";
     }
+
     @Override
     public String getType() {
         return "workflowprocessefilter";
@@ -93,6 +127,7 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
     public String getSubject() {
         return subject;
     }
+
     public void setSubject(String subject) {
         this.subject = subject;
     }
@@ -131,5 +166,157 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
 
     public void setOutward(String outward) {
         this.outward = outward;
+    }
+
+    public String getInwarddate() {
+        return inwarddate;
+    }
+
+    public void setInwarddate(String inwarddate) {
+        this.inwarddate = inwarddate;
+    }
+
+    public String getOutwarddate() {
+        return outwarddate;
+    }
+
+    public void setOutwarddate(String outwarddate) {
+        this.outwarddate = outwarddate;
+    }
+
+    public String getReceiveddate() {
+        return receiveddate;
+    }
+
+    public void setReceiveddate(String receiveddate) {
+        this.receiveddate = receiveddate;
+    }
+
+    public WorkFlowProcessMasterValueRest getCategoryRest() {
+        return categoryRest;
+    }
+
+    public void setCategoryRest(WorkFlowProcessMasterValueRest categoryRest) {
+        this.categoryRest = categoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getSubcategoryRest() {
+        return subcategoryRest;
+    }
+
+    public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
+        this.subcategoryRest = subcategoryRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getOfficeRest() {
+        return officeRest;
+    }
+
+    public void setOfficeRest(WorkFlowProcessMasterValueRest officeRest) {
+        this.officeRest = officeRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getInwardmodeRest() {
+        return inwardmodeRest;
+    }
+
+    public void setInwardmodeRest(WorkFlowProcessMasterValueRest inwardmodeRest) {
+        this.inwardmodeRest = inwardmodeRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getOutwardmodeRest() {
+        return outwardmodeRest;
+    }
+
+    public void setOutwardmodeRest(WorkFlowProcessMasterValueRest outwardmodeRest) {
+        this.outwardmodeRest = outwardmodeRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getOutwardmediumRest() {
+        return outwardmediumRest;
+    }
+
+    public void setOutwardmediumRest(WorkFlowProcessMasterValueRest outwardmediumRest) {
+        this.outwardmediumRest = outwardmediumRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getDesignationRest() {
+        return designationRest;
+    }
+
+    public void setDesignationRest(WorkFlowProcessMasterValueRest designationRest) {
+        this.designationRest = designationRest;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getSendername() {
+        return sendername;
+    }
+
+    public void setSendername(String sendername) {
+        this.sendername = sendername;
+    }
+
+    public String getSenderemail() {
+        return senderemail;
+    }
+
+    public void setSenderemail(String senderemail) {
+        this.senderemail = senderemail;
+    }
+
+    public String getSenderphonenumber() {
+        return senderphonenumber;
+    }
+
+    public void setSenderphonenumber(String senderphonenumber) {
+        this.senderphonenumber = senderphonenumber;
+    }
+
+    public String getSenderorganization() {
+        return senderorganization;
+    }
+
+    public void setSenderorganization(String senderorganization) {
+        this.senderorganization = senderorganization;
+    }
+
+    public String getSenderaddress() {
+        return senderaddress;
+    }
+
+    public void setSenderaddress(String senderaddress) {
+        this.senderaddress = senderaddress;
+    }
+
+    public String getSendercity() {
+        return sendercity;
+    }
+
+    public void setSendercity(String sendercity) {
+        this.sendercity = sendercity;
+    }
+
+    public String getSendercountry() {
+        return sendercountry;
+    }
+
+    public void setSendercountry(String sendercountry) {
+        this.sendercountry = sendercountry;
+    }
+
+    public String getSenderpincode() {
+        return senderpincode;
+    }
+
+    public void setSenderpincode(String senderpincode) {
+        this.senderpincode = senderpincode;
     }
 }

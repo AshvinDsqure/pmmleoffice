@@ -21,6 +21,10 @@ import org.apache.logging.log4j.Logger;
  */
 public class DateUtils {
 
+    public static void main(String[] args) {
+        System.out.println(parse("2022-02-02"));
+    }
+
     private static Logger log = LogManager.getLogger(DateUtils.class);
 
     /**
@@ -54,6 +58,16 @@ public class DateUtils {
      * @param date string to parse
      * @return Date
      */
+    public static Date parseyyyymmdd(String date) {
+        SimpleDateFormat format = new SimpleDateFormat(
+                "yyyy-MM-dd");
+        Date ret;
+        try {
+            ret = format.parse(date);
+            return ret;
+        } catch (ParseException ex) {}
+        return null;
+    }
     public static Date parse(String date) {
         // First try to parse as a full UTC date/time, e.g. 2008-01-01T00:00:00Z
         SimpleDateFormat format = new SimpleDateFormat(

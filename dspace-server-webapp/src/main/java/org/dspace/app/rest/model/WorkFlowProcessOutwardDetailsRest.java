@@ -47,14 +47,6 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
     private WorkFlowProcessMasterValueRest categoryRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest subcategoryRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest lettercategoryRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest officelocationRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest categoriesoffileRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest subcategoriesoffileRest = null;
 
     public Date getDispatchdate() {
         return dispatchdate;
@@ -145,37 +137,5 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
 
     public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
         this.subcategoryRest = subcategoryRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getLettercategoryRest() {
-        return lettercategoryRest;
-    }
-
-    public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
-        this.lettercategoryRest = lettercategoryRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getOfficelocationRest() {
-        return officelocationRest;
-    }
-
-    public void setOfficelocationRest(WorkFlowProcessMasterValueRest officelocationRest) {
-        this.officelocationRest = officelocationRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getCategoriesoffileRest() {
-        return categoriesoffileRest;
-    }
-
-    public void setCategoriesoffileRest(WorkFlowProcessMasterValueRest categoriesoffileRest) {
-        this.categoriesoffileRest = categoriesoffileRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getSubcategoriesoffileRest() {
-        return subcategoriesoffileRest;
-    }
-
-    public void setSubcategoriesoffileRest(WorkFlowProcessMasterValueRest subcategoriesoffileRest) {
-        this.subcategoriesoffileRest = subcategoriesoffileRest;
     }
 }

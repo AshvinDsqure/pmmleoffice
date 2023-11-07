@@ -213,6 +213,7 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
             EPersonRest ePersonRest=new EPersonRest();
             ePersonRest.setUuid(context.getCurrentUser().getID().toString());
             workflowProcessEpersonSubmitor.setIndex(0);
+            workflowProcessEpersonSubmitor.setSequence(0);
             Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
             if(workFlowUserTypOptional.isPresent()){
                 workflowProcessEpersonSubmitor.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(),utils.obtainProjection()));

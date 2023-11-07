@@ -7,15 +7,23 @@
  */
 package org.dspace.app.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
 import org.dspace.app.rest.enums.WorkFlowStatus;
-import org.dspace.app.rest.model.CounterDTO;
-import org.dspace.app.rest.model.ExcelDTO;
-import org.dspace.app.rest.model.ItemRest;
-import org.dspace.app.rest.model.LoginCounterRest;
+import org.dspace.app.rest.model.*;
+import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.ExcelHelper;
@@ -30,13 +38,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.multipart.MultipartFile;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -83,6 +92,18 @@ public class WorkflowProcessItemReportController {
 
     @Autowired
     LoginCounterConverter loginCounterConverter;
+
+    @Autowired
+    BitstreamService bitstreamService;
+
+    @Autowired
+    private BundleRestRepository bundleRestRepository;
+
+    @Autowired
+    private WorkflowProcessService workflowProcessService;
+
+    @Autowired
+    WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
 
 
     @Autowired
@@ -202,6 +223,7 @@ public class WorkflowProcessItemReportController {
             Context context = ContextUtil.obtainContext(request);
             EPerson currentuser = context.getCurrentUser();
             StringBuffer sb = new StringBuffer();
+            sb.append("PCMC/");
             WorkFlowProcessMasterValue department;
             if (currentuser != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
@@ -209,14 +231,33 @@ public class WorkflowProcessItemReportController {
                     sb.append(department.getSecondaryvalue());
                 }
             }
-            if (currentuser.getTablenumber() != null) {
-                sb.append("/" + currentuser.getTablenumber());
-            }
-            sb.append("/File");
             sb.append("/" + DateUtils.getFinancialYear());
             int count = itemService.countTotal(context);
             count = count + 1;
             sb.append("/0000" + count);
+
+            filenumber = sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in getInwardNumber ");
+        }
+        Map<String, String> map = new HashMap<>();
+        map.put("filenumber", filenumber);
+        return map;
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber1")
+    public Map<String, String> getFileNumber1(HttpServletRequest request, @Parameter(value = "department", required = true) String department, @Parameter(value = "subject", required = true) String subject) throws Exception {
+        String filenumber = null;
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            StringBuffer sb = new StringBuffer();
+            sb.append("PCMC/" + department);
+            sb.append("/" + DateUtils.getFinancialYear());
+            int count = itemService.countTotal(context);
+            count = count + 1;
+            sb.append("/0000" + count + "/" + subject);
             filenumber = sb.toString();
         } catch (Exception e) {
             e.printStackTrace();
@@ -325,6 +366,109 @@ public class WorkflowProcessItemReportController {
         return generateRandomText(6);
     }
 
+    @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/signPdf")
+    public ResponseEntity<byte[]> signPdf(HttpServletRequest request,
+                                          MultipartFile p12File,
+                                          MultipartFile certFile,
+                                          String singPdfRequest) throws SQLException, AuthorizeException, ParseException {
+        Context context = ContextUtil.obtainContext(request);
+        SignPdfRequestDTO signPdfRequestDTO = null;
+        Bitstream bitstreampdf=null;
+        Bitstream bitstreampkcs12=null;
+        InputStream fileInputa=null;
+        InputStream pkcs12File=null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            signPdfRequestDTO = mapper.readValue(singPdfRequest, SignPdfRequestDTO.class);
+            System.out.println("doc id"+signPdfRequestDTO.getDocumentuuid());
+            System.out.println("getPksc12orpemdocuuid  id"+signPdfRequestDTO.getPksc12orpemdocuuid());
+            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getDocumentuuid()));
+            if(workflowProcessReferenceDoc!=null) {
+                bitstreampdf = workflowProcessReferenceDoc.getBitstream();
+                 fileInputa = bitstreamService.retrieve(context, workflowProcessReferenceDoc.getBitstream());
+            }
+            WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getPksc12orpemdocuuid()));
+            if(pkcs12doc!=null) {
+                bitstreampkcs12=pkcs12doc.getBitstream();
+                pkcs12File = bitstreamService.retrieve(context, pkcs12doc.getBitstream());
+            }
+            ResponseEntity<byte[]> s = singData(signPdfRequestDTO, fileInputa,pkcs12File, certFile, bitstreampdf.getName(),bitstreampkcs12.getName());
+            FileInputStream pdfFileInputStream = new FileInputStream(new File("D://"+bitstreampdf.getName()+".pdf"));
+            bitstreampdf = bundleRestRepository.processBitstreamCreationWithoutBundle(context, pdfFileInputStream, "", "fileInput");
+            workflowProcessReferenceDoc.setBitstream(bitstreampdf);
+            WorkflowProcessReferenceDoc d= workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+            workflowProcessService.storeWorkFlowMataDataTOBitsream(context,d);
+            context.commit();
+            return s;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public ResponseEntity<byte[]> singData(SignPdfRequestDTO signPdfRequestDTO, InputStream fileInput,
+                                           InputStream p12File,
+                                           MultipartFile certFile, String fileInputname,String p12Filename) {
+        //CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpClient httpClient = HttpClients.createDefault();
+        try {
+            String url = "http://localhost:8081/api/v1/security/cert-sign";
+            HttpPost httpPost = new HttpPost(url);
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            // Add parameters as form data
+            builder.addTextBody("certType", signPdfRequestDTO.getCertType(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("showSignature", signPdfRequestDTO.getShowSignature(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("location", signPdfRequestDTO.getLocation(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("reason", signPdfRequestDTO.getReason(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("pageNumber", signPdfRequestDTO.getPageNumber(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("name", signPdfRequestDTO.getName(), ContentType.TEXT_PLAIN);
+            builder.addTextBody("password", signPdfRequestDTO.getKeystorePassword(), ContentType.TEXT_PLAIN);
+            // Add a binary file
+            builder.addBinaryBody("fileInput", fileInput, ContentType.APPLICATION_OCTET_STREAM, fileInputname);
+            builder.addBinaryBody("p12File", p12File, ContentType.APPLICATION_OCTET_STREAM, p12Filename);
+            builder.addBinaryBody("certFile", certFile.getInputStream(), ContentType.APPLICATION_OCTET_STREAM, certFile.getName());
+            // Build the multipart entity
+            httpPost.setEntity(builder.build());
+            // Execute the request
+            try {
+                // Execute the request and get the response
+                HttpResponse response = httpClient.execute(httpPost);
+                System.out.println("Response :::::::::::::" + response);
+                // Check the response status code and content
+                int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode == 200) {
+                    HttpEntity entity = response.getEntity();
+                    HttpStatus httpStatus = HttpStatus.valueOf(statusCode);
+                    HttpHeaders headers = new HttpHeaders();
+                    for (org.apache.http.Header header : response.getAllHeaders()) {
+                        headers.add(header.getName(), header.getValue());
+                    }
+                    byte[] responseBody = EntityUtils.toByteArray(entity);
+                    return ResponseEntity.status(httpStatus)
+                            .headers(headers)
+                            .contentType(MediaType.parseMediaType(entity.getContentType().getValue()))
+                            .body(responseBody);
+                    // Process the response content here
+                } else {
+                    System.out.println("errot with "+statusCode);
+                    HttpEntity entity = response.getEntity();
+                    byte[] responseBody = EntityUtils.toByteArray(entity);
+                    return ResponseEntity.badRequest().body(responseBody);
+
+                }
+            } catch (IOException e) {
+                System.out.println("error"+e.getMessage());
+                e.printStackTrace();
+
+            }
+        } catch (Exception e) {
+            System.out.println("error"+e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
         String s = formatter.format(date);
@@ -341,4 +485,16 @@ public class WorkflowProcessItemReportController {
         }
         return sb.toString();
     }
+
+    private byte[] parsePEM(byte[] content) throws IOException {
+        PemReader pemReader = new PemReader(new InputStreamReader(new ByteArrayInputStream(content)));
+        return pemReader.readPemObject().getContent();
+    }
+
+    private boolean isPEM(byte[] content) {
+        String contentStr = new String(content);
+        return contentStr.contains("-----BEGIN") && contentStr.contains("-----END");
+    }
+
+
 }

@@ -17,9 +17,13 @@ import org.dspace.content.service.WorkflowProcessEpersonService;
 import org.dspace.content.service.WorkflowProcessService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.dspace.core.Email;
+import org.dspace.core.I18nUtil;
+import org.dspace.eperson.EPerson;
 import org.dspace.event.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -91,5 +95,42 @@ public class WorkflowProcessEpersonServiceImpl extends DSpaceObjectServiceImpl<W
     public List<WorkflowProcessEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException {
         return  Optional.ofNullable(workflowProcessEpersonDAO.findAll(context,WorkflowProcessEperson.class,limit,
                 offset)).orElse(new ArrayList<>());
+    }
+
+    @Override
+    public void sendEmail(Context context, String recipientEmail, String recipientName, String subject) throws IOException, MessagingException, SQLException, AuthorizeException {
+        {
+            EPerson currentuser=context.getCurrentUser();
+            String senderName = null;
+            String senderEmail = null;
+            String senderDesignation = null;
+            String senderDepartment = null;
+            String senderOffice = null;
+            if (currentuser != null && currentuser.getFullName() != null) {
+                senderName = currentuser.getFullName();
+            }
+            if (currentuser != null && currentuser.getDesignation() != null && currentuser.getDesignation().getPrimaryvalue() != null) {
+                senderDesignation = currentuser.getDesignation().getPrimaryvalue();
+            }
+            if (currentuser != null && currentuser.getDepartment() != null && currentuser.getDepartment().getPrimaryvalue() != null) {
+                senderDepartment = currentuser.getDepartment().getPrimaryvalue();
+            }
+            if (currentuser != null && currentuser.getOffice() != null && currentuser.getOffice().getPrimaryvalue() != null) {
+                senderOffice = currentuser.getOffice().getPrimaryvalue();
+            }
+            if (currentuser != null && currentuser.getEmail() != null) {
+                senderEmail = currentuser.getEmail();
+            }
+            Email email = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "notification_to_next_user"));
+            email.addArgument(subject);                   //0
+            email.addRecipient(recipientEmail);
+            email.addArgument(recipientName);             //1
+            email.addArgument(senderName);                //2
+            email.addArgument(senderEmail);               //3
+            email.addArgument(senderDesignation);         //4
+            email.addArgument(senderDepartment);          //5
+            email.addArgument(senderOffice);              //6
+            email.send();
+        }
     }
 }

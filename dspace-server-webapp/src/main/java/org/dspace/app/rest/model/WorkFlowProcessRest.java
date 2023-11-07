@@ -82,6 +82,9 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     @JsonProperty
     private  Boolean ismode =false;
+
+    @JsonProperty
+    private  Boolean isread =false;
     @JsonProperty
     private Boolean isDraft = false;
     @JsonProperty
@@ -360,6 +363,14 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setIsmode(Boolean ismode) {
         this.ismode = ismode;
+    }
+
+    public Boolean getIsread() {
+        return isread;
+    }
+
+    public void setIsread(Boolean isread) {
+        this.isread = isread;
     }
 
     public List<ItemRest> getItemsRests() {

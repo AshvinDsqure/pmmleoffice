@@ -129,6 +129,10 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
+    public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.countfilterInwarAndOutWard(context,perameter,offset,limit);
+    }
+    @Override
     public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
         return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context,eperson,statusid,offset,limit);
     }
@@ -294,5 +298,10 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     @Override
     public List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException {
         return workflowProcessDAO.searchSubjectByWorkflowTypeandSubject(context,workflowtypeid,subject);
+    }
+
+    @Override
+    public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.filterInwarAndOutWard(context,perameter,offset,limit);
     }
 }

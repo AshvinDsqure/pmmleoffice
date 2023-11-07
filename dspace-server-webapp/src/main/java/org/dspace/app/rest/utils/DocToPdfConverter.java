@@ -38,7 +38,7 @@ public class DocToPdfConverter {
     public static void main(String[] args) throws Exception {
 
         System.out.println("in>>>>>>>>>>>>>");
-        InputStream inputStream = new FileInputStream(new File("D://doc//note3.docx"));
+       /* InputStream inputStream = new FileInputStream(new File("D://doc//note3.docx"));
         XWPFDocument document2 = DocToPdfConverter.getXWPFDocument();
         String firstPergraph = getfirstParagraphText(document2);
         insertBeforeParagraph(document2,firstPergraph,1l);
@@ -50,8 +50,9 @@ public class DocToPdfConverter {
         }
 
         document2.close();
-        System.out.println("in >>>>>>>>>>>>>>>>>");
-        ConvertToPDF("D://news.docx", "D://test.pdf");
+        System.out.println("in >>>>>>>>>>>>>>>>>");*/
+
+        ConvertToPDF("D://a.docx", "D://test_A.pdf");
 
     }
 

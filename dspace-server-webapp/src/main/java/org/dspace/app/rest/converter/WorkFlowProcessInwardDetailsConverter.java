@@ -21,7 +21,6 @@ import java.sql.SQLException;
 public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter<WorkFlowProcessInwardDetails, WorkFlowProcessInwardDetailsRest> {
     @Autowired
     ModelMapper modelMapper;
-
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
@@ -29,12 +28,10 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
     public Class<WorkFlowProcessInwardDetails> getModelClass() {
         return WorkFlowProcessInwardDetails.class;
     }
-
     @Override
     protected WorkFlowProcessInwardDetailsRest newInstance() {
         return new WorkFlowProcessInwardDetailsRest();
     }
-
 
     @Override
     public WorkFlowProcessInwardDetailsRest convert(WorkFlowProcessInwardDetails obj, Projection projection) {
@@ -56,15 +53,6 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (obj.getLettercategory() != null) {
             rest.setLettercategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLettercategory(), projection));
-        }
-        if (obj.getOfficelocation() != null) {
-            rest.setOfficelocationRest(workFlowProcessMasterValueConverter.convert(obj.getOfficelocation(), projection));
-        }
-        if (obj.getCategoriesoffile() != null) {
-            rest.setCategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getCategoriesoffile(), projection));
-        }
-        if (obj.getSubcategoriesoffile() != null) {
-            rest.setSubcategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getSubcategoriesoffile(), projection));
         }
         if (obj.getInwardmode() != null) {
             rest.setInwardmodeRest(workFlowProcessMasterValueConverter.convert(obj.getInwardmode(), projection));
@@ -92,15 +80,6 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getLettercategoryRest() != null) {
             obj.setLettercategory(workFlowProcessMasterValueConverter.convert(context, rest.getLettercategoryRest()));
         }
-        if (rest.getOfficelocationRest() != null) {
-            obj.setOfficelocation(workFlowProcessMasterValueConverter.convert(context, rest.getOfficelocationRest()));
-        }
-        if (rest.getCategoriesoffileRest() != null) {
-            obj.setCategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getCategoriesoffileRest()));
-        }
-        if (rest.getSubcategoriesoffileRest() != null) {
-            obj.setSubcategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoriesoffileRest()));
-        }
         if (rest.getInwardmodeRest() != null) {
             obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));
         }
@@ -126,15 +105,6 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (rest.getLettercategoryRest() != null) {
             obj.setLettercategory(workFlowProcessMasterValueConverter.convert(context, rest.getLettercategoryRest()));
-        }
-        if (rest.getOfficelocationRest() != null) {
-            obj.setOfficelocation(workFlowProcessMasterValueConverter.convert(context, rest.getOfficelocationRest()));
-        }
-        if (rest.getCategoriesoffileRest() != null) {
-            obj.setCategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getCategoriesoffileRest()));
-        }
-        if (rest.getSubcategoriesoffileRest() != null) {
-            obj.setSubcategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoriesoffileRest()));
         }
         if (rest.getInwardmodeRest() != null) {
             obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));

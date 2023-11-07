@@ -112,7 +112,36 @@ public class MargedDocUtils {
             System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::" + e.getMessage());
         }
     }
+    public static String ConvertDocInputstremToPDF(InputStream inputStream, String pdfname) {
+        System.out.println("::::::::::::::::::::IN DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::"+pdfname);
+        try {
+            XWPFDocument doc = new XWPFDocument(inputStream);
+            PdfOptions options = PdfOptions.create();
+            final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+            File pdfstorepathe = new File(TEMP_DIRECTORY, pdfname+".pdf");
 
+            if (!pdfstorepathe.exists()) {
+                try {
+                    pdfstorepathe.createNewFile();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("path::::::::::::::::::::"+pdfstorepathe.getAbsolutePath());
+            OutputStream out = new FileOutputStream(new File(pdfstorepathe.getAbsolutePath()));
+            PdfConverter.getInstance().convert(doc, out, options);
+            doc.close();
+            out.close();
+            System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::" + pdfstorepathe.getAbsolutePath());
+            return pdfstorepathe.getAbsolutePath();
+            //setcolor(pdfPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("::::::::::::::::::::Error:::::::::::::::::::::::::::::::::" + e.getMessage());
+        }
+        return null;
+    }
     public static  void setcolor(String pathe) throws IOException {
         System.out.println("set color in pdf ");
         PDDocument document = PDDocument.load(new File(pathe));

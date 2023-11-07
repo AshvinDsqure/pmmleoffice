@@ -8,11 +8,15 @@
 package org.dspace.content.service;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
 import org.dspace.content.WorkflowProcess;
 import org.dspace.content.WorkflowProcessDefinition;
 import org.dspace.content.WorkflowProcessEperson;
 import org.dspace.core.Context;
 
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -58,5 +62,6 @@ public interface WorkflowProcessEpersonService extends DSpaceObjectService<Workf
      * @throws SQLException if database error
      */
     public List<WorkflowProcessEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException;
+    public void sendEmail(Context context, String recipientEmail, String recipientName, String subject) throws IOException, MessagingException, SQLException, AuthorizeException;
 
 }

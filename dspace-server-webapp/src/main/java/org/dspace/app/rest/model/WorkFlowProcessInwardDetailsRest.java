@@ -40,12 +40,7 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private WorkFlowProcessMasterValueRest subcategoryRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest lettercategoryRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest officelocationRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest categoriesoffileRest = null;
-    @JsonProperty
-    private WorkFlowProcessMasterValueRest subcategoriesoffileRest = null;
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest inwardmodeRest = null;
 
@@ -107,37 +102,7 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
         this.subcategoryRest = subcategoryRest;
     }
 
-    public WorkFlowProcessMasterValueRest getLettercategoryRest() {
-        return lettercategoryRest;
-    }
 
-    public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
-        this.lettercategoryRest = lettercategoryRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getOfficelocationRest() {
-        return officelocationRest;
-    }
-
-    public void setOfficelocationRest(WorkFlowProcessMasterValueRest officelocationRest) {
-        this.officelocationRest = officelocationRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getCategoriesoffileRest() {
-        return categoriesoffileRest;
-    }
-
-    public void setCategoriesoffileRest(WorkFlowProcessMasterValueRest categoriesoffileRest) {
-        this.categoriesoffileRest = categoriesoffileRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getSubcategoriesoffileRest() {
-        return subcategoriesoffileRest;
-    }
-
-    public void setSubcategoriesoffileRest(WorkFlowProcessMasterValueRest subcategoriesoffileRest) {
-        this.subcategoriesoffileRest = subcategoriesoffileRest;
-    }
 
     public WorkFlowProcessMasterValueRest getInwardmodeRest() {
         return inwardmodeRest;
@@ -145,5 +110,13 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
 
     public void setInwardmodeRest(WorkFlowProcessMasterValueRest inwardmodeRest) {
         this.inwardmodeRest = inwardmodeRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getLettercategoryRest() {
+        return lettercategoryRest;
+    }
+
+    public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
+        this.lettercategoryRest = lettercategoryRest;
     }
 }

@@ -63,7 +63,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         if (0 <= limit) {
             query.setMaxResults(limit);
         }
-        System.out.println("query ::::"+query);
+        System.out.println("query ::::" + query);
         return query.getResultList();
     }
 
@@ -262,14 +262,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             System.out.println("key : " + map.getKey() + " value : " + map.getValue());
             if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
                 if (i == 0) {
-                    sb.append("wp.Subject like :" + map.getKey());
+                    sb.append(" wp.Subject like :" + map.getKey());
                 } else {
-                    sb.append("and wp.Subject like :" + map.getKey());
+                    sb.append(" and wp.Subject like :" + map.getKey());
                 }
             }
             if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
                 if (i == 0) {
-                    sb.append("st.id=:" + map.getKey());
+                    sb.append(" st.id=:" + map.getKey());
                 } else {
                     sb.append(" and st.id=:" + map.getKey());
                 }
@@ -308,18 +308,18 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             }
             if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
                 if (i == 0) {
-                    sb.append(" inward.id=:" + map.getKey());
+                    sb.append(" inward.inwardNumber like :" + map.getKey());
 
                 } else {
-                    sb.append(" and inward.id=:" + map.getKey());
+                    sb.append(" and inward.inwardNumber like :" + map.getKey());
                 }
             }
             if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
                 if (i == 0) {
-                    sb.append(" outward.id=:" + map.getKey());
+                    sb.append(" outward.outwardNumber like :" + map.getKey());
 
                 } else {
-                    sb.append(" and outward.id=:" + map.getKey());
+                    sb.append(" and outward.outwardNumber like :" + map.getKey());
                 }
             }
             i++;
@@ -328,17 +328,578 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         Query query = createQuery(context, sb.toString());
         for (Map.Entry<String, String> map : perameter.entrySet()) {
             if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
-                query.setParameter(map.getKey(),"%"+map.getValue()+"%");
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
             } else {
                 query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
             }
         }
+
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
         return query.getResultList();
+    }
+
+    @Override
+    public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        StringBuffer sb = new StringBuffer("SELECT DISTINCT wp FROM WorkflowProcess as wp " +
+                "left join wp.priority as p " +
+                "left join wp.workflowStatus as st " +
+                "left join wp.workflowType as t  " +
+                "left join wp.workflowStatus as st  " +
+                "left join wp.dispatchmode as mode  " +
+                "left join wp.workflowProcessSenderDiary as sender  " +
+                "left join wp.workFlowProcessInwardDetails as inward  " +
+                "left join inward.category as cat " +
+                "left join inward.subcategory as subcat " +
+                "left join inward.inwardmode as inwmode " +
+                "left join inward.category as category " +
+                "left join wp.workFlowProcessOutwardDetails as outward  " +
+                "left join outward.outwardmedium as outmedium " +
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as user " +
+                "left join user.designation as designa " +
+                "left join user.department as dpt " +
+                "left join user.office as offic " +
+                "where ");
+
+        int i = 0;
+        for (Map.Entry<String, String> map : perameter.entrySet()) {
+            System.out.println("key : " + map.getKey() + " value : " + map.getValue());
+            if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" st.id=:" + map.getKey());
+                } else {
+                    sb.append(" and st.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("type") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" t.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and t.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("priority") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" p.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and p.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("department") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" dpt.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and dpt.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("categoryRest") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" cat.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and cat.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("subcategoryRest") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" subcat.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and subcat.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("officeRest") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" offic.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and offic.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("inwardmodeRest") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" inwmode.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and inwmode.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("outwardmodeRest") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" mode.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and mode.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("outwardmedium") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" mode.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and mode.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("designation") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" designa.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and designa.id=:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("user") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" user.id=:" + map.getKey());
+
+                } else {
+                    sb.append(" and user.id=:" + map.getKey());
+                }
+            }
+            //text start
+            if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" wp.Subject like :" + map.getKey());
+                } else {
+                    sb.append(" and wp.Subject like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" inward.inwardNumber like :" + map.getKey());
+
+                } else {
+                    sb.append(" and inward.inwardNumber like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" outward.outwardNumber like :" + map.getKey());
+
+                } else {
+                    sb.append(" and outward.outwardNumber like :" + map.getKey());
+                }
+            }
+            //startnefiled
+            if (map.getKey().equalsIgnoreCase("inwarddate") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" STR(inward.inwardDate) =:"+map.getKey());
+                } else {
+                    sb.append(" and STR(inward.inwardDate) =:"+map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("outwarddate") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" STR(outward.outwardDate) =:" + map.getKey());
+                } else {
+                    sb.append(" and STR(outward.outwardDate) =:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("receiveddate") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" STR(inward.receivedDate) =:" + map.getKey());
+
+                } else {
+                    sb.append(" and STR(inward.receivedDate) =:" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("username") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" user.email like :" + map.getKey());
+
+                } else {
+                    sb.append(" and user.email like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("sendername") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.sendername like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.sendername like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("senderphonenumber") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.contactNumber like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.contactNumber like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("senderaddress") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.address like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.address like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("sendercity") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.city like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.city like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("sendercountry") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.country like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.country like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" sender.pincode like :" + map.getKey());
+
+                } else {
+                    sb.append(" and sender.pincode like :" + map.getKey());
+                }
+            }
+            if (map.getKey().equalsIgnoreCase("draftid") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" t.id!=:" + map.getKey());
+
+                } else {
+                    sb.append(" and t.id!=:" + map.getKey());
+                }
+            }
+            i++;
+        }
+        System.out.println("query " + sb.toString());
+        Query query = createQuery(context, sb.toString());
+        for (Map.Entry<String, String> map : perameter.entrySet()) {
+            if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("inwarddate") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("outwarddate") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("receiveddate") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("username") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("sendername") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("senderphonenumber") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("senderaddress") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("sendercity") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("sendercountry") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            }else  {
+                //uuid all perameter
+                query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
+            }
+        }
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+
+            StringBuffer sb = new StringBuffer("SELECT count(wp) FROM WorkflowProcess as wp " +
+                    "left join wp.priority as p " +
+                    "left join wp.workflowStatus as st " +
+                    "left join wp.workflowType as t  " +
+                    "left join wp.workflowStatus as st  " +
+                    "left join wp.dispatchmode as mode  " +
+                    "left join wp.workflowProcessSenderDiary as sender  " +
+                    "left join wp.workFlowProcessInwardDetails as inward  " +
+                    "left join inward.category as cat " +
+                    "left join inward.subcategory as subcat " +
+                    "left join inward.inwardmode as inwmode " +
+                    "left join inward.category as category " +
+                    "left join wp.workFlowProcessOutwardDetails as outward  " +
+                    "left join outward.outwardmedium as outmedium " +
+                    "left join wp.workflowProcessEpeople as ep " +
+                    "left join ep.ePerson as user " +
+                    "left join user.designation as designa " +
+                    "left join user.department as dpt " +
+                    "left join user.office as offic " +
+                    "where ");
+
+            int i = 0;
+            for (Map.Entry<String, String> map : perameter.entrySet()) {
+                System.out.println("key : " + map.getKey() + " value : " + map.getValue());
+                if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" st.id=:" + map.getKey());
+                    } else {
+                        sb.append(" and st.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("type") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" t.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and t.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("priority") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" p.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and p.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("department") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" dpt.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and dpt.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("categoryRest") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" cat.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and cat.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("subcategoryRest") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" subcat.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and subcat.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("officeRest") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" offic.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and offic.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("inwardmodeRest") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" inwmode.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and inwmode.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("outwardmodeRest") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" mode.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and mode.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("outwardmedium") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" mode.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and mode.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("designation") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" designa.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and designa.id=:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("user") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" user.id=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and user.id=:" + map.getKey());
+                    }
+                }
+                //text start
+                if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" wp.Subject like :" + map.getKey());
+                    } else {
+                        sb.append(" and wp.Subject like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" inward.inwardNumber like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and inward.inwardNumber like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" outward.outwardNumber like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and outward.outwardNumber like :" + map.getKey());
+                    }
+                }
+                //startnefiled
+                if (map.getKey().equalsIgnoreCase("inwarddate") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" STR(inward.inwardDate) =:"+map.getKey());
+                    } else {
+                        sb.append(" and STR(inward.inwardDate) =:"+map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("outwarddate") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" STR(outward.outwardDate) =:" + map.getKey());
+                    } else {
+                        sb.append(" and STR(outward.outwardDate) =:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("receiveddate") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" STR(inward.receivedDate) =:" + map.getKey());
+
+                    } else {
+                        sb.append(" and STR(inward.receivedDate) =:" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("username") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" user.email like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and user.email like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("sendername") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.sendername like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.sendername like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("senderphonenumber") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.contactNumber like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.contactNumber like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("senderaddress") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.address like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.address like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("sendercity") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.city like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.city like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("sendercountry") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.country like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.country like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" sender.pincode like :" + map.getKey());
+
+                    } else {
+                        sb.append(" and sender.pincode like :" + map.getKey());
+                    }
+                }
+                if (map.getKey().equalsIgnoreCase("draftid") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" t.id!=:" + map.getKey());
+
+                    } else {
+                        sb.append(" and t.id!=:" + map.getKey());
+                    }
+                }
+                i++;
+            }
+            System.out.println("query " + sb.toString());
+            Query query = createQuery(context, sb.toString());
+            for (Map.Entry<String, String> map : perameter.entrySet()) {
+                if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("inward") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("outward") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("inwarddate") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("outwarddate") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("receiveddate") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("username") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("sendername") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("senderphonenumber") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("senderaddress") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("sendercity") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("sendercountry") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                }else {
+                    //uuid all
+                    query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
+                }
+            }
+            return count(query);
+
     }
 
 
     @Override
-    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid,UUID epersonid) throws SQLException {
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.workflowStatus as st left join wp.workflowType as t where  t.id=:typeid and st.id=:statusid and user.id=:epersonid and ep.isOwner=:isOwner");
         query.setParameter("typeid", typeid);
@@ -349,7 +910,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid,UUID epersonid) throws SQLException {
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.priority as p left join wp.workflowType as t where t.id=:typeid and p.id=:priorityid and user.id=:epersonid and ep.isOwner=:isOwner");
         query.setParameter("typeid", typeid);
@@ -364,7 +925,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         Query query = createQuery(context, "SELECT wp FROM WorkflowProcess as wp " +
                 "left join wp.workflowType as t where t.id=:workflowtypeid and lower(wp.Subject)  like :subject ");
         query.setParameter("workflowtypeid", workflowtypeid);
-        query.setParameter("subject", "%"+subject.toLowerCase()+"%");
+        query.setParameter("subject", "%" + subject.toLowerCase() + "%");
         return query.getResultList();
     }
 }

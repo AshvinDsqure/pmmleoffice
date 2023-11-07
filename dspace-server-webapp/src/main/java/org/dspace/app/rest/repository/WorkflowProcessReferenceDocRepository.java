@@ -174,7 +174,7 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
                 workFlowAction.setComment("Deleted " + doc.getDrafttype().getPrimaryvalue() + " " + (doc.getItemname() != null ? doc.getItemname() : ""));
             }else{
-                workFlowAction.setComment("Deleted " + doc.getDrafttype().getPrimaryvalue());
+                workFlowAction.setComment("Deleted " + doc.getSubject());
             }
             workFlowProcessHistoryService.create(context, workFlowAction);
             System.out.println("::::::OUT :storeWorkFlowHistory: delete :Document:::::::: ");

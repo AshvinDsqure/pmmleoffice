@@ -74,18 +74,6 @@ public class WorkFlowProcessOutwardDetailsConverter extends DSpaceObjectConverte
         if (obj.getSubcategory() != null) {
             rest.setSubcategoryRest(workFlowProcessMasterValueConverter.convert(obj.getSubcategory(), projection));
         }
-        if (obj.getLettercategory() != null) {
-            rest.setLettercategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLettercategory(), projection));
-        }
-        if (obj.getOfficelocation() != null) {
-            rest.setOfficelocationRest(workFlowProcessMasterValueConverter.convert(obj.getOfficelocation(), projection));
-        }
-        if (obj.getCategoriesoffile() != null) {
-            rest.setCategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getCategoriesoffile(), projection));
-        }
-        if (obj.getSubcategoriesoffile() != null) {
-            rest.setSubcategoriesoffileRest(workFlowProcessMasterValueConverter.convert(obj.getSubcategoriesoffile(), projection));
-        }
         if(obj.getDispatchdate()!=null){
             rest.setDispatchdate(obj.getDispatchdate());
         }
@@ -121,20 +109,6 @@ public class WorkFlowProcessOutwardDetailsConverter extends DSpaceObjectConverte
         if (rest.getSubcategoryRest() != null) {
             obj.setSubcategory(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoryRest()));
         }
-        if (rest.getLettercategoryRest() != null) {
-            obj.setLettercategory(workFlowProcessMasterValueConverter.convert(context, rest.getLettercategoryRest()));
-        }
-        if (rest.getOfficelocationRest() != null) {
-            obj.setOfficelocation(workFlowProcessMasterValueConverter.convert(context, rest.getOfficelocationRest()));
-        }
-        if (rest.getCategoriesoffileRest() != null) {
-            obj.setCategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getCategoriesoffileRest()));
-        }
-        if (rest.getSubcategoriesoffileRest() != null) {
-            obj.setSubcategoriesoffile(workFlowProcessMasterValueConverter.convert(context, rest.getSubcategoriesoffileRest()));
-        }
-
-
         return obj;
     }
 }

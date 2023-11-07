@@ -118,7 +118,6 @@ public class StatelessAuthenticationFilter extends BasicAuthenticationFilter {
      */
     private Authentication getAuthentication(HttpServletRequest request, HttpServletResponse res)
         throws AuthorizeException, SQLException {
-
         if (restAuthenticationService.hasAuthenticationData(request)) {
             Context context = ContextUtil.obtainContext(request);
             // parse the token.

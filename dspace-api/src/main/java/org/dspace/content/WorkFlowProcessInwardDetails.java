@@ -46,55 +46,33 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category")
     private WorkFlowProcessMasterValue category = null;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subcategory")
     private WorkFlowProcessMasterValue subcategory = null;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lettercategory")
     private WorkFlowProcessMasterValue lettercategory = null;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "officelocation")
-    private WorkFlowProcessMasterValue officelocation = null;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoriesoffile")
-    private WorkFlowProcessMasterValue categoriesoffile = null;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subcategoriesoffile")
-    private WorkFlowProcessMasterValue subcategoriesoffile = null;
-
-    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inwardmode")
     private WorkFlowProcessMasterValue inwardmode = null;
-
-
     public String getInwardNumber() {
         return inwardNumber;
     }
-
     public void setInwardNumber(String inwardNumber) {
         this.inwardNumber = inwardNumber;
     }
-
     public Date getInwardDate() {
         return inwardDate;
     }
-
     public void setInwardDate(Date inwardDate) {
         this.inwardDate = inwardDate;
     }
-
     public Date getReceivedDate() {
         return receivedDate;
     }
-
     public void setReceivedDate(Date receivedDate) {
         this.receivedDate = receivedDate;
     }
-
     @Override
     public int getType() {
         return 0;
@@ -124,41 +102,8 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     public WorkFlowProcessMasterValue getSubcategory() {
         return subcategory;
     }
-
     public void setSubcategory(WorkFlowProcessMasterValue subcategory) {
         this.subcategory = subcategory;
-    }
-
-    public WorkFlowProcessMasterValue getLettercategory() {
-        return lettercategory;
-    }
-
-    public void setLettercategory(WorkFlowProcessMasterValue lettercategory) {
-        this.lettercategory = lettercategory;
-    }
-
-    public WorkFlowProcessMasterValue getOfficelocation() {
-        return officelocation;
-    }
-
-    public void setOfficelocation(WorkFlowProcessMasterValue officelocation) {
-        this.officelocation = officelocation;
-    }
-
-    public WorkFlowProcessMasterValue getCategoriesoffile() {
-        return categoriesoffile;
-    }
-
-    public void setCategoriesoffile(WorkFlowProcessMasterValue categoriesoffile) {
-        this.categoriesoffile = categoriesoffile;
-    }
-
-    public WorkFlowProcessMasterValue getSubcategoriesoffile() {
-        return subcategoriesoffile;
-    }
-
-    public void setSubcategoriesoffile(WorkFlowProcessMasterValue subcategoriesoffile) {
-        this.subcategoriesoffile = subcategoriesoffile;
     }
 
     public WorkFlowProcessMasterValue getInwardmode() {
@@ -167,5 +112,12 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
 
     public void setInwardmode(WorkFlowProcessMasterValue inwardmode) {
         this.inwardmode = inwardmode;
+    }
+    public WorkFlowProcessMasterValue getLettercategory() {
+        return lettercategory;
+    }
+
+    public void setLettercategory(WorkFlowProcessMasterValue lettercategory) {
+        this.lettercategory = lettercategory;
     }
 }

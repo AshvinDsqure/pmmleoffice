@@ -30,7 +30,7 @@ public interface WorkflowProcessReferenceDocDAO extends DSpaceObjectLegacySuppor
     public int countDocumentByItemid(Context context ,UUID drafttypeid, UUID itemid) throws SQLException;
     public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context ,UUID drafttypeid, UUID itemid, Integer offset, Integer limit) throws SQLException;
     public List<WorkflowProcessReferenceDoc> getDocumentByworkflowprocessid(Context context ,UUID workflowprocessid) throws SQLException;
-    public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context ,UUID signitoreid) throws SQLException;
+    public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context ,UUID signitoreid,UUID drafttypeuuid) throws SQLException;
 
 
 }

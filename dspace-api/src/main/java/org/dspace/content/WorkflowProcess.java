@@ -102,6 +102,8 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "ismode")
     private Boolean ismode = false;
 
+    @Column(name = "isread")
+    private Boolean isread = false;
 
 //    @Column(name = "assignduedate", columnDefinition = "timestamp with time zone")
 //    @Temporal(TemporalType.TIMESTAMP)
@@ -191,10 +193,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     }
 
     public void setnewUser(WorkflowProcessEperson workflowProcessEperson) {
-       // WorkflowProcessEperson workflowProcessEpersonmax = this.workflowProcessEpeople.stream().max(Comparator.comparing(WorkflowProcessEperson::getIndex)).orElseThrow(NoSuchElementException::new);
-       // var nextindex = workflowProcessEpersonmax.getIndex() + 1;
-     /*   workflowProcessEperson.setIndex(nextindex);
-        workflowProcessEperson.setSequence(nextindex);*/
+       WorkflowProcessEperson workflowProcessEpersonmax = this.workflowProcessEpeople.stream().max(Comparator.comparing(WorkflowProcessEperson::getSequence)).orElseThrow(NoSuchElementException::new);
+        var nextindex = workflowProcessEpersonmax.getIndex() + 1;
+        workflowProcessEperson.setSequence(nextindex);
         this.workflowProcessEpeople.add(workflowProcessEperson);
         //this.workflowProcessEpeople.add(workflowProcessEperson);
       //  System.out.println("workflowProcessEpersonmax index::" + workflowProcessEpersonmax.getIndex());
@@ -274,5 +275,13 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setIsmode(Boolean ismode) {
         this.ismode = ismode;
+    }
+
+    public Boolean getIsread() {
+        return isread;
+    }
+
+    public void setIsread(Boolean isread) {
+        this.isread = isread;
     }
 }
