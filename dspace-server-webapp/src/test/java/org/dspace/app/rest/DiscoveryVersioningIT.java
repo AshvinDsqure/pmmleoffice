@@ -86,6 +86,7 @@ public class DiscoveryVersioningIT extends AbstractControllerIntegrationTest {
     @Autowired
     private IndexingService indexingService;
 
+
     @Autowired
     private SolrSearchCore solrSearchCore;
 
@@ -253,7 +254,7 @@ public class DiscoveryVersioningIT extends AbstractControllerIntegrationTest {
         context.commit();
 
         // archive the new version, this implies that VersioningConsumer will unarchive the previous version
-        installItemService.installItem(context, workspaceItemService.findByItem(context, newItem));
+        //instworkspaceitemsallItemService.installItem(context, workspaceItemService.findByItem(context, newItem));
         context.commit();
         indexingService.commit();
 

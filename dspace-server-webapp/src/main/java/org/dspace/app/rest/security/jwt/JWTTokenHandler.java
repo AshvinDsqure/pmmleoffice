@@ -166,7 +166,6 @@ public abstract class JWTTokenHandler {
         }
 
         // Update the saved session salt for the currently logged in user, returning the user object
-        System.out.println("::::::::::::::previousLoginDate::::::::::::::"+previousLoginDate);
         EPerson ePerson = updateSessionSalt(context, previousLoginDate);
 
         // Create a claims set based on currently logged in user
@@ -402,14 +401,10 @@ public abstract class JWTTokenHandler {
      */
     protected EPerson updateSessionSalt(final Context context, final Date previousLoginDate) throws SQLException {
         EPerson ePerson;
-        System.out.println(":::::::::::::::::updateSessionSalt:::::::::::::::::::::::");
         try {
             ePerson = context.getCurrentUser();
 
             System.out.println("::::::getExpirationPeriod():::::"+getExpirationPeriod());
-            System.out.println("::::::ePerson.getLastActive().getTime():::::"+ePerson.getLastActive().getTime());
-            System.out.println("::::::previousLoginDate.getTime():::::"+previousLoginDate.getTime());
-
             //If the previous login was within the configured token expiration time, we reuse the session salt.
             //This allows a user to login on multiple devices/browsers at the same time.
             if (StringUtils.isBlank(ePerson.getSessionSalt())

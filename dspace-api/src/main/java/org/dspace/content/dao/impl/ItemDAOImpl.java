@@ -474,7 +474,6 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
                 "AND  metadatavalue.metadataField = :metadataField " +
                 "AND STR(metadatavalue.value) >= :startdate " +
                 "AND STR(metadatavalue.value) <= :endDate order by TO_DATE(STR(metadatavalue.value),'yyyy-MM-dd hh:mm:ss')");
-
         query.setParameter("in_archive",true);
         query.setParameter("metadataField",metadataField);
         query.setParameter("startdate",startdate);

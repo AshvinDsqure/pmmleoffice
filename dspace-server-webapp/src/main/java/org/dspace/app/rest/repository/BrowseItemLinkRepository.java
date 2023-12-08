@@ -139,16 +139,13 @@ public class BrowseItemLinkRepository extends AbstractDSpaceRestRepository
         if (bi.isMetadataIndex() && bs.isSecondLevel() && bs.getSortBy() <= 0) {
             bs.setSortBy(1);
         }
-
         BrowseInfo binfo = be.browse(bs);
-
         Pageable pageResultInfo =
                 PageRequest.of((binfo.getStart() - 1) / binfo.getResultsPerPage(), binfo.getResultsPerPage());
         List<Item> tmpResult = new ArrayList<>();
         for (Item bb : binfo.getBrowseItemResults()) {
             tmpResult.add(bb);
         }
-
         return converter.toRestPage(tmpResult, pageResultInfo, binfo.getTotal(), projection);
     }
 

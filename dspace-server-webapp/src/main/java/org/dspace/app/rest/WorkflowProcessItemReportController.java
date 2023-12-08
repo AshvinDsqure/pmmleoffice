@@ -365,7 +365,7 @@ public class WorkflowProcessItemReportController {
         }
         return generateRandomText(6);
     }
-
+/*
     @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/signPdf")
     public ResponseEntity<byte[]> signPdf(HttpServletRequest request,
@@ -406,6 +406,8 @@ public class WorkflowProcessItemReportController {
             return null;
         }
     }
+*/
+    /*
 
     public ResponseEntity<byte[]> singData(SignPdfRequestDTO signPdfRequestDTO, InputStream fileInput,
                                            InputStream p12File,
@@ -468,6 +470,7 @@ public class WorkflowProcessItemReportController {
         }
         return null;
     }
+*/
 
     public static Date DateToSTRDDMMYYYHHMMSS(Date date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
@@ -485,7 +488,6 @@ public class WorkflowProcessItemReportController {
         }
         return sb.toString();
     }
-
     private byte[] parsePEM(byte[] content) throws IOException {
         PemReader pemReader = new PemReader(new InputStreamReader(new ByteArrayInputStream(content)));
         return pemReader.readPemObject().getContent();

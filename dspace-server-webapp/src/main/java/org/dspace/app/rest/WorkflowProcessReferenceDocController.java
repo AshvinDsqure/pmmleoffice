@@ -632,8 +632,9 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getSignatureDocuments")
-    public List<WorkflowProcessReferenceDocRest> test(HttpServletRequest request) {
+    public List<WorkflowProcessReferenceDocRest> getSignatureDocuments(HttpServletRequest request) {
         System.out.println("::::::::::::::::::getSignatureDocuments::::::::::::start");
+
         Context context = ContextUtil.obtainContext(request);
         List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
         UUID draftid=null;
@@ -653,6 +654,23 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
             e.printStackTrace();
         }
         System.out.println("::::::::::::::::::getSignatureDocuments::::::::::::stop");
+        return workflowProcessReferenceDocRests;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getDocByDraftType")
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    public List<WorkflowProcessReferenceDocRest> getDocByDraftType(@Parameter(value = "workflowtypeid",required = true)UUID drafttypeid, HttpServletRequest request) {
+        System.out.println("::::::::::::::::::getDocByDraftType::::::::::::start");
+        Context context = ContextUtil.obtainContext(request);
+        List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
+        try {
+            List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workflowProcessReferenceDocService.getDocumentBySignitore(context, context.getCurrentUser().getID(),drafttypeid);
+            workflowProcessReferenceDocRests = workflowProcessReferenceDocs.stream().map(workflowProcessReferenceDoc -> {
+                return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("::::::::::::::::::getDocByDraftType::::::::::::stop");
         return workflowProcessReferenceDocRests;
     }
 }
