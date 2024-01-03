@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.content;
@@ -17,12 +17,14 @@ import org.dspace.core.Email;
 import org.dspace.core.I18nUtil;
 import org.dspace.eperson.EPerson;
 import org.dspace.event.Event;
+import org.dspace.workflow.WorkflowType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -47,12 +49,10 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     private BitstreamService bitstreamService;
 
 
-
-
-
     protected WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
 
     protected WorkFlowProcessMasterService workFlowProcessMasterServicee;
+
 
     protected WorkFlowProcessServiceImpl() {
         super();
@@ -71,7 +71,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     @Override
     public WorkflowProcess find(Context context, UUID uuid) throws SQLException {
 
-        return workflowProcessDAO.findByID(context,WorkflowProcess.class,uuid);
+        return workflowProcessDAO.findByID(context, WorkflowProcess.class, uuid);
     }
 
     @Override
@@ -93,59 +93,60 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public WorkflowProcess create(Context context, WorkflowProcess workflowProcess) throws SQLException, AuthorizeException {
-        workflowProcess= workflowProcessDAO.create(context,workflowProcess);
+        workflowProcess = workflowProcessDAO.create(context, workflowProcess);
         return workflowProcess;
     }
 
     @Override
     public List<WorkflowProcess> findAll(Context context) throws SQLException {
-        return Optional.ofNullable(workflowProcessDAO.findAll(context,WorkflowProcess.class)).orElse(new ArrayList<>());
+        return Optional.ofNullable(workflowProcessDAO.findAll(context, WorkflowProcess.class)).orElse(new ArrayList<>());
     }
 
     @Override
     public List<WorkflowProcess> findAll(Context context, Integer limit, Integer offset) throws SQLException {
-        return  Optional.ofNullable(workflowProcessDAO.findAll(context,WorkflowProcess.class,limit,
+        return Optional.ofNullable(workflowProcessDAO.findAll(context, WorkflowProcess.class, limit,
                 offset)).orElse(new ArrayList<>());
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson,UUID statusid,UUID draftid, Integer offset, Integer limit) throws SQLException {
-       return workflowProcessDAO.findNotCompletedByUser(context,eperson,statusid,draftid,offset,limit);
+    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid, offset, limit);
     }
 
     @Override
-    public int countfindNotCompletedByUser(Context context, UUID eperson,UUID statusid,UUID draftid) throws SQLException {
-        return workflowProcessDAO.countfindNotCompletedByUser(context,eperson,statusid,draftid);
+    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
+        return workflowProcessDAO.countfindNotCompletedByUser(context, eperson, statusid, draftid);
     }
 
     @Override
     public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context,eperson,statusid,offset,limit);
+        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid, offset, limit);
     }
 
     @Override
     public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context,eperson,statusid);
+        return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context, eperson, statusid);
     }
 
     @Override
     public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.countfilterInwarAndOutWard(context,perameter,offset,limit);
+        return workflowProcessDAO.countfilterInwarAndOutWard(context, perameter, offset, limit);
     }
+
     @Override
     public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context,eperson,statusid,offset,limit);
+        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid, offset, limit);
     }
 
     @Override
     public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context,eperson,statusid);
+        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context, eperson, statusid);
     }
 
     @Override
     public void storeWorkFlowMataDataTOBitsream(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Item item) throws SQLException, AuthorizeException {
-        Bitstream bitstream= workflowProcessReferenceDoc.getBitstream();
-        if(bitstream != null) {
+        Bitstream bitstream = workflowProcessReferenceDoc.getBitstream();
+        if (bitstream != null) {
             List<Bundle> bundles = item.getBundles("ORIGINAL");
             Bundle finalBundle = null;
             if (bundles.size() == 0) {
@@ -180,10 +181,11 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         }
 
     }
+
     @Override
     public void storeWorkFlowMataDataTOBitsream(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc) throws SQLException, AuthorizeException {
-        Bitstream bitstream= workflowProcessReferenceDoc.getBitstream();
-        if(bitstream != null) {
+        Bitstream bitstream = workflowProcessReferenceDoc.getBitstream();
+        if (bitstream != null) {
             if (workflowProcessReferenceDoc.getWorkFlowProcessReferenceDocType() != null) {
                 bitstreamService.addMetadata(context, bitstream, "dc", "doc", "type", null, workflowProcessReferenceDoc.getWorkFlowProcessReferenceDocType().getPrimaryvalue());
             }
@@ -208,55 +210,60 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             }
         }
     }
+
     @Override
-    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findDraftPending(context,eperson,statuscloseid,statusdraftid,statusdraft,offset,limit);
+    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft, offset, limit);
     }
+
     @Override
-    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException {
-        return workflowProcessDAO.countfindDraftPending(context,eperson,statuscloseid,statusdraftid,statusdraft);
+    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
+        return workflowProcessDAO.countfindDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft);
     }
+
     @Override
     public WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException {
-        return workflowProcessDAO.getNoteByItemsid(context,itemid);
+        return workflowProcessDAO.getNoteByItemsid(context, itemid);
     }
 
     @Override
     public int getCountByType(Context context, UUID typeid) throws SQLException {
-        return workflowProcessDAO.getCountByType(context,typeid);
+        return workflowProcessDAO.getCountByType(context, typeid);
     }
 
     @Override
     public List<WorkflowProcess> Filter(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
 
-        return workflowProcessDAO.Filter(context,perameter,offset,limit);
+        return workflowProcessDAO.Filter(context, perameter, offset, limit);
     }
 
     @Override
     public List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findReferList(context,eperson,statuscloseid,statusdraftid,statusdraft,offset,limit);
+        return workflowProcessDAO.findReferList(context, eperson, statuscloseid, statusdraftid, statusdraft, offset, limit);
     }
 
     @Override
     public int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
-        return workflowProcessDAO.countRefer(context,eperson,statuscloseid,statusdraftid,statusdraft);
+        return workflowProcessDAO.countRefer(context, eperson, statuscloseid, statusdraftid, statusdraft);
     }
+
     @Override
-    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid,UUID epersonid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndStatus(context,typeid,statusid,epersonid);
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatus(context, typeid, statusid, epersonid);
     }
+
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid,UUID epersonid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriority(context,typeid,priorityid,epersonid);
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid);
     }
 
     @Override
     public void
 
 
-    sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstreams) throws IOException, MessagingException, SQLException, AuthorizeException {
+    sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName, String subject, List<Bitstream> bitstreams) throws IOException, MessagingException, SQLException, AuthorizeException {
         {
-            EPerson currentuser=context.getCurrentUser();
+            EPerson currentuser = context.getCurrentUser();
             String senderName = null;
             String senderEmail = null;
             String senderDesignation = null;
@@ -286,9 +293,9 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             email.addArgument(senderDesignation);         //4
             email.addArgument(senderDepartment);          //5
             email.addArgument(senderOffice);              //6
-            for (Bitstream bitstream:bitstreams) {
-                if(bitstreamService.retrieve(context, bitstream)!=null){
-                    email.addAttachment(bitstreamService.retrieve(context, bitstream),bitstream.getName(),bitstream.getFormat(context).getMIMEType());
+            for (Bitstream bitstream : bitstreams) {
+                if (bitstreamService.retrieve(context, bitstream) != null) {
+                    email.addAttachment(bitstreamService.retrieve(context, bitstream), bitstream.getName(), bitstream.getFormat(context).getMIMEType());
                 }
             }
             email.send();
@@ -297,11 +304,44 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException {
-        return workflowProcessDAO.searchSubjectByWorkflowTypeandSubject(context,workflowtypeid,subject);
+        return workflowProcessDAO.searchSubjectByWorkflowTypeandSubject(context, workflowtypeid, subject);
     }
 
     @Override
     public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.filterInwarAndOutWard(context,perameter,offset,limit);
+        return workflowProcessDAO.filterInwarAndOutWard(context, perameter, offset, limit);
+    }
+
+
+    public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
+        WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);
+        if (workFlowProcessMaster != null) {
+            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
+            if (workFlowProcessMasterValue != null) {
+                System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
+                return workFlowProcessMasterValue.getID();
+            }
+        }
+        return null;
+    }
+
+    public static String getFinancialYear() {
+        LocalDate today = LocalDate.now();
+        System.out.println("todate date" + today);
+        int year = today.getYear();
+        int month = today.getMonthValue();
+        System.out.println("date\t" + today.getDayOfMonth());
+        System.out.println("dmonth\t" + today.getMonthValue());
+        System.out.println("year\t" + today.getYear());
+        String financialYear;
+        String financialYears;
+        if (month <= 1) {
+            financialYear = String.format("%d-%d", year - 1, year);
+        } else {
+            financialYear = String.format("%d-%d", year, year + 1);
+        }
+        String s[] = financialYear.split("-");
+        financialYears = s[0].toString().substring(2) + "-" + s[1].toString().substring(2);
+        return financialYears;
     }
 }

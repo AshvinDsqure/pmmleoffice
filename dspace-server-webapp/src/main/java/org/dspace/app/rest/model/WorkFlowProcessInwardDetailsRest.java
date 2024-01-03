@@ -1,4 +1,4 @@
-/**
+    /**
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
@@ -33,6 +33,11 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private Date inwardDate;
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date receivedDate;
+    @JsonDeserialize(converter = MyDateConverter.class)
+    private Date latterDate;
+
+
+    private String filereferencenumber;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest categoryRest = null;
@@ -43,6 +48,14 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest inwardmodeRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest vipRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest vipnameRest = null;
+
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest languageRest = null;
+
 
     public String getInwardNumber() {
         return inwardNumber;
@@ -119,4 +132,45 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     public void setLettercategoryRest(WorkFlowProcessMasterValueRest lettercategoryRest) {
         this.lettercategoryRest = lettercategoryRest;
     }
+
+    public WorkFlowProcessMasterValueRest getVipRest() {
+        return vipRest;
+    }
+
+    public void setVipRest(WorkFlowProcessMasterValueRest vipRest) {
+        this.vipRest = vipRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getVipnameRest() {
+        return vipnameRest;
+    }
+
+    public void setVipnameRest(WorkFlowProcessMasterValueRest vipnameRest) {
+        this.vipnameRest = vipnameRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getLanguageRest() {
+        return languageRest;
+    }
+
+    public void setLanguageRest(WorkFlowProcessMasterValueRest languageRest) {
+        this.languageRest = languageRest;
+    }
+
+    public String getFilereferencenumber() {
+        return filereferencenumber;
+    }
+
+    public void setFilereferencenumber(String filereferencenumber) {
+        this.filereferencenumber = filereferencenumber;
+    }
+
+    public Date getLatterDate() {
+        return latterDate;
+    }
+
+    public void setLatterDate(Date latterDate) {
+        this.latterDate = latterDate;
+    }
+
 }

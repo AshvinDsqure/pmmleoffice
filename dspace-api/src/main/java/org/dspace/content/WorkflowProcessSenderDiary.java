@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.content;
@@ -60,7 +60,11 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
     @Column(name = "pincode")
     private String pincode;
     @Column(name = "country")
-        private String country;
+    private String country;
+    @Column(name = "fax")
+    private String fax;
+    @Column(name = "landline")
+    private String landline;
 
     @Override
     public int getType() {
@@ -159,5 +163,21 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
 
     public void setPincode(String pincode) {
         this.pincode = pincode;
+    }
+
+    public String getFax() {
+        return fax;
+    }
+
+    public void setFax(String fax) {
+        this.fax = fax;
+    }
+
+    public String getLandline() {
+        return landline;
+    }
+
+    public void setLandline(String landline) {
+        this.landline = landline;
     }
 }

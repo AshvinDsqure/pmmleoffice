@@ -443,7 +443,20 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
             throw new RuntimeException(e);
         }
     }
-
+    @SearchRestMethod(name = "searchByTitleOrYear")
+    public Page<ItemRest> searchByTitleOrYear(
+                @Parameter(value = "searchtitleoryear", required = true) String searchtitleoryear,
+            Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            List<Item> witems = itemService.searchItemByTitleOrYear(context, searchtitleoryear);
+            return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
 }

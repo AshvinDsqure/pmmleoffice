@@ -60,6 +60,20 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest workflowStatus = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest workflowType = null;
+
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest documenttypeRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest actionRest = null;
+
+    public WorkFlowProcessMasterValueRest getActionRest() {
+        return actionRest;
+    }
+
+    public void setActionRest(WorkFlowProcessMasterValueRest actionRest) {
+        this.actionRest = actionRest;
+    }
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest eligibleForFilingRest = null;
     @JsonProperty
@@ -71,6 +85,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     @NotBlank
     private String Subject;
+    @JsonProperty
+    private String remark;
     @JsonProperty
     private String workflowTypeStr;
     @JsonProperty
@@ -424,5 +440,21 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
                 ", priorityRest=" + priorityRest +
                 ", entityType='" + entityType + '\'' +
                 '}';
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public WorkFlowProcessMasterValueRest getDocumenttypeRest() {
+        return documenttypeRest;
+    }
+
+    public void setDocumenttypeRest(WorkFlowProcessMasterValueRest documenttypeRest) {
+        this.documenttypeRest = documenttypeRest;
     }
 }

@@ -10,6 +10,7 @@ package org.dspace.content.service;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.*;
+import org.dspace.content.Collection;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
@@ -97,5 +98,4 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context,UUID workflowtypeid, String subject) throws SQLException;
     List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
-
 }

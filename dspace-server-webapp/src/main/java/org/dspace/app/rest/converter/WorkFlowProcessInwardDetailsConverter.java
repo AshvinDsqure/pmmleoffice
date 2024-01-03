@@ -39,11 +39,17 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (obj.getInwardNumber() != null) {
             rest.setInwardNumber(obj.getInwardNumber());
         }
+        if (obj.getFilereferencenumber() != null) {
+            rest.setFilereferencenumber(obj.getFilereferencenumber());
+        }
         if (obj.getInwardDate() != null) {
             rest.setInwardDate(obj.getInwardDate());
         }
         if (obj.getReceivedDate() != null) {
             rest.setReceivedDate(obj.getReceivedDate());
+        }
+        if (obj.getLatterDate() != null) {
+            rest.setLatterDate(obj.getLatterDate());
         }
         if (obj.getCategory() != null) {
             rest.setCategoryRest(workFlowProcessMasterValueConverter.convert(obj.getCategory(), projection));
@@ -56,6 +62,12 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (obj.getInwardmode() != null) {
             rest.setInwardmodeRest(workFlowProcessMasterValueConverter.convert(obj.getInwardmode(), projection));
+        } if (obj.getVip() != null) {
+            rest.setVipRest(workFlowProcessMasterValueConverter.convert(obj.getVip(), projection));
+        } if (obj.getVipname() != null) {
+            rest.setVipnameRest(workFlowProcessMasterValueConverter.convert(obj.getVipname(), projection));
+        }if (obj.getLanguage() != null) {
+            rest.setLanguageRest(workFlowProcessMasterValueConverter.convert(obj.getLanguage(), projection));
         }
         rest.setUuid(obj.getID().toString());
         return rest;
@@ -65,6 +77,9 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getInwardNumber() != null) {
             obj.setInwardNumber(rest.getInwardNumber());
         }
+        if (rest.getFilereferencenumber() != null) {
+            obj.setFilereferencenumber(rest.getFilereferencenumber());
+        }
         if (rest.getInwardDate() != null) {
             obj.setInwardDate(rest.getInwardDate());
         }
@@ -82,6 +97,17 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (rest.getInwardmodeRest() != null) {
             obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));
+        }
+        if (rest.getVipRest() != null) {
+            obj.setVip(workFlowProcessMasterValueConverter.convert(context, rest.getVipRest()));
+        }  if (rest.getVipnameRest() != null) {
+            obj.setVipname(workFlowProcessMasterValueConverter.convert(context, rest.getVipnameRest()));
+        }
+        if (rest.getLanguageRest() != null) {
+            obj.setLanguage(workFlowProcessMasterValueConverter.convert(context, rest.getLanguageRest()));
+        }
+        if (rest.getLatterDate() != null) {
+            obj.setLatterDate(rest.getLatterDate());
         }
         return obj;
     }
@@ -91,6 +117,9 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getInwardNumber() != null) {
             obj.setInwardNumber(rest.getInwardNumber());
         }
+        if (rest.getFilereferencenumber() != null) {
+            obj.setFilereferencenumber(rest.getFilereferencenumber());
+        }
         if (rest.getInwardDate() != null) {
             obj.setInwardDate(rest.getInwardDate());
         }
@@ -108,6 +137,17 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         }
         if (rest.getInwardmodeRest() != null) {
             obj.setInwardmode(workFlowProcessMasterValueConverter.convert(context, rest.getInwardmodeRest()));
+        }
+        if (rest.getVipRest() != null) {
+            obj.setVip(workFlowProcessMasterValueConverter.convert(context, rest.getVipRest()));
+        }  if (rest.getVipnameRest() != null) {
+            obj.setVipname(workFlowProcessMasterValueConverter.convert(context, rest.getVipnameRest()));
+        }
+        if (rest.getLanguageRest() != null) {
+            obj.setLanguage(workFlowProcessMasterValueConverter.convert(context, rest.getLanguageRest()));
+        }
+        if (rest.getLatterDate() != null) {
+            obj.setLatterDate(rest.getLatterDate());
         }
         return obj;
     }

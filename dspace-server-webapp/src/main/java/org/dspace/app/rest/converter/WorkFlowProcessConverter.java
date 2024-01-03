@@ -74,7 +74,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
     @Autowired
     WorkflowProcessService workflowProcessService;
 
-        @Override
+    @Override
     public WorkFlowProcessRest convert(WorkflowProcess obj, Projection projection) {
         WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
         if (obj.getWorkflowProcessSenderDiary() != null) {
@@ -149,6 +149,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (senderRest.isPresent()) {
             workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
         }
+        if (obj.getRemark() != null) {
+            workFlowProcessRest.setRemark(obj.getRemark());
+        }
         workFlowProcessRest.setUuid(obj.getID().toString());
         return workFlowProcessRest;
     }
@@ -164,8 +167,8 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getWorkFlowProcessOutwardDetails() != null) {
             workFlowProcessRest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(obj.getWorkFlowProcessOutwardDetails(), projection));
         }
-        if(obj.getSubject()!=null){
-        workFlowProcessRest.setSubject(obj.getSubject());
+        if (obj.getSubject() != null) {
+            workFlowProcessRest.setSubject(obj.getSubject());
         }
         if (obj.getWorkflowProcessReferenceDocs() != null) {
             workFlowProcessRest.setWorkflowProcessReferenceDocRests(obj.getWorkflowProcessReferenceDocs().stream().map(d -> {
@@ -176,9 +179,12 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 return rest;
             }).collect(Collectors.toList()));
         }
+        if (obj.getRemark() != null) {
+            workFlowProcessRest.setRemark(obj.getRemark());
+        }
         workFlowProcessRest.setUuid(obj.getID().toString());
         return workFlowProcessRest;
-        }
+    }
 
     public WorkflowProcess convert(WorkFlowProcessRest obj, Context context) throws Exception {
         WorkflowProcess workflowProcess = new WorkflowProcess();
@@ -229,6 +235,8 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
                 if (we.getUserType() == null) {
                     workflowProcessEperson.setUsertype(workFlowUserTypOptional.get());
+                } else {
+                    workflowProcessEperson.setUsertype(workFlowProcessMasterValueConverter.convert(context, we.getUserType()));
                 }
                 workflowProcessEperson.setOwner(false);
                 workflowProcessEperson.setSender(false);
@@ -246,6 +254,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         }
         if (obj.getDispatchModeRest() != null) {
             workflowProcess.setDispatchmode(workFlowProcessMasterValueConverter.convert(context, obj.getDispatchModeRest()));
+        }
+        if (obj.getRemark() != null) {
+            workflowProcess.setRemark(obj.getRemark());
         }
         return workflowProcess;
     }

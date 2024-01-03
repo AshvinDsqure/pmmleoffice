@@ -513,4 +513,15 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     }
 
+    @Override
+    public List<Item> searchItemByTitleOrYear(Context context, MetadataField metadataTitleField, MetadataField metadataYearField, String titleoryear) throws Exception {
+        Query query = createQuery(context, "SELECT item FROM Item as item join item.metadata  metadatavalue  WHERE item.inArchive=:in_archive  " +
+                "AND  (metadatavalue.metadataField = :metadataFieldTitle OR metadatavalue.metadataField = :metadataFieldYear) AND lower(STR(metadatavalue.value)) like :title");
+        query.setParameter("in_archive", true);
+        query.setParameter("title", "%"+titleoryear.toLowerCase()+"%");
+        query.setParameter("metadataFieldTitle", metadataTitleField);
+        query.setParameter("metadataFieldYear", metadataYearField);
+        return query.getResultList();
+    }
+
 }

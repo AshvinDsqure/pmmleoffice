@@ -82,6 +82,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     @Column(name = "subject")
     private String Subject;
+
+    @Column(name = "remark")
+    private String remark;
     @Column(name = "workflow_id", insertable = false, updatable = false)
     private Integer legacyId;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
@@ -283,5 +286,13 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setIsread(Boolean isread) {
         this.isread = isread;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

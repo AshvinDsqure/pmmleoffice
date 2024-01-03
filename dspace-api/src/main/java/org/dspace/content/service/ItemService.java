@@ -842,4 +842,7 @@ public interface ItemService
 
     public List<Item> searchItemByTitle(Context context, String title) throws Exception;
 
+    public List<Item> searchItemByTitleOrYear(Context context, String titleoryear) throws Exception;
+
+
 }

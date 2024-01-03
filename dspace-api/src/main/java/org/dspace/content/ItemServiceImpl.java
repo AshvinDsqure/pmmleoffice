@@ -1656,7 +1656,6 @@ prevent the generation of resource policy entry values with null dspace_object a
     @Override
     public List<Item> getDataTwoDateRange(Context context, String startdate, String endDate,Integer offset,Integer limit) throws SQLException {
         MetadataField metadataField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "accessioned");
-
         return itemDAO.getDataTwoDateRange(context,metadataField,startdate,endDate,offset,limit);
     }
 
@@ -1670,6 +1669,13 @@ prevent the generation of resource policy entry values with null dspace_object a
     public List<Item> searchItemByTitle(Context context,String title) throws Exception {
         MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
         return itemDAO.searchItemByTitle(context,metadataFields,title);
+    }
+
+    @Override
+    public List<Item> searchItemByTitleOrYear(Context context,String titleoryear) throws Exception {
+        MetadataField metadatatitleField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        MetadataField metadatayearField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "issued");
+        return itemDAO.searchItemByTitleOrYear(context,metadatatitleField,metadatayearField,titleoryear);
     }
 
 

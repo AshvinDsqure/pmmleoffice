@@ -35,6 +35,7 @@ public enum WorkFlowType {
         @Override
         public WorkFlowProcessRest storeWorkFlowProcess(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
             workFlowProcessRest.setWorkflowTypeStr("INWARD");
+            //convert rest to obj
             WorkflowProcess workflowProcess = this.getWorkFlowProcessConverter().convert(workFlowProcessRest, context);
             Optional<WorkflowProcessSenderDiary> workflowProcessSenderDiaryOptional = Optional.ofNullable(this.getWorkflowProcessSenderDiaryService().findByEmailID(context, workflowProcess.getWorkflowProcessSenderDiary().getEmail()));
             if (workflowProcessSenderDiaryOptional.isPresent()) {
@@ -46,6 +47,7 @@ public enum WorkFlowType {
                     workflowProcess.setWorkflowStatus(workFlowStatusOptional.get());
                 }
             }
+            //create workflow
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess1 = workflowProcess;
             if (workFlowProcessRest.getWorkflowProcessReferenceDocRests() != null) {
@@ -60,6 +62,7 @@ public enum WorkFlowType {
                 }).collect(Collectors.toList());
                 workflowProcess.setWorkflowProcessReferenceDocs(doclist);
             }
+            //update workflow
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             this.getWorkFlowAction().perfomeAction(context, workflowProcess, workFlowProcessRest);

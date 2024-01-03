@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.model;
@@ -10,13 +10,10 @@ package org.dspace.app.rest.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.app.rest.RestResourceController;
 
-import javax.persistence.Column;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
-import java.util.Date;
 
-public class WorkflowProcessSenderDiaryRest  extends  DSpaceObjectRest{
+public class WorkflowProcessSenderDiaryRest extends DSpaceObjectRest {
     public static final String NAME = "workflowprocesssenderdiarie";
     public static final String PLURAL_NAME = "workflowprocesssenderdiaries";
     public static final String CATEGORY = RestAddressableModel.WORKFLOWPROCESSSENDERDIARY;
@@ -36,6 +33,8 @@ public class WorkflowProcessSenderDiaryRest  extends  DSpaceObjectRest{
     private String state;
     private String pincode;
     private String country;
+    private String fax;
+    private String landline;
 
 
     public Integer getLegacyId() {
@@ -45,7 +44,6 @@ public class WorkflowProcessSenderDiaryRest  extends  DSpaceObjectRest{
     public void setLegacyId(Integer legacyId) {
         this.legacyId = legacyId;
     }
-
 
 
     public String getDesignation() {
@@ -142,5 +140,21 @@ public class WorkflowProcessSenderDiaryRest  extends  DSpaceObjectRest{
 
     public void setPincode(String pincode) {
         this.pincode = pincode;
+    }
+
+    public String getFax() {
+        return fax;
+    }
+
+    public void setFax(String fax) {
+        this.fax = fax;
+    }
+
+    public String getLandline() {
+        return landline;
+    }
+
+    public void setLandline(String landline) {
+        this.landline = landline;
     }
 }

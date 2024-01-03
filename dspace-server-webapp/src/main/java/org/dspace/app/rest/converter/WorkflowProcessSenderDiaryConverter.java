@@ -71,6 +71,12 @@ public class WorkflowProcessSenderDiaryConverter extends DSpaceObjectConverter<W
         if (obj.getPincode()!=null){
             rest.setPincode(obj.getPincode());
         }
+        if (obj.getFax()!=null){
+            rest.setFax(obj.getFax());
+        }
+        if (obj.getLandline()!=null){
+            rest.setLandline(obj.getLandline());
+        }
         rest.setUuid(obj.getID().toString());
         return rest;
     }

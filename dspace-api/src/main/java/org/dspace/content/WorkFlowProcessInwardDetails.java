@@ -32,12 +32,17 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     public static final String ANY = "*";
     @Column(name = "workflowprocessinwarddetails_id", insertable = false, updatable = false)
     private Integer legacyId;
-
     @Column(name = "inwardnumber")
     private String inwardNumber;
+    @Column(name = "filereferencenumber")
+    private String filereferencenumber;
     @Column(name = "inwarddate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date inwardDate;
+
+    @Column(name = "latterdate", columnDefinition = "timestamp with time zone")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date latterDate;
 
     @Column(name = "receiveddate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
@@ -55,6 +60,20 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inwardmode")
     private WorkFlowProcessMasterValue inwardmode = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vip")
+    private WorkFlowProcessMasterValue vip = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vipname")
+    private WorkFlowProcessMasterValue vipname = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "language")
+    private WorkFlowProcessMasterValue language = null;
+
+
     public String getInwardNumber() {
         return inwardNumber;
     }
@@ -120,4 +139,45 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     public void setLettercategory(WorkFlowProcessMasterValue lettercategory) {
         this.lettercategory = lettercategory;
     }
+
+    public WorkFlowProcessMasterValue getVip() {
+        return vip;
+    }
+
+    public void setVip(WorkFlowProcessMasterValue vip) {
+        this.vip = vip;
+    }
+
+    public WorkFlowProcessMasterValue getVipname() {
+        return vipname;
+    }
+
+    public void setVipname(WorkFlowProcessMasterValue vipname) {
+        this.vipname = vipname;
+    }
+
+    public WorkFlowProcessMasterValue getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(WorkFlowProcessMasterValue language) {
+        this.language = language;
+    }
+
+    public String getFilereferencenumber() {
+        return filereferencenumber;
+    }
+
+    public void setFilereferencenumber(String filereferencenumber) {
+        this.filereferencenumber = filereferencenumber;
+    }
+
+    public Date getLatterDate() {
+        return latterDate;
+    }
+
+    public void setLatterDate(Date latterDate) {
+        this.latterDate = latterDate;
+    }
+
 }

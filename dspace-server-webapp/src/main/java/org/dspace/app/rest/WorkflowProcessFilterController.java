@@ -79,6 +79,14 @@ public class WorkflowProcessFilterController {
 
     @Autowired
     WorkflowProcessService workflowProcessService;
+
+    @Autowired
+    CountryService countryService;
+    @Autowired
+    StateService stateService;
+    @Autowired
+    CityService cityService;
+
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
     @Autowired
@@ -120,7 +128,7 @@ public class WorkflowProcessFilterController {
      * @return The created BitstreamResource
      */
     @RequestMapping(method = RequestMethod.POST, value = "/filterbyData")
-    public List<WorkFlowProcessRest> filter(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest,Pageable pageable
+    public List<WorkFlowProcessRest> filter(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest, Pageable pageable
     ) {
         try {
             Context context = ContextUtil.obtainContext(request);
@@ -156,7 +164,7 @@ public class WorkflowProcessFilterController {
                 /*}*/
             }
             System.out.println(map);
-            List<WorkflowProcess> list = workflowProcessService.Filter(context, map,Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> list = workflowProcessService.Filter(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             List<WorkFlowProcessRest> rests = list.stream().map(d -> {
                 return workFlowProcessConverter.convertFilter(d, utils.obtainProjection());
             }).collect(Collectors.toList());
@@ -168,7 +176,7 @@ public class WorkflowProcessFilterController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/filterbyInwardAndOutWard")
-    public Page<WorkFlowProcessRest> filterbyInwardAndOutWard(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest,Pageable pageable) {
+    public Page<WorkFlowProcessRest> filterbyInwardAndOutWard(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest, Pageable pageable) {
         try {
             System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
             Context context = ContextUtil.obtainContext(request);
@@ -250,13 +258,13 @@ public class WorkflowProcessFilterController {
                 map.put("outward", rest.getOutward());
             }
             System.out.println(map);
-            int count = workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
-            List<WorkflowProcess> list = workflowProcessService.filterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> list = workflowProcessService.filterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             List<WorkFlowProcessRest> rests = list.stream().map(d -> {
                 return workFlowProcessConverter.convertFilter(d, utils.obtainProjection());
             }).collect(Collectors.toList());
             System.out.println("::::::::::::::::::::stop filterbyInwardAndOutWard :::::::::::::::::::");
-            return new PageImpl(rests, pageable,count);
+            return new PageImpl(rests, pageable, count);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -411,6 +419,135 @@ public class WorkflowProcessFilterController {
 
             System.out.println("out getCountsDashbord ");
             return maps;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.POST, value = "/addContry")
+    public ContryDTO addContry(HttpServletRequest request, @RequestBody ContryDTO rest) {
+        try {
+            ContryDTO obj=new ContryDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getContryname() != null) {
+                Country c = new Country();
+                c.setCountryname(rest.getContryname());
+                Country cc = countryService.create(context, c);
+                obj.setContryuuid(cc.getID().toString());
+                obj.setContryname(cc.getCountryname());
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/addState")
+    public ContryDTO addState(HttpServletRequest request, @RequestBody ContryDTO rest) {
+        try {
+            ContryDTO obj=new ContryDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getStatename() != null && rest.getContryuuid() != null) {
+                UUID uuid = UUID.fromString(rest.getContryuuid());
+                Country country = countryService.find(context, uuid);
+                if (country != null) {
+                    State state = new State();
+                    state.setStatename(rest.getStatename());
+                    state.setCountry(country);
+                    State state1 = stateService.create(context, state);
+                    obj.setStateuuid(state1.getID().toString());
+                    obj.setStatename(state1.getStatename());
+                    context.commit();
+                }
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/addCity")
+    public ContryDTO addCity(HttpServletRequest request, @RequestBody ContryDTO rest) {
+        try {
+            ContryDTO obj=new ContryDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getCityname() != null && rest.getStateuuid() != null) {
+                UUID uuid = UUID.fromString(rest.getStateuuid());
+                State state = stateService.find(context, uuid);
+                if (state != null) {
+                    City city = new City();
+                    city.setCityname(rest.getCityname());
+                    city.setState(state);
+                    City city1 = cityService.create(context, city);
+                    obj.setCityuuid(city1.getID().toString());
+                    obj.setCityname(city1.getCityname());
+                    context.commit();
+                    return obj;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getAllCountries")
+    public List<ContryDTO> getContryAll(HttpServletRequest request) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<Country> list = countryService.getAll(context);
+            List<ContryDTO>rest=list.stream().map(d->{
+                ContryDTO contryDTO=new ContryDTO();
+                contryDTO.setContryname(d.getCountryname());
+                contryDTO.setContryuuid(d.getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getStateByContryid")
+    public List<ContryDTO> getStateByContryid(HttpServletRequest request,@Parameter(value = "countyid", required = true) String countyid) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<State> list = stateService.getByCountryId(context,UUID.fromString(countyid));
+            List<ContryDTO>rest=list.stream().map(d->{
+                ContryDTO contryDTO=new ContryDTO();
+                contryDTO.setStatename(d.getStatename());
+                contryDTO.setStateuuid(d.getID().toString());
+                contryDTO.setContryname(d.getCountry().getCountryname());
+                contryDTO.setContryuuid(d.getCountry().getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getCityByStateid")
+    public List<ContryDTO> getCityByStateid(HttpServletRequest request,@Parameter(value = "stateid", required = true) String stateid) {
+        try {
+            System.out.println("in Citys ");
+            Context context = ContextUtil.obtainContext(request);
+            List<City> list = cityService.getCityByStateid(context,UUID.fromString(stateid));
+            List<ContryDTO>rest=list.stream().map(d->{
+                ContryDTO contryDTO=new ContryDTO();
+                contryDTO.setCityname(d.getCityname());
+                contryDTO.setCityuuid(d.getID().toString());
+                contryDTO.setStatename(d.getState().getStatename());
+                contryDTO.setStateuuid(d.getState().getID().toString());
+                contryDTO.setContryname(d.getState().getCountry().getCountryname());
+                contryDTO.setContryuuid(d.getState().getCountry().getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
         } catch (Exception e) {
             e.printStackTrace();
         }
