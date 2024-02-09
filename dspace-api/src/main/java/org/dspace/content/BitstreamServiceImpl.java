@@ -140,6 +140,15 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     }
 
     @Override
+    public Bitstream create1(Context context, InputStream is,Bitstream bitstream) throws IOException, SQLException {
+        UUID bitstreamID = bitstreamStorageService.store1(context, bitstream, is);
+
+         return bitstream;
+    }
+
+
+
+    @Override
     public Bitstream create(Context context, Bundle bundle, InputStream is)
         throws IOException, SQLException, AuthorizeException {
         // Check authorisation
@@ -155,6 +164,13 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         Bitstream b = create(context, is);
         return b;
     }
+
+    @Override
+    public Bitstream createWithoutBundle1(Context context, InputStream is,Bitstream bitstream) throws IOException, SQLException, AuthorizeException {
+        Bitstream b = create1(context, is,bitstream);
+        return b;
+    }
+
     @Override
     public Bitstream register(Context context, Bundle bundle, int assetstore, String bitstreamPath)
         throws IOException, SQLException, AuthorizeException {

@@ -101,7 +101,7 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
         WorkflowProcessSenderDiary workflowProcessSenderDiary = new WorkflowProcessSenderDiary();
 
         try {
-            workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(workflowProcessSenderDiary, workflowProcessSenderDiaryRest);
+            workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(context,workflowProcessSenderDiary, workflowProcessSenderDiaryRest);
             workflowProcessSenderDiaryService.create(context, workflowProcessSenderDiary);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -146,7 +146,7 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
             System.out.println("workflowProcessSenderDiary id ::: is Null  LatterCategoryRest tye null" + id);
             throw new ResourceNotFoundException("workflowProcessSenderDiary  field with id: " + id + " not found");
         }
-        workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(workflowProcessSenderDiary, workflowProcessSenderDiaryRest);
+        workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(context,workflowProcessSenderDiary, workflowProcessSenderDiaryRest);
         workflowProcessSenderDiary.setCity(workflowProcessSenderDiaryRest.getCity());
         workflowProcessSenderDiary.setCountry(workflowProcessSenderDiaryRest.getCountry());
         workflowProcessSenderDiary.setOrganization(workflowProcessSenderDiaryRest.getOrganization());

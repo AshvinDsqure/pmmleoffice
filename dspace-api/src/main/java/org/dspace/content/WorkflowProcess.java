@@ -75,6 +75,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     /* Attechment  Details*/
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess")
     private List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = new ArrayList<>();
+    @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess",cascade = {CascadeType.ALL})
+    private List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries = new ArrayList<>();
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
     @OrderBy("actionDate")
     private List<WorkFlowProcessHistory> workFlowProcessHistories = new ArrayList<>();
@@ -85,6 +88,10 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     @Column(name = "remark")
     private String remark;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "action_id")
+    private WorkFlowProcessMasterValue action = null;
     @Column(name = "workflow_id", insertable = false, updatable = false)
     private Integer legacyId;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
@@ -104,6 +111,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     @Column(name = "ismode")
     private Boolean ismode = false;
+
+    @Column(name = "isreplydraft")
+    private Boolean isreplydraft = false;
 
     @Column(name = "isread")
     private Boolean isread = false;
@@ -294,5 +304,29 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public WorkFlowProcessMasterValue getAction() {
+        return action;
+    }
+
+    public void setAction(WorkFlowProcessMasterValue action) {
+        this.action = action;
+    }
+
+    public List<WorkflowProcessSenderDiary> getWorkflowProcessSenderDiaries() {
+        return workflowProcessSenderDiaries;
+    }
+
+    public void setWorkflowProcessSenderDiaries(List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries) {
+        this.workflowProcessSenderDiaries = workflowProcessSenderDiaries;
+    }
+
+    public Boolean getIsreplydraft() {
+        return isreplydraft;
+    }
+
+    public void setIsreplydraft(Boolean isreplydraft) {
+        this.isreplydraft = isreplydraft;
     }
 }

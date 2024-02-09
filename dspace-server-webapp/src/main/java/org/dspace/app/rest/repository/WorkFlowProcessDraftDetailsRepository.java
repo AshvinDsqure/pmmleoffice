@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -11,11 +11,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.Logger;
+import org.dspace.app.rest.Parameter;
+import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkFlowProcessDraftDetailsConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkFlowProcessDraftDetailsRest;
+import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.WorkFlowProcessDraftDetails;
+import org.dspace.content.WorkflowProcess;
 import org.dspace.content.service.WorkFlowProcessDraftDetailsService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +44,11 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
     WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
     @Autowired
     WorkFlowProcessDraftDetailsConverter workFlowProcessDraftDetailsConverter;
+
     public WorkFlowProcessDraftDetailsRepository(WorkFlowProcessDraftDetailsService dsoService) {
         super(dsoService);
     }
+
     @Override
     protected WorkFlowProcessDraftDetailsRest createAndReturn(Context context)
             throws AuthorizeException {
@@ -63,11 +69,12 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
         log.info("::::::complate::::createAndReturn::::::::::");
         return converter.toRest(workFlowProcessDraftDetails, utils.obtainProjection());
     }
+
     private WorkFlowProcessDraftDetails createWorkFlowProcessDraftDetailsFromRestObject(Context context, WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest) throws AuthorizeException {
         log.info("::::::start::::createWorkFlowProcessDraftDetailsFromRestObject::::::::::");
         WorkFlowProcessDraftDetails workFlowProcessDraftDetails = new WorkFlowProcessDraftDetails();
         try {
-            workFlowProcessDraftDetails=workFlowProcessDraftDetailsConverter.convert(context,workFlowProcessDraftDetailsRest);
+            workFlowProcessDraftDetails = workFlowProcessDraftDetailsConverter.convert(context, workFlowProcessDraftDetailsRest);
             workFlowProcessDraftDetailsService.create(context, workFlowProcessDraftDetails);
         } catch (Exception e) {
             log.info("::::::error::::createWorkFlowProcessDraftDetailsFromRestObject::::::::::");
@@ -76,26 +83,28 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
         log.info("::::::complate::::createWorkFlowProcessDraftDetailsFromRestObject::::::::::");
         return workFlowProcessDraftDetails;
     }
+
     @Override
     protected WorkFlowProcessDraftDetailsRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                                   JsonNode jsonNode) throws SQLException, AuthorizeException {
+                                                  JsonNode jsonNode) throws SQLException, AuthorizeException {
         log.info("::::::start::::put::::::::::");
         ObjectMapper mapper = new ObjectMapper();
-        WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest  = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessDraftDetailsRest.class);
+        WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessDraftDetailsRest.class);
         WorkFlowProcessDraftDetails workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.find(context, id);
         if (workFlowProcessDraftDetails == null) {
-            System.out.println("workFlowProcessDraftDetails id ::: is Null  workFlowProcessDraftDetails tye null"+id);
+            System.out.println("workFlowProcessDraftDetails id ::: is Null  workFlowProcessDraftDetails tye null" + id);
             throw new ResourceNotFoundException("workFlowProcessDraftDetails  field with id: " + id + " not found");
         }
-        workFlowProcessDraftDetails=workFlowProcessDraftDetailsConverter.convert(context,workFlowProcessDraftDetailsRest);
+        workFlowProcessDraftDetails = workFlowProcessDraftDetailsConverter.convert(context, workFlowProcessDraftDetailsRest);
         workFlowProcessDraftDetailsService.update(context, workFlowProcessDraftDetails);
         context.commit();
         log.info("::::::End::::put::::::::::");
         return converter.toRest(workFlowProcessDraftDetails, utils.obtainProjection());
     }
+
     @Override
     public WorkFlowProcessDraftDetailsRest findOne(Context context, UUID uuid) {
-        WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest =null;
+        WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = null;
         log.info("::::::start::::findOne::::::::::");
         try {
             Optional<WorkFlowProcessDraftDetails> workFlowProcessDraftDetails = Optional.ofNullable(workFlowProcessDraftDetailsService.find(context, uuid));
@@ -109,13 +118,15 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
         log.info("::::::End::::findOne::::::::::");
         return workFlowProcessDraftDetailsRest;
     }
+
     @Override
     public Page<WorkFlowProcessDraftDetailsRest> findAll(Context context, Pageable pageable) throws SQLException {
         int total = workFlowProcessDraftDetailsService.countRows(context);
-        List<WorkFlowProcessDraftDetails>  workFlowProcessDraftDetails= workFlowProcessDraftDetailsService.findAll(context,
+        List<WorkFlowProcessDraftDetails> workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.findAll(context,
                 Math.toIntExact(pageable.getPageSize()), Math.toIntExact(pageable.getOffset()));
         return converter.toRestPage(workFlowProcessDraftDetails, pageable, total, utils.obtainProjection());
     }
+
     protected void delete(Context context, UUID id) throws AuthorizeException {
         log.info("::::::in::::delete::::::::::");
         WorkFlowProcessDraftDetails workFlowProcessDraftDetails = null;
@@ -137,6 +148,27 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+    @SearchRestMethod(name = "discardDraft")
+    public WorkFlowProcessDraftDetailsRest discardDraft(@Parameter(value = "draftid", required = true) UUID draftid) {
+        WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = null;
+        try {
+            Context context = obtainContext();
+            WorkFlowProcessDraftDetails workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.find(context, draftid);
+            if (workFlowProcessDraftDetails != null) {
+                workFlowProcessDraftDetails.setIsdelete(true);
+                workFlowProcessDraftDetailsService.update(context, workFlowProcessDraftDetails);
+            }
+            workFlowProcessDraftDetailsRest = workFlowProcessDraftDetailsConverter.convert(workFlowProcessDraftDetails, utils.obtainProjection());
+            context.commit();
+            return workFlowProcessDraftDetailsRest;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (AuthorizeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public Class<WorkFlowProcessDraftDetailsRest> getDomainClass() {
         return null;

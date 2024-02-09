@@ -279,9 +279,9 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                     WorkflowProcess workflowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
                     WorkflowProcessReferenceDoc finaldoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
                     //document push  in items
-                    if (workflowProcess.getItem() != null) {
-                        workflowProcessService.storeWorkFlowMataDataTOBitsream(context, finaldoc, workflowProcess.getItem());
-                    }
+                  //  if (workflowProcess.getItem() != null) {
+                      //  workflowProcessService.storeWorkFlowMataDataTOBitsream(context, finaldoc, workflowProcess.getItem());
+                  //  }
                     storeWorkFlowHistoryforDocument(context, finaldoc);
                     WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                     context.commit();
@@ -453,7 +453,56 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                     context.commit();
                     return rest;
                 }
-            } else {
+            }
+            //Reply Tapal
+            if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Reply Tapal")) {
+                System.out.println("Reply Tapal in");
+                if (workflowProcessReferenceDocRest.getUuid() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getId() != null) {
+                    workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+                    WorkflowProcessReferenceDocVersion version = workflowProcessReferenceDocVersionService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getUuid()));
+                    if (version != null) {
+                        System.out.println("Reply Tapal in version update!");
+                        if (workflowProcessReferenceDocRest.getEditortext() != null) {
+                            version.setEditortext(workflowProcessReferenceDocRest.getEditortext());
+                        }
+                        if (workflowProcessReferenceDocRest.getBitstreamRest() != null) {
+                            version.setBitstream(bitstream);
+                        }
+                        version.setCreationdatetime(new Date());
+                        storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc, version.getVersionnumber());
+                        workflowProcessReferenceDocVersionService.update(context, version);
+                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                        context.commit();
+                        return rest;
+                    }
+                }
+                if (workflowProcessReferenceDocRest.getUuid() != null) {
+                    if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
+                        System.out.println("in create new version of Reply Tapal ");
+                        workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+                        storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                        if (workflowProcessReferenceDoc.getWorkflowProcess() != null) {
+                            System.out.println("in store histitory create new version ");
+                            storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
+                        }
+                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                        context.commit();
+                        return rest;
+                    }
+                } else {
+                    System.out.println("Reply Tapal in else ");
+                    workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+                    storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                    workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
+                    WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                    if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null && workflowProcessReferenceDoc.getWorkflowprocessnote().getID() != null) {
+                        rest.setWorkflowProcessNoteRest(workflowProcessNoteConverter.convert(workflowProcessNoteService.find(context, workflowProcessReferenceDoc.getWorkflowprocessnote().getID()), utils.obtainProjection()));
+                    }
+                    context.commit();
+                    return rest;
+                }
+            }
+            else {
                 workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
                 workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
                 context.commit();
@@ -626,7 +675,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Outward") && !doc.getIssignature()) {
             workFlowAction.setComment("Create Version  " + doc.getWorkflowProcessReferenceDocVersion().size() + " for  " + (doc.getDrafttype().getPrimaryvalue() != null ? doc.getDrafttype().getPrimaryvalue() : " "));
         }
-
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Document:::::::: ");
     }
@@ -658,12 +706,12 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     }
     @RequestMapping(method = RequestMethod.GET, value = "/getDocByDraftType")
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
-    public List<WorkflowProcessReferenceDocRest> getDocByDraftType(@Parameter(value = "workflowtypeid",required = true)UUID drafttypeid, HttpServletRequest request) {
+    public List<WorkflowProcessReferenceDocRest> getDocByDraftType(@Parameter(value = "drafttypeid",required = true) String drafttypeid, HttpServletRequest request) {
         System.out.println("::::::::::::::::::getDocByDraftType::::::::::::start");
         Context context = ContextUtil.obtainContext(request);
         List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
         try {
-            List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workflowProcessReferenceDocService.getDocumentBySignitore(context, context.getCurrentUser().getID(),drafttypeid);
+            List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workflowProcessReferenceDocService.getDocumentBySignitore(context, context.getCurrentUser().getID(),UUID.fromString(drafttypeid));
             workflowProcessReferenceDocRests = workflowProcessReferenceDocs.stream().map(workflowProcessReferenceDoc -> {
                 return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
             }).collect(Collectors.toList());

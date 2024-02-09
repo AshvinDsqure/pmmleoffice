@@ -216,7 +216,6 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
 
     @Override
     public List<EPerson> getByDepartment(Context context, UUID idd) throws SQLException {
-        System.out.println("search :"+idd);
         Query query = createQuery(context, "" +
         "SELECT ep FROM EPerson as ep join ep.department as d join ep.office as o  where  d.id=:department OR o.id=:department");
         query.setParameter("department",idd);

@@ -230,6 +230,37 @@ public class BundleRestRepository extends DSpaceObjectRestRepository<Bundle, Bun
         bitstreamService.update(context, bitstream);
         return bitstream;
     }
+
+    public Bitstream processBitstreamCreationWithoutBundle1(Context context,InputStream fileInputStream,
+                                                           String properties, String originalFilename,Bitstream bitstream)
+            throws AuthorizeException, IOException, SQLException {
+
+        if (StringUtils.isNotBlank(properties)) {
+            ObjectMapper mapper = new ObjectMapper();
+            BitstreamRest bitstreamRest = null;
+            try {
+                bitstreamRest = mapper.readValue(properties, BitstreamRest.class);
+            } catch (Exception e) {
+                throw new UnprocessableEntityException("The properties parameter was incorrect: " + properties);
+            }
+            bitstream = bitstreamService.createWithoutBundle1(context, fileInputStream,bitstream);
+            if (bitstreamRest.getMetadata() != null) {
+                metadataConverter.setMetadata(context, bitstream, bitstreamRest.getMetadata());
+            }
+            String name = bitstreamRest.getName();
+            if (StringUtils.isNotBlank(name)) {
+                bitstream.setName(context, name);
+            } else {
+                bitstream.setName(context, originalFilename);
+            }
+        } else {
+            System.out.println("createWithoutBundle1 else.....");
+            bitstream = bitstreamService.createWithoutBundle1(context, fileInputStream,bitstream);
+           // bitstream.setName(context, originalFilename);
+
+        }
+        return bitstream;
+    }
     public Class<BundleRest> getDomainClass() {
         return BundleRest.class;
     }

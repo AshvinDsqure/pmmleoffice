@@ -82,8 +82,15 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
     }
     @Override
     public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context, UUID signitoreid,UUID drafttypeuuid) throws SQLException {
-        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d join d.documentsignator as ds join d.drafttype as df  where d.issignature=:issignitor and ds.id=:signitoreid and df.id=:drafttypeid");
-        query.setParameter("issignitor",false);
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+                " left join d.drafttype as df " +
+                " left join d.workflowProcessReferenceDocVersion dv " +
+                " left join dv.creator as ds " +
+                " where dv.issign=:issignitor " +
+                " and ds.id=:signitoreid " +
+                " and df.id=:drafttypeid " +
+                " and dv.issign=:issignitor");
+        query.setParameter("issignitor",true);
         query.setParameter("signitoreid",signitoreid);
         query.setParameter("drafttypeid",drafttypeuuid);
         return query.getResultList();

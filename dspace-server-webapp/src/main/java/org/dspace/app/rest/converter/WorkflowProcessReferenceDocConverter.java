@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- * <p>
+ *
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.converter;
@@ -10,6 +10,7 @@ package org.dspace.app.rest.converter;
 import net.sf.saxon.Controller;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.PdfUtils;
 import org.dspace.content.*;
 import org.dspace.content.enums.Priority;
@@ -89,6 +90,13 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (obj.getPage() != null) {
             workflowProcessDefinitionRest.setPage(obj.getPage());
         }
+        if(!DateUtils.isNullOrEmptyOrBlank(obj.getFilenumber())){
+            workflowProcessDefinitionRest.setFilenumber(obj.getFilenumber());
+        }
+        if (!DateUtils.isNullOrEmptyOrBlank(obj.getFiletype())) {
+            workflowProcessDefinitionRest.setFiletype(obj.getFiletype());
+        }
+
         workflowProcessDefinitionRest.setUuid(obj.getID().toString());
         return workflowProcessDefinitionRest;
     }
@@ -151,6 +159,12 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (rest.getPage() != null) {
             workflowProcessReferenceDoc.setPage(rest.getPage());
         }
+        if(!DateUtils.isNullOrEmptyOrBlank(rest.getFilenumber())){
+            workflowProcessReferenceDoc.setFilenumber(rest.getFilenumber());
+        }
+        if (!DateUtils.isNullOrEmptyOrBlank(rest.getFiletype())) {
+            workflowProcessReferenceDoc.setFiletype(rest.getFiletype());
+        }
         return workflowProcessReferenceDoc;
     }
 
@@ -188,6 +202,12 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         }
         if (rest.getCreatedate() != null) {
             workflowProcessReferenceDoc.setCreatedate(rest.getCreatedate());
+        }
+        if(!DateUtils.isNullOrEmptyOrBlank(rest.getFilenumber())){
+            workflowProcessReferenceDoc.setFilenumber(rest.getFilenumber());
+        }
+        if (!DateUtils.isNullOrEmptyOrBlank(rest.getFiletype())) {
+            workflowProcessReferenceDoc.setFiletype(rest.getFiletype());
         }
        /* if (rest.getDocumentsignatorRest() != null && rest.getDocumentsignatorRest().getUuid()!=null && !rest.getDocumentsignatorRest().getUuid().toString().isEmpty()) {
             workflowProcessReferenceDoc.setDocumentsignator(ePersonConverter.convert(context, rest.getDocumentsignatorRest()));
@@ -237,6 +257,12 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         }
         if(obj.getItemname()!=null){
             workflowProcessReferenceDoc.setItemname(obj.getItemname());
+        }
+        if(!DateUtils.isNullOrEmptyOrBlank(obj.getFilenumber())){
+            workflowProcessReferenceDoc.setFilenumber(obj.getFilenumber());
+        }
+        if (!DateUtils.isNullOrEmptyOrBlank(obj.getFiletype())) {
+            workflowProcessReferenceDoc.setFiletype(obj.getFiletype());
         }
         return workflowProcessReferenceDoc;
     }

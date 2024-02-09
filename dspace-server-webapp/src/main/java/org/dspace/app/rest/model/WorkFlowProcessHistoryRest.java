@@ -7,10 +7,8 @@
  */
 package org.dspace.app.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.dspace.content.WorkFlowProcessHistory;
-import org.dspace.content.WorkFlowProcessMasterValue;
-import org.dspace.eperson.EPerson;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.dspace.app.rest.model.helper.MyDateConverter;
 
 import java.util.Date;
 @LinksRest(links = {
@@ -29,11 +27,18 @@ public class WorkFlowProcessHistoryRest extends  DSpaceObjectRest{
     private Integer legacyId;
 
     private WorkflowProcessEpersonRest workflowProcessEpersonRest;
+    private WorkflowProcessEpersonRest senttoRest;
+
     private WorkFlowProcessMasterValueRest action;
 
     private String comment;
-
+    @JsonDeserialize(converter = MyDateConverter.class)
     private Date actionDate;
+    @JsonDeserialize(converter = MyDateConverter.class)
+    private Date receivedDate;
+    private String sentbyname;
+    private String senttoname;
+
 
     public String getComment() {
         return comment;
@@ -84,5 +89,37 @@ public class WorkFlowProcessHistoryRest extends  DSpaceObjectRest{
 
     public void setActionDate(Date actionDate) {
         this.actionDate = actionDate;
+    }
+
+    public WorkflowProcessEpersonRest getSenttoRest() {
+        return senttoRest;
+    }
+
+    public void setSenttoRest(WorkflowProcessEpersonRest senttoRest) {
+        this.senttoRest = senttoRest;
+    }
+
+    public Date getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(Date receivedDate) {
+        this.receivedDate = receivedDate;
+    }
+
+    public String getSentbyname() {
+        return sentbyname;
+    }
+
+    public void setSentbyname(String sentbyname) {
+        this.sentbyname = sentbyname;
+    }
+
+    public String getSenttoname() {
+        return senttoname;
+    }
+
+    public void setSenttoname(String senttoname) {
+        this.senttoname = senttoname;
     }
 }

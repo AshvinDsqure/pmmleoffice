@@ -17,6 +17,7 @@ import org.dspace.app.rest.validation.WorkflowProcessMasterValueValid;
 import org.dspace.app.rest.validation.WorkflowProcessValid;
 import org.dspace.content.Item;
 import org.dspace.content.WorkflowProcessEperson;
+import org.dspace.content.WorkflowProcessSenderDiary;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -97,14 +98,21 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String mode;
 
     @JsonProperty
+    private String body;
+
+    @JsonProperty
     private  Boolean ismode =false;
 
     @JsonProperty
     private  Boolean isread =false;
     @JsonProperty
     private Boolean isDraft = false;
+
+    private Boolean isreplydraft = false;
+
     @JsonProperty
     private String comment;
+    private String margeddocuuid;
     @JsonProperty
     private String workflowtype;
     @JsonProperty
@@ -115,6 +123,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private List<ItemRest> itemsRests=new ArrayList<>();
     @JsonProperty
     List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = new ArrayList<>();
+    @JsonProperty
+    List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests = new ArrayList<>();
 
     @JsonProperty
     @NotEmpty(message = "Input WorkflowProcessEpersonRest list cannot be empty.")
@@ -456,5 +466,37 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setDocumenttypeRest(WorkFlowProcessMasterValueRest documenttypeRest) {
         this.documenttypeRest = documenttypeRest;
+    }
+
+    public List<WorkflowProcessSenderDiaryRest> getWorkflowProcessSenderDiaryRests() {
+        return workflowProcessSenderDiaryRests;
+    }
+
+    public void setWorkflowProcessSenderDiaryRests(List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests) {
+        this.workflowProcessSenderDiaryRests = workflowProcessSenderDiaryRests;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public Boolean getIsreplydraft() {
+        return isreplydraft;
+    }
+
+    public void setIsreplydraft(Boolean isreplydraft) {
+        this.isreplydraft = isreplydraft;
+    }
+
+    public String getMargeddocuuid() {
+        return margeddocuuid;
+    }
+
+    public void setMargeddocuuid(String margeddocuuid) {
+        this.margeddocuuid = margeddocuuid;
     }
 }

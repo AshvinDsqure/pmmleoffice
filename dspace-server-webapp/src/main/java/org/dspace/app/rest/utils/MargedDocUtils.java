@@ -6,6 +6,8 @@ import com.spire.doc.FileFormat;
 import com.spire.doc.Section;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -66,12 +68,12 @@ public class MargedDocUtils {
         // copyInputStreamToPdf(inputStream,"D://out12as.pdf");
 
 
-        DocOneWrite(1l);
-        InputStream input3 = new FileInputStream(new File("D://new.docx"));
-        DocTwoWrite(input3);
-        InputStream input3a = new FileInputStream(new File("D://doc//note4.docx"));
-        DocTwoWrite1(input3a);
-        DocumentMerger("D://test111112.pdf");
+        //DocOneWrite(1l);
+      //  InputStream input3 = new FileInputStream(new File("D://new.docx"));
+        //DocTwoWrite(input3);
+        //InputStream input3a = new FileInputStream(new File("D://doc//note4.docx"));
+        //DocTwoWrite1(input3a);
+       // DocumentMerger("D://test111112.pdf");
 
         // DocthreWrite1();
         //writeMultipleFiles();
@@ -81,6 +83,8 @@ public class MargedDocUtils {
 
 
         //removetext2("D://Note#9.docx","D://ddddd.pdf");
+
+
     }
 
 
@@ -670,5 +674,14 @@ public class MargedDocUtils {
         );
     }
 
+    public static void  mergePdfFiles(List<InputStream> inputStreams,OutputStream outputStream) throws IOException {
+        PDFMergerUtility pdfMerger = new PDFMergerUtility();
 
+        for (InputStream inputStream : inputStreams) {
+            pdfMerger.addSource(inputStream);
+        }
+        pdfMerger.setDestinationStream(outputStream);
+        pdfMerger.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
+
+    }
 }

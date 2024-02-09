@@ -57,6 +57,8 @@ public interface BitStoreService {
      * @throws java.io.IOException If a problem occurs while storing the bits
      */
     public void put(Bitstream bitstream, InputStream inputStream) throws IOException;
+    public void put1(Bitstream bitstream, InputStream inputStream) throws IOException;
+
 
     /**
      * Obtain technical metadata about an asset in the asset store.

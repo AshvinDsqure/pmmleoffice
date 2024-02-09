@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- * <p>
+ *
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -54,6 +54,7 @@ import static java.util.stream.Collectors.toList;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
 
+
 @Component(WorkFlowProcessRest.CATEGORY + "." + WorkFlowProcessRest.NAME)
 public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<WorkflowProcess, WorkFlowProcessRest> {
 
@@ -95,7 +96,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
         try {
             if (!workflowProcess.getIsread()) {
-                System.out.println("in update is read true");
                 workflowProcess.setIsread(true);
                 workflowProcessService.update(context, workflowProcess);
                 context.commit();
@@ -110,7 +110,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     public Page<WorkFlowProcessRest> findAll(Context context, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
-        log.info("in get All Workflow start");
         try {
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
@@ -123,11 +122,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
-            log.info("in get All Workflow stop");
+
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("in get All Workflow Error" + e.getMessage());
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -232,7 +230,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @SearchRestMethod(name = "getByWorkFlowType")
     public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
-        log.info("in getByWorkFlowType start inward or outward start");
         try {
             Context context = obtainContext();
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
@@ -241,11 +238,9 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
-            log.info("in getByWorkFlowType start inward or outward stop!");
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("in getByWorkFlowType Error " + e.getMessage());
             throw new RuntimeException(e.getMessage(), e);
         }
     }

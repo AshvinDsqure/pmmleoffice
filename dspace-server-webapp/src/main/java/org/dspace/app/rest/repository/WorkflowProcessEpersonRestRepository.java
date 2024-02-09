@@ -77,7 +77,6 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         try {
             Optional<WorkflowProcessEperson> workflowProcessDefinitionOption = Optional.ofNullable(workflowProcessEpersonService.find(context, id));
             if(workflowProcessDefinitionOption.isPresent()){
-                System.out.println(">>>>>>>>>>>>>>>>>>name"+workflowProcessDefinitionOption.get());
                 WorkflowProcessEpersonRest =converter.toRest(workflowProcessDefinitionOption.get(),utils.obtainProjection());
             }
         }catch (Exception e){
@@ -137,10 +136,12 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
             throw new RuntimeException(e.getMessage(), e);
         }
         try {
-            workflowProcessEpersonService.delete(context, eperson);
+          //  eperson.setWorkflowProcess(null);
+            eperson.setIsdelete(true);
+            workflowProcessEpersonService.update(context, eperson);
             context.commit();
             System.out.println("delete done !");
-        } catch (SQLException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }

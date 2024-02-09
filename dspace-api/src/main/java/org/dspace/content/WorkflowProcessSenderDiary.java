@@ -36,7 +36,6 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
      * Wild card for Dublin Core metadata qualifiers/languages
      */
     public static final String ANY = "*";
-
     @Column(name = "workflowprocesssenderdiary_id", insertable = false, updatable = false)
     private Integer legacyId;
     @Column(name = "sendername")
@@ -53,10 +52,8 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
     private String address;
     @Column(name = "city")
     private String city;
-
     @Column(name = "state")
     private String state;
-
     @Column(name = "pincode")
     private String pincode;
     @Column(name = "country")
@@ -65,7 +62,19 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
     private String fax;
     @Column(name = "landline")
     private String landline;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workflowprocess")
+    private WorkflowProcess workflowProcess;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vip")
+    private Vip vip = null;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vipname")
+    private VipName vipname = null;
+    @Column(name = "status")
+    private Integer status;
     @Override
     public int getType() {
         return 0;
@@ -179,5 +188,36 @@ public class WorkflowProcessSenderDiary extends DSpaceObject implements DSpaceOb
 
     public void setLandline(String landline) {
         this.landline = landline;
+    }
+    public Vip getVip() {
+        return vip;
+    }
+
+    public void setVip(Vip vip) {
+        this.vip = vip;
+    }
+
+    public VipName getVipname() {
+        return vipname;
+    }
+
+    public void setVipname(VipName vipname) {
+        this.vipname = vipname;
+    }
+
+    public WorkflowProcess getWorkflowProcess() {
+        return workflowProcess;
+    }
+
+    public void setWorkflowProcess(WorkflowProcess workflowProcess) {
+        this.workflowProcess = workflowProcess;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

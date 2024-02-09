@@ -259,9 +259,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public void
-
-
-    sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName, String subject, List<Bitstream> bitstreams) throws IOException, MessagingException, SQLException, AuthorizeException {
+    sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName, String subject, List<Bitstream> bitstreams,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException {
+        System.out.println("in sendEmail");
         {
             EPerson currentuser = context.getCurrentUser();
             String senderName = null;
@@ -286,13 +285,22 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             }
             Email email = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "electronical"));
             email.addArgument(subject);                   //0
-            email.addRecipient(recipientEmail);
+            if(recipientEmails!=null){
+            email.addRecipient(recipientEmail);}
+            if(recipientEmails!=null){
+                for (String emailid:recipientEmails) {
+                    email.addRecipient(emailid);
+                    System.out.println("sent email for "+emailid);
+                }
+            }
             email.addArgument(recipientName);             //1
             email.addArgument(senderName);                //2
             email.addArgument(senderEmail);               //3
             email.addArgument(senderDesignation);         //4
             email.addArgument(senderDepartment);          //5
             email.addArgument(senderOffice);              //6
+            email.addArgument(body);                      //7
+
             for (Bitstream bitstream : bitstreams) {
                 if (bitstreamService.retrieve(context, bitstream) != null) {
                     email.addAttachment(bitstreamService.retrieve(context, bitstream), bitstream.getName(), bitstream.getFormat(context).getMIMEType());

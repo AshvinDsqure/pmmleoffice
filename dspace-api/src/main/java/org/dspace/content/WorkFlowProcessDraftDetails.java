@@ -39,13 +39,41 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
     @Column(name = "draftdate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date draftdate;
-    //drafttype means notesheet or document
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "documentsignator_id")
+    private EPerson documentsignator;
+
+    //for reply Inward screen
+    //drafttype means doc type  notesheet or document,inward,outward,comment,referel
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "draft_type_id")
     private WorkFlowProcessMasterValue drafttype;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "documentsignator_id")
-    private EPerson documentsignator;
+    @JoinColumn(name = "draft_nature")
+    private WorkFlowProcessMasterValue draftnature;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "confidential")
+    private WorkFlowProcessMasterValue confidential;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "replytype")
+    private WorkFlowProcessMasterValue replytype;
+    @Column(name = "subject")
+    private String subject;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referencetapalnumber")
+    private WorkFlowProcessInwardDetails referencetapalnumber = null;
+
+    @Column(name = "referencefilenumber")
+    private String referencefilenumber = null;
+    @Column(name = "issinglatter")
+    private Boolean issinglatter = false;
+    @Column(name = "isdispatchbyself")
+    private Boolean isdispatchbyself = false;
+    @Column(name = "isdispatchbycru")
+    private Boolean isdispatchbycru = false;
+    @Column(name = "isdelete")
+    private Boolean isdelete = false;
 
     @Override
     public int getType() {
@@ -83,5 +111,85 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
 
     public void setDocumentsignator(EPerson documentsignator) {
         this.documentsignator = documentsignator;
+    }
+
+    public WorkFlowProcessMasterValue getDraftnature() {
+        return draftnature;
+    }
+
+    public void setDraftnature(WorkFlowProcessMasterValue draftnature) {
+        this.draftnature = draftnature;
+    }
+
+    public WorkFlowProcessMasterValue getConfidential() {
+        return confidential;
+    }
+
+    public void setConfidential(WorkFlowProcessMasterValue confidential) {
+        this.confidential = confidential;
+    }
+
+    public WorkFlowProcessMasterValue getReplytype() {
+        return replytype;
+    }
+
+    public void setReplytype(WorkFlowProcessMasterValue replytype) {
+        this.replytype = replytype;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public WorkFlowProcessInwardDetails getReferencetapalnumber() {
+        return referencetapalnumber;
+    }
+
+    public void setReferencetapalnumber(WorkFlowProcessInwardDetails referencetapalnumber) {
+        this.referencetapalnumber = referencetapalnumber;
+    }
+
+    public String getReferencefilenumber() {
+        return referencefilenumber;
+    }
+
+    public void setReferencefilenumber(String referencefilenumber) {
+        this.referencefilenumber = referencefilenumber;
+    }
+
+    public Boolean getIssinglatter() {
+        return issinglatter;
+    }
+
+    public void setIssinglatter(Boolean issinglatter) {
+        this.issinglatter = issinglatter;
+    }
+
+    public Boolean getIsdispatchbyself() {
+        return isdispatchbyself;
+    }
+
+    public void setIsdispatchbyself(Boolean isdispatchbyself) {
+        this.isdispatchbyself = isdispatchbyself;
+    }
+
+    public Boolean getIsdispatchbycru() {
+        return isdispatchbycru;
+    }
+
+    public void setIsdispatchbycru(Boolean isdispatchbycru) {
+        this.isdispatchbycru = isdispatchbycru;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
     }
 }

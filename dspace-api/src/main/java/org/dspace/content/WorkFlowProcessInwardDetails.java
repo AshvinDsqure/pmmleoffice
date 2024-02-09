@@ -36,6 +36,8 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
     private String inwardNumber;
     @Column(name = "filereferencenumber")
     private String filereferencenumber;
+    @Column(name = "letterrefno")
+    private String letterrefno;
     @Column(name = "inwarddate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date inwardDate;
@@ -50,10 +52,10 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category")
-    private WorkFlowProcessMasterValue category = null;
+    private Category category = null;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subcategory")
-    private WorkFlowProcessMasterValue subcategory = null;
+    private SubCategory subcategory = null;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lettercategory")
     private WorkFlowProcessMasterValue lettercategory = null;
@@ -63,11 +65,11 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vip")
-    private WorkFlowProcessMasterValue vip = null;
+    private Vip vip = null;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vipname")
-    private WorkFlowProcessMasterValue vipname = null;
+    private VipName vipname = null;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language")
@@ -110,20 +112,6 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
         this.legacyId = legacyId;
     }
 
-    public WorkFlowProcessMasterValue getCategory() {
-        return category;
-    }
-
-    public void setCategory(WorkFlowProcessMasterValue category) {
-        this.category = category;
-    }
-
-    public WorkFlowProcessMasterValue getSubcategory() {
-        return subcategory;
-    }
-    public void setSubcategory(WorkFlowProcessMasterValue subcategory) {
-        this.subcategory = subcategory;
-    }
 
     public WorkFlowProcessMasterValue getInwardmode() {
         return inwardmode;
@@ -140,21 +128,6 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
         this.lettercategory = lettercategory;
     }
 
-    public WorkFlowProcessMasterValue getVip() {
-        return vip;
-    }
-
-    public void setVip(WorkFlowProcessMasterValue vip) {
-        this.vip = vip;
-    }
-
-    public WorkFlowProcessMasterValue getVipname() {
-        return vipname;
-    }
-
-    public void setVipname(WorkFlowProcessMasterValue vipname) {
-        this.vipname = vipname;
-    }
 
     public WorkFlowProcessMasterValue getLanguage() {
         return language;
@@ -180,4 +153,43 @@ public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpace
         this.latterDate = latterDate;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public SubCategory getSubcategory() {
+        return subcategory;
+    }
+
+    public void setSubcategory(SubCategory subcategory) {
+        this.subcategory = subcategory;
+    }
+
+    public Vip getVip() {
+        return vip;
+    }
+
+    public void setVip(Vip vip) {
+        this.vip = vip;
+    }
+
+    public VipName getVipname() {
+        return vipname;
+    }
+
+    public void setVipname(VipName vipname) {
+        this.vipname = vipname;
+    }
+
+    public String getLetterrefno() {
+        return letterrefno;
+    }
+
+    public void setLetterrefno(String letterrefno) {
+        this.letterrefno = letterrefno;
+    }
 }

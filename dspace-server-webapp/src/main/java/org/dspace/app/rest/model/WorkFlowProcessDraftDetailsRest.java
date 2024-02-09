@@ -12,10 +12,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.app.rest.model.helper.MyDateConverter;
+import org.dspace.content.WorkFlowProcessInwardDetails;
 import org.dspace.content.WorkFlowProcessMasterValue;
+import org.dspace.content.WorkflowProcessSenderDiary;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     public static final String NAME = "workflowprocessdraftdetail";
@@ -28,6 +32,25 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     //drafttype means notesheet or document
     private WorkFlowProcessMasterValueRest drafttypeRest;
     private EPersonRest documentsignatorRest;
+    //for reply tapal
+    private WorkFlowProcessMasterValueRest draftnatureRest;
+
+    private WorkFlowProcessMasterValueRest confidentialRest;
+
+    private WorkFlowProcessMasterValueRest replytypeRest;
+
+    private String subject;
+
+    private WorkFlowProcessInwardDetailsRest referencetapalnumberRest = null;
+
+    private String referencefilenumberRest = null;
+
+    private Boolean issinglatter = false;
+    private Boolean isdispatchbyself = false;
+    private Boolean isdispatchbycru = false;
+    private Boolean isdelete = false;
+
+
     public Integer getLegacyId() {
         return legacyId;
     }
@@ -59,5 +82,85 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     }
     public void setDocumentsignatorRest(EPersonRest documentsignatorRest) {
         this.documentsignatorRest = documentsignatorRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getDraftnatureRest() {
+        return draftnatureRest;
+    }
+
+    public void setDraftnatureRest(WorkFlowProcessMasterValueRest draftnatureRest) {
+        this.draftnatureRest = draftnatureRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getConfidentialRest() {
+        return confidentialRest;
+    }
+
+    public void setConfidentialRest(WorkFlowProcessMasterValueRest confidentialRest) {
+        this.confidentialRest = confidentialRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getReplytypeRest() {
+        return replytypeRest;
+    }
+
+    public void setReplytypeRest(WorkFlowProcessMasterValueRest replytypeRest) {
+        this.replytypeRest = replytypeRest;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public WorkFlowProcessInwardDetailsRest getReferencetapalnumberRest() {
+        return referencetapalnumberRest;
+    }
+
+    public void setReferencetapalnumberRest(WorkFlowProcessInwardDetailsRest referencetapalnumberRest) {
+        this.referencetapalnumberRest = referencetapalnumberRest;
+    }
+
+    public String getReferencefilenumberRest() {
+        return referencefilenumberRest;
+    }
+
+    public void setReferencefilenumberRest(String referencefilenumberRest) {
+        this.referencefilenumberRest = referencefilenumberRest;
+    }
+
+    public Boolean getIssinglatter() {
+        return issinglatter;
+    }
+
+    public void setIssinglatter(Boolean issinglatter) {
+        this.issinglatter = issinglatter;
+    }
+
+    public Boolean getIsdispatchbyself() {
+        return isdispatchbyself;
+    }
+
+    public void setIsdispatchbyself(Boolean isdispatchbyself) {
+        this.isdispatchbyself = isdispatchbyself;
+    }
+
+    public Boolean getIsdispatchbycru() {
+        return isdispatchbycru;
+    }
+
+    public void setIsdispatchbycru(Boolean isdispatchbycru) {
+        this.isdispatchbycru = isdispatchbycru;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
     }
 }

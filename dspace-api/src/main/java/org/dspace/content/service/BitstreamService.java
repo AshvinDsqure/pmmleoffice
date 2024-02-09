@@ -71,6 +71,7 @@ public interface BitstreamService extends DSpaceObjectService<Bitstream>, DSpace
      * @throws SQLException if database error
      */
     public Bitstream create(Context context, InputStream is) throws IOException, SQLException;
+    public Bitstream create1(Context context, InputStream is,Bitstream bitstream) throws IOException, SQLException;
 
     /**
      * Create a new bitstream, with a new ID. The checksum and file size are
@@ -239,5 +240,8 @@ public interface BitstreamService extends DSpaceObjectService<Bitstream>, DSpace
     @Nullable
     Long getLastModified(Bitstream bitstream) throws IOException;
     public Bitstream createWithoutBundle(Context context, InputStream is)
+            throws IOException, SQLException, AuthorizeException;
+
+    public Bitstream createWithoutBundle1(Context context, InputStream is,Bitstream bitstream)
             throws IOException, SQLException, AuthorizeException;
 }

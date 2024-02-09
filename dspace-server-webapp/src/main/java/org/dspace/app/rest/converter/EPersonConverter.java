@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.converter;
@@ -39,6 +39,7 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
 
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
     @Override
     public EPersonRest convert(EPerson obj, Projection projection) {
         EPersonRest eperson = super.convert(obj, projection);
@@ -48,30 +49,36 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         eperson.setRequireCertificate(obj.getRequireCertificate());
         eperson.setSelfRegistered(obj.getSelfRegistered());
         eperson.setEmail(obj.getEmail());
-        if(obj.getTablenumber()!=null){
-        eperson.setTablenumber(obj.getTablenumber());
+        if (obj.getTablenumber() != null) {
+            eperson.setTablenumber(obj.getTablenumber());
         }
-        if(obj.getEmployeeid()!=null) {
+        if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-        if(obj.getDepartment()!=null && obj.getDepartment().getID()!=null){
-        eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(),projection));
+        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
+            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
         }
-        if(obj.getOffice()!=null && obj.getOffice().getID()!=null){
-            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(),projection));
+        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
+            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
         }
-        if(obj.getDesignation()!=null){
-            eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(),projection));
-        }
-        if(obj.getFullName()!=null){
-            if(obj.getDesignation()!=null && obj.getDesignation().getPrimaryvalue()!=null) {
-                eperson.setFullname(obj.getFullName() + " (" + obj.getDesignation().getPrimaryvalue() + ").");
-            }else{
-                eperson.setFullname(obj.getFullName()+".");
+        try {
+            if (obj.getDesignation() != null) {
+                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
             }
+            if (obj.getFullName() != null) {
+                if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
+                    eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());
+                } else {
+                    eperson.setFullname(obj.getFullName() + ".");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
         return eperson;
     }
+
     public EPersonRest convertBYUSer(EPerson obj, Projection projection) {
         EPersonRest eperson = new EPersonRest();
         eperson.setLastActive(obj.getLastActive());
@@ -81,44 +88,51 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         eperson.setSelfRegistered(obj.getSelfRegistered());
         eperson.setEmail(obj.getEmail());
         eperson.setUuid(obj.getID().toString());
-        if(obj.getTablenumber()!=null){
+        if (obj.getTablenumber() != null) {
             eperson.setTablenumber(obj.getTablenumber());
         }
-        if(obj.getEmployeeid()!=null) {
+        if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-        if(obj.getDepartment()!=null && obj.getDepartment().getID()!=null){
-            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(),projection));
+        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
+            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
         }
-        if(obj.getOffice()!=null && obj.getOffice().getID()!=null){
-            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(),projection));
+        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
+            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
         }
-        if(obj.getDesignation()!=null){
-            eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(),projection));
-        }
-        if(obj.getFullName()!=null){
-            if(obj.getDesignation()!=null && obj.getDesignation().getPrimaryvalue()!=null) {
-                eperson.setFullname(obj.getFullName() + " (" + obj.getDesignation().getPrimaryvalue() + ").");
-            }else{
-                eperson.setFullname(obj.getFullName()+".");
+        try {
+            if (obj.getDesignation() != null) {
+                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
             }
+            if (obj.getFullName() != null) {
+                if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
+                    eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());
+                } else {
+                    eperson.setFullname(obj.getFullName() + ".");
+                }
+            }
+        } catch (Exception e) {
+
         }
         return eperson;
     }
 
     public EPerson convert(Context context, EPersonRest rest) throws SQLException {
-        if(rest!=null && rest.getId()!=null){
+        if (rest != null && rest.getId() != null) {
             return ePersonService.find(context, UUID.fromString(rest.getId()));
         }
         return null;
     }
+
     public EPerson convert(EPersonRest obj) {
-        return modelMapper.map(obj,EPerson.class);
+        return modelMapper.map(obj, EPerson.class);
     }
+
     @Override
     protected EPersonRest newInstance() {
         return new EPersonRest();
     }
+
     @Override
     public Class<EPerson> getModelClass() {
         return EPerson.class;

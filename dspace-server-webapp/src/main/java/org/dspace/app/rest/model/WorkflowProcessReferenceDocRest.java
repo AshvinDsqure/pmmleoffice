@@ -16,6 +16,7 @@ import org.dspace.content.Item;
 import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.WorkflowProcessNote;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -51,6 +52,10 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     @JsonProperty
     private Integer page;
 
+    private String filenumber;
+
+    private String filetype;
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest workFlowProcessReferenceDocType;
     @JsonProperty
@@ -61,6 +66,7 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date initdate = new Date();
     @JsonProperty
+    @JsonDeserialize(converter = MyDateConverter.class)
     private Date createdate = new Date();
 
     @JsonProperty
@@ -226,5 +232,21 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setPage(Integer page) {
         this.page = page;
+    }
+
+    public String getFilenumber() {
+        return filenumber;
+    }
+
+    public void setFilenumber(String filenumber) {
+        this.filenumber = filenumber;
+    }
+
+    public String getFiletype() {
+        return filetype;
+    }
+
+    public void setFiletype(String filetype) {
+        this.filetype = filetype;
     }
 }

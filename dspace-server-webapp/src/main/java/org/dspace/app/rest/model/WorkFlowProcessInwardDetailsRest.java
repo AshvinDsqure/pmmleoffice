@@ -35,23 +35,22 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private Date receivedDate;
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date latterDate;
-
-
     private String filereferencenumber;
+    private String letterrefno;
 
     @JsonProperty
-    private WorkFlowProcessMasterValueRest categoryRest = null;
+    private String categoryRest = null;
     @JsonProperty
-    private WorkFlowProcessMasterValueRest subcategoryRest = null;
+    private String subcategoryRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest lettercategoryRest = null;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest inwardmodeRest = null;
     @JsonProperty
-    private WorkFlowProcessMasterValueRest vipRest = null;
+    private String vipRest = null;
     @JsonProperty
-    private WorkFlowProcessMasterValueRest vipnameRest = null;
+    private String vipnameRest = null;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest languageRest = null;
@@ -99,21 +98,6 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
         return NAME;
     }
 
-    public WorkFlowProcessMasterValueRest getCategoryRest() {
-        return categoryRest;
-    }
-
-    public void setCategoryRest(WorkFlowProcessMasterValueRest categoryRest) {
-        this.categoryRest = categoryRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getSubcategoryRest() {
-        return subcategoryRest;
-    }
-
-    public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
-        this.subcategoryRest = subcategoryRest;
-    }
 
 
 
@@ -133,21 +117,7 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
         this.lettercategoryRest = lettercategoryRest;
     }
 
-    public WorkFlowProcessMasterValueRest getVipRest() {
-        return vipRest;
-    }
 
-    public void setVipRest(WorkFlowProcessMasterValueRest vipRest) {
-        this.vipRest = vipRest;
-    }
-
-    public WorkFlowProcessMasterValueRest getVipnameRest() {
-        return vipnameRest;
-    }
-
-    public void setVipnameRest(WorkFlowProcessMasterValueRest vipnameRest) {
-        this.vipnameRest = vipnameRest;
-    }
 
     public WorkFlowProcessMasterValueRest getLanguageRest() {
         return languageRest;
@@ -173,4 +143,43 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
         this.latterDate = latterDate;
     }
 
+    public String getCategoryRest() {
+        return categoryRest;
+    }
+
+    public void setCategoryRest(String categoryRest) {
+        this.categoryRest = categoryRest;
+    }
+
+    public String getSubcategoryRest() {
+        return subcategoryRest;
+    }
+
+    public void setSubcategoryRest(String subcategoryRest) {
+        this.subcategoryRest = subcategoryRest;
+    }
+
+    public String getVipRest() {
+        return vipRest;
+    }
+
+    public void setVipRest(String vipRest) {
+        this.vipRest = vipRest;
+    }
+
+    public String getVipnameRest() {
+        return vipnameRest;
+    }
+
+    public void setVipnameRest(String vipnameRest) {
+        this.vipnameRest = vipnameRest;
+    }
+
+    public String getLetterrefno() {
+        return letterrefno;
+    }
+
+    public void setLetterrefno(String letterrefno) {
+        this.letterrefno = letterrefno;
+    }
 }

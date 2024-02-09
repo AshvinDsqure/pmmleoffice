@@ -9,6 +9,7 @@ package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.WorkFlowProcessMasterValueRest;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.core.Context;
@@ -25,10 +26,12 @@ public class WorkFlowProcessMasterValueConverter extends DSpaceObjectConverter<W
     ModelMapper modelMapper;
     @Autowired
     WorkFlowProcessMasterValueService masterValueService;
+
     @Override
     public Class<WorkFlowProcessMasterValue> getModelClass() {
         return WorkFlowProcessMasterValue.class;
     }
+
     @Override
     protected WorkFlowProcessMasterValueRest newInstance() {
         return new WorkFlowProcessMasterValueRest();
@@ -37,24 +40,26 @@ public class WorkFlowProcessMasterValueConverter extends DSpaceObjectConverter<W
     @Override
     public WorkFlowProcessMasterValueRest convert(WorkFlowProcessMasterValue obj, Projection projection) {
         WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
-        if (obj.getPrimaryvalue() != null) {
+        if (!DateUtils.isNullOrEmptyOrBlank(obj.getPrimaryvalue())) {
             rest.setPrimaryvalue(obj.getPrimaryvalue());
         }
-        if (obj.getSecondaryvalue() != null) {
+        if (!DateUtils.isNullOrEmptyOrBlank(obj.getSecondaryvalue())) {
             rest.setSecondaryvalue(obj.getSecondaryvalue());
         }
         if (obj.getLegacyId() != null) {
             rest.setLegacyId(obj.getLegacyId());
         }
-        rest.setUuid(obj.getID().toString());
+        if (!DateUtils.isNullOrEmptyOrBlank(obj.getID().toString())) {
+            rest.setUuid(obj.getID().toString());
+        }
         return rest;
     }
 
     public WorkFlowProcessMasterValue convert(WorkFlowProcessMasterValue obj, WorkFlowProcessMasterValueRest rest) {
-        if (rest.getPrimaryvalue() != null) {
+        if (!DateUtils.isNullOrEmptyOrBlank(rest.getPrimaryvalue())) {
             obj.setPrimaryvalue(rest.getPrimaryvalue());
         }
-        if (rest.getSecondaryvalue() != null) {
+        if (!DateUtils.isNullOrEmptyOrBlank(rest.getSecondaryvalue())) {
             obj.setSecondaryvalue(rest.getSecondaryvalue());
         }
         if (rest.getWorkFlowProcessMaster() != null && rest.getWorkFlowProcessMaster().getLegacyId() != null) {

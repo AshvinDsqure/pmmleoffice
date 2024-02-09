@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- * <p>
+ *
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -96,6 +96,7 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
 
         try {
             workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
+            workFlowProcessMasterValue.setIsdelete(false);
             workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -160,9 +161,10 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             throw new RuntimeException(e.getMessage(), e);
         }
         try {
-            workFlowProcessMasterValueService.delete(context, workFlowProcessMasterValue);
+            workFlowProcessMasterValue.setIsdelete(true);
+            workFlowProcessMasterValueService.update(context, workFlowProcessMasterValue);
             context.commit();
-        } catch (SQLException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }

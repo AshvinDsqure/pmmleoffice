@@ -95,7 +95,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
     int countByTypeAndStatus(Context context,UUID typeid,UUID statusid,UUID epersonid) throws SQLException;
     int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid) throws SQLException;
-    public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream) throws IOException, MessagingException, SQLException, AuthorizeException;
+    public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context,UUID workflowtypeid, String subject) throws SQLException;
     List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
 }

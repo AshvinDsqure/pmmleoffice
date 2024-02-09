@@ -140,6 +140,7 @@ public class GroupRestController {
             throw new ResourceNotFoundException("parent group is not found for uuid: " + uuid);
         }
 
+
         AuthorizeUtil.authorizeManageGroup(context, parentGroup);
 
         List<String> memberLinks = utils.getStringListFromRequest(request);

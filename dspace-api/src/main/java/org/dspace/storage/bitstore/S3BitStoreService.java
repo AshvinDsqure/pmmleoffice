@@ -296,6 +296,11 @@ public class S3BitStoreService extends BaseBitStoreService {
         }
     }
 
+    @Override
+    public void put1(Bitstream bitstream, InputStream inputStream) throws IOException {
+
+    }
+
     /**
      * Obtain technical metadata about an asset in the asset store.
      *

@@ -123,6 +123,48 @@ public class DSBitStoreService extends BaseBitStoreService {
         }
     }
 
+    @Override
+    public void put1(Bitstream bitstream, InputStream in) throws IOException {
+        try {
+            File file = getFile(bitstream);
+            System.out.println("file.exists():::"+file.exists() +file.getAbsoluteFile());
+            System.out.println("file.exists():::"+bitstream.getID());
+            if(file.exists()){
+               file.delete();
+
+            }
+
+            // Make the parent dirs if necessary
+            File parent = file.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
+            //Create the corresponding file and open it
+            file.createNewFile();
+
+            try (
+                    FileOutputStream fos = new FileOutputStream(file);
+                    // Read through a digest input stream that will work out the MD5
+                    DigestInputStream dis = new DigestInputStream(in, MessageDigest.getInstance(CSA));
+            ) {
+                Utils.bufferedCopy(dis, fos);
+                in.close();
+
+                bitstream.setSizeBytes(file.length());
+                bitstream.setChecksum(Utils.toHex(dis.getMessageDigest().digest()));
+                bitstream.setChecksumAlgorithm(CSA);
+            } catch (NoSuchAlgorithmException nsae) {
+                nsae.printStackTrace();
+                // Should never happen
+                log.warn("Caught NoSuchAlgorithmException", nsae);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("put(" + bitstream.getInternalId() + ", inputstream)", e);
+            throw new IOException(e);
+        }
+    }
+
     /**
      * Obtain technical metadata about an asset in the asset store.
      *
@@ -248,7 +290,8 @@ public class DSBitStoreService extends BaseBitStoreService {
             log.debug("Local filename for " + sInternalId + " is "
                           + bufFilename.toString());
         }
-        return new File(bufFilename.toString());
+      File file=  new File(bufFilename.toString());
+        return file;
     }
 
     public boolean isRegisteredBitstream(String internalId) {

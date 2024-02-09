@@ -84,6 +84,9 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     @Column(name = "isrefer")
     private  Boolean isrefer=false;
 
+    @Column(name = "isdelete")
+    private  Boolean isdelete=false;
+
     @Transient
     private List<EPerson> Persons = new ArrayList<>();
 
@@ -248,5 +251,13 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setIsapproved(Boolean isapproved) {
         this.isapproved = isapproved;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
     }
 }

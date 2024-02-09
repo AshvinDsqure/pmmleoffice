@@ -12,6 +12,8 @@ import org.dspace.app.rest.RestResourceController;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WorkflowProcessSenderDiaryRest extends DSpaceObjectRest {
     public static final String NAME = "workflowprocesssenderdiarie";
@@ -36,6 +38,23 @@ public class WorkflowProcessSenderDiaryRest extends DSpaceObjectRest {
     private String fax;
     private String landline;
 
+    private Integer status;
+    @JsonProperty
+    private String vipRest = null;
+    @JsonProperty
+    private String vipnameRest = null;
+
+
+    @JsonProperty
+    private WorkFlowProcessDraftDetailsRest workFlowProcessInwardDetailsRest;
+
+    public WorkFlowProcessDraftDetailsRest getWorkFlowProcessInwardDetailsRest() {
+        return workFlowProcessInwardDetailsRest;
+    }
+
+    public void setWorkFlowProcessInwardDetailsRest(WorkFlowProcessDraftDetailsRest workFlowProcessInwardDetailsRest) {
+        this.workFlowProcessInwardDetailsRest = workFlowProcessInwardDetailsRest;
+    }
 
     public Integer getLegacyId() {
         return legacyId;
@@ -156,5 +175,29 @@ public class WorkflowProcessSenderDiaryRest extends DSpaceObjectRest {
 
     public void setLandline(String landline) {
         this.landline = landline;
+    }
+
+    public String getVipRest() {
+        return vipRest;
+    }
+
+    public void setVipRest(String vipRest) {
+        this.vipRest = vipRest;
+    }
+
+    public String getVipnameRest() {
+        return vipnameRest;
+    }
+
+    public void setVipnameRest(String vipnameRest) {
+        this.vipnameRest = vipnameRest;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

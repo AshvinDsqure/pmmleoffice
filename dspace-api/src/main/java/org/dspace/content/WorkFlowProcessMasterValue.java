@@ -36,6 +36,8 @@ public class WorkFlowProcessMasterValue extends DSpaceObject implements DSpaceOb
     @Column(name = "secondaryvalue")
     private String secondaryvalue;
 
+    @Column(name = "isdelete")
+    private Boolean isdelete =false;
 
     public WorkFlowProcessMaster getWorkflowprocessmaster() {
         return workflowprocessmaster;
@@ -71,5 +73,13 @@ public class WorkFlowProcessMasterValue extends DSpaceObject implements DSpaceOb
     @Override
     public Integer getLegacyId() {
         return this.legacyId;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
     }
 }

@@ -81,6 +81,10 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     @JsonProperty
     private  Boolean isrefer=false;
     @JsonProperty
+    private  Boolean isdelete=false;
+
+
+    @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date assignDate =null;
 

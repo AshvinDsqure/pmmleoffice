@@ -48,9 +48,19 @@ public class WorkFlowProcessHistoryConverter extends DSpaceObjectConverter<WorkF
         if(obj.getWorkflowProcessEpeople()!= null){
             rest.setWorkflowProcessEpersonRest(workFlowProcessEpersonConverter.convert(obj.getWorkflowProcessEpeople(),projection));
         }
+        if(obj.getSentto()!= null){
+            rest.setSenttoRest(workFlowProcessEpersonConverter.convert(obj.getSentto(),projection));
+        }
+        if(obj.getSentbyname()!=null){
+            rest.setSentbyname(obj.getSentbyname());
+        }
+        if(obj.getSenttoname()!=null){
+            rest.setSenttoname(obj.getSenttoname());
+        }
         rest.setUuid(obj.getID().toString());
         rest.setComment(obj.getComment());
         rest.setActionDate(obj.getActionDate());
+        rest.setReceivedDate(obj.getReceivedDate());
         return rest;
     }
 

@@ -82,6 +82,16 @@ public class WorkflowProcessFilterController {
 
     @Autowired
     CountryService countryService;
+
+    @Autowired
+    VipService vipService;
+   @Autowired
+    CategoryService categoryService;
+   @Autowired
+    SubCategoryService subcategoryService;
+
+    @Autowired
+    VipNameService vipNameService;
     @Autowired
     StateService stateService;
     @Autowired
@@ -438,6 +448,160 @@ public class WorkflowProcessFilterController {
                 context.commit();
                 return obj;
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/addVip")
+    public VipDTO addVip(HttpServletRequest request, @RequestBody VipDTO rest) {
+        try {
+            VipDTO obj=new VipDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getVip() != null) {
+                Vip c = new Vip();
+                c.setVip(rest.getVip());
+                Vip cc = vipService.create(context, c);
+                obj.setVipuuid(cc.getID().toString());
+                obj.setVip(cc.getVip());
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.POST, value = "/addVipName")
+    public VipDTO addVipName(HttpServletRequest request, @RequestBody VipDTO rest) {
+        try {
+            VipDTO obj=new VipDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getVipname() != null&& rest.getVipuuid()!=null) {
+                Vip v=vipService.find(context,UUID.fromString(rest.getVipuuid()));
+                VipName c = new VipName();
+                c.setVipname(rest.getVipname());
+                c.setVip(v);
+                VipName cc = vipNameService.create(context, c);
+                obj.setVipnameuuid(cc.getID().toString());
+                obj.setVipname(cc.getVipname());
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/addCategory")
+    public CategoryDTO addCategory(HttpServletRequest request, @RequestBody CategoryDTO rest) {
+        try {
+            CategoryDTO obj=new CategoryDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getCategoryname() != null) {
+                Category c = new Category();
+                c.setCategoryname(rest.getCategoryname());
+                Category cc = categoryService.create(context, c);
+                obj.setCategoryuuid(cc.getID().toString());
+                obj.setCategoryname(cc.getCategoryname());
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.POST, value = "/addSubCategory")
+    public CategoryDTO addSubCategory(HttpServletRequest request, @RequestBody CategoryDTO rest) {
+        try {
+            CategoryDTO obj=new CategoryDTO();
+            Context context = ContextUtil.obtainContext(request);
+            if (rest.getCategoryuuid() != null&& rest.getSubcategoryname()!=null) {
+                Category v=categoryService.find(context,UUID.fromString(rest.getCategoryuuid()));
+                SubCategory c = new SubCategory();
+                c.setSubcategoryname(rest.getSubcategoryname());
+                c.setCategory(v);
+                SubCategory cc = subcategoryService.create(context, c);
+                obj.setSubcategoryuuid(cc.getID().toString());
+                obj.setSubcategoryname(cc.getSubcategoryname());
+                context.commit();
+                return obj;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getAllCategory")
+    public List<CategoryDTO> getAllCategory(HttpServletRequest request) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<Category> list = categoryService.getAll(context);
+            List<CategoryDTO>rest=list.stream().map(d->{
+                CategoryDTO contryDTO=new CategoryDTO();
+                contryDTO.setCategoryname(d.getCategoryname());
+                contryDTO.setCategoryuuid(d.getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getSubCategoryByCategoryID")
+    public List<CategoryDTO> getSubCategoryByCategoryID(HttpServletRequest request,@Parameter(value = "categoryid", required = true) String categoryid) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<SubCategory> list = subcategoryService.getByCountryId(context,UUID.fromString(categoryid));
+            List<CategoryDTO>rest=list.stream().map(d->{
+                CategoryDTO contryDTO=new CategoryDTO();
+                contryDTO.setCategoryname(d.getCategory().getCategoryname());
+                contryDTO.setSubcategoryname(d.getSubcategoryname());
+                contryDTO.setCategoryuuid(d.getCategory().getID().toString());
+                contryDTO.setSubcategoryuuid(d.getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+   @RequestMapping(method = RequestMethod.GET, value = "/getAllVip")
+    public List<VipDTO> getAllVip(HttpServletRequest request) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<Vip> list = vipService.getAll(context);
+            List<VipDTO>rest=list.stream().map(d->{
+                VipDTO contryDTO=new VipDTO();
+                contryDTO.setVip(d.getVip());
+                contryDTO.setVipuuid(d.getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getVipNameByVipid")
+    public List<VipDTO> getVipNameByVipid(HttpServletRequest request,@Parameter(value = "vipid", required = true) String vipid) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            List<VipName> list = vipNameService.getByCountryId(context,UUID.fromString(vipid));
+            List<VipDTO>rest=list.stream().map(d->{
+                VipDTO contryDTO=new VipDTO();
+                contryDTO.setVipname(d.getVipname());
+                contryDTO.setVipnameuuid(d.getID().toString());
+                contryDTO.setVip(d.getVip().getVip());
+                contryDTO.setVipuuid(d.getVip().getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
         } catch (Exception e) {
             e.printStackTrace();
         }

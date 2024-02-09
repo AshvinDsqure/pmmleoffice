@@ -40,8 +40,9 @@ public class WorkFlowProcessMasterValueDAOImpl  extends AbstractHibernateDAO<Wor
     @Override
     public List<WorkFlowProcessMasterValue> findByType(Context context, String mastername,Integer offset,Integer limit) throws SQLException{
         try {
-            Query query = createQuery(context, "SELECT mv from  WorkFlowProcessMasterValue as mv join mv.workflowprocessmaster as m where m.id=:master");
+            Query query = createQuery(context, "SELECT mv from  WorkFlowProcessMasterValue as mv join mv.workflowprocessmaster as m where m.id=:master and mv.isdelete=:isdelete ORDER BY mv.primaryvalue ASC");
             query.setParameter("master",UUID.fromString(mastername));
+            query.setParameter("isdelete",false);
             return query.getResultList();
         }catch (Exception e){
             System.out.println("in error " + e.getMessage());

@@ -7,6 +7,8 @@
  */
 package org.dspace.content;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.content.enums.Priority;
 import org.dspace.content.enums.WorkFlowProcessReferenceDocType;
 import org.dspace.eperson.EPerson;
@@ -64,6 +66,11 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     @Column(name = "itemname")
     private String itemname;
+    @Column(name = "filenumber")
+    private String filenumber;
+
+    @Column(name = "filetype")
+    private String filetype;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lattercategory")
     private WorkFlowProcessMasterValue latterCategory;
@@ -235,5 +242,21 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setPage(Integer page) {
         this.page = page;
+    }
+
+    public String getFilenumber() {
+        return filenumber;
+    }
+
+    public void setFilenumber(String filenumber) {
+        this.filenumber = filenumber;
+    }
+
+    public String getFiletype() {
+        return filetype;
+    }
+
+    public void setFiletype(String filetype) {
+        this.filetype = filetype;
     }
 }

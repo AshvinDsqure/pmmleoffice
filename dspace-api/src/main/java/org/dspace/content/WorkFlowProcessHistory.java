@@ -51,16 +51,30 @@ public class WorkFlowProcessHistory extends DSpaceObject implements DSpaceObject
     private WorkflowProcessEperson workflowProcessEpeople;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sentto")
+    private WorkflowProcessEperson sentto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflowprocess_id")
     private WorkflowProcess workflowProcess;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action")
     private WorkFlowProcessMasterValue action = null;
+
     @Column(name = "actiondate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date actionDate = new Date();
+    @Column(name = "receiveddate", columnDefinition = "timestamp with time zone")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date receivedDate = new Date();
     @Column(name = "comment")
     private String comment;
+
+    @Column(name = "sentbyname")
+    private String sentbyname;
+
+    @Column(name = "senttoname")
+    private String senttoname;
 
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "workFlowProcessHistory", cascade = {CascadeType.ALL})
     private WorkFlowProcessComment workFlowProcessComment;
@@ -129,5 +143,37 @@ public class WorkFlowProcessHistory extends DSpaceObject implements DSpaceObject
 
     public void setWorkFlowProcessComment(WorkFlowProcessComment workFlowProcessComment) {
         this.workFlowProcessComment = workFlowProcessComment;
+    }
+
+    public WorkflowProcessEperson getSentto() {
+        return sentto;
+    }
+
+    public void setSentto(WorkflowProcessEperson sentto) {
+        this.sentto = sentto;
+    }
+
+    public Date getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(Date receivedDate) {
+        this.receivedDate = receivedDate;
+    }
+
+    public String getSentbyname() {
+        return sentbyname;
+    }
+
+    public void setSentbyname(String sentbyname) {
+        this.sentbyname = sentbyname;
+    }
+
+    public String getSenttoname() {
+        return senttoname;
+    }
+
+    public void setSenttoname(String senttoname) {
+        this.senttoname = senttoname;
     }
 }

@@ -82,6 +82,7 @@ public interface BitstreamStorageService {
      * @throws java.sql.SQLException If a problem occurs accessing the RDBMS
      */
     public UUID store(Context context, Bitstream bitstream, InputStream is) throws SQLException, IOException;
+    public UUID store1(Context context, Bitstream bitstream, InputStream is) throws SQLException, IOException;
 
 
     /**

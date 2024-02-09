@@ -7,8 +7,6 @@
  */
 package org.dspace.content;
 
-import org.dspace.content.enums.Dispatch;
-import org.dspace.content.enums.Priority;
 import org.dspace.eperson.EPerson;
 
 import javax.persistence.Entity;

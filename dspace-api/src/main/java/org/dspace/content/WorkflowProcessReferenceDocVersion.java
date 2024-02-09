@@ -57,6 +57,9 @@ public class WorkflowProcessReferenceDocVersion extends DSpaceObject implements 
     @Column(name = "isactive")
     private Boolean isactive;
 
+    @Column(name = "issign")
+    private Boolean issign=false;
+
     @Column(name = "editortext")
     private String editortext;
     @Override
@@ -133,5 +136,13 @@ public class WorkflowProcessReferenceDocVersion extends DSpaceObject implements 
 
     public void setEditortext(String editortext) {
         this.editortext = editortext;
+    }
+
+    public Boolean getIssign() {
+        return issign;
+    }
+
+    public void setIssign(Boolean issign) {
+        this.issign = issign;
     }
 }
