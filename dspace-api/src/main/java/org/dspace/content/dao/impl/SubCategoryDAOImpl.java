@@ -37,7 +37,7 @@ public class SubCategoryDAOImpl extends AbstractHibernateDAO<SubCategory> implem
 
     @Override
     public List<SubCategory> getByCountryId(Context context, UUID vipid) throws SQLException {
-        Query query = createQuery(context, "SELECT s FROM SubCategory s join s.category as c where c.id=:vipid order by s.subcategoryname");
+        Query query = createQuery(context, "SELECT s FROM SubCategory s join s.category as c where c.id=:vipid order by s.subcategoryname ASC");
         query.setParameter("vipid",vipid);
         return query.getResultList();
     }

@@ -36,7 +36,7 @@ public class CountryDAOImpl extends AbstractHibernateDAO<Country> implements Cou
 
     @Override
     public List<Country> getAll(Context c) throws SQLException {
-        Query query = createQuery(c, "SELECT c FROM Country c");
+        Query query = createQuery(c, "SELECT c FROM Country c ORDER BY c.countryname ASC");
         return query.getResultList();
 
     }

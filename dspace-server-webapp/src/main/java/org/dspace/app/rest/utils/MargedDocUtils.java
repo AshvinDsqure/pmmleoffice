@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -119,11 +120,8 @@ public class MargedDocUtils {
     public static String ConvertDocInputstremToPDF(InputStream inputStream, String pdfname) {
         System.out.println("::::::::::::::::::::IN DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::"+pdfname);
         try {
-            XWPFDocument doc = new XWPFDocument(inputStream);
-            PdfOptions options = PdfOptions.create();
             final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
             File pdfstorepathe = new File(TEMP_DIRECTORY, pdfname+".pdf");
-
             if (!pdfstorepathe.exists()) {
                 try {
                     pdfstorepathe.createNewFile();
@@ -132,11 +130,35 @@ public class MargedDocUtils {
                     e.printStackTrace();
                 }
             }
-            System.out.println("path::::::::::::::::::::"+pdfstorepathe.getAbsolutePath());
-            OutputStream out = new FileOutputStream(new File(pdfstorepathe.getAbsolutePath()));
-            PdfConverter.getInstance().convert(doc, out, options);
-            doc.close();
-            out.close();
+            XWPFDocument document = new XWPFDocument(inputStream);
+
+            // Create PDF document
+            PDDocument pdfDocument = new PDDocument();
+            PDPage page = new PDPage();
+            pdfDocument.addPage(page);
+
+            // Create PDF content stream
+            PDPageContentStream contentStream = new PDPageContentStream(pdfDocument, page);
+
+            // Process each paragraph in the DOC document
+            for (XWPFParagraph paragraph : document.getParagraphs()) {
+                for (XWPFRun run : paragraph.getRuns()) {
+                    // Write text to PDF content stream
+                    contentStream.setFont(PDType1Font.HELVETICA, 12);
+                    contentStream.beginText();
+                    contentStream.newLineAtOffset(100, 700); // Set text position
+                    contentStream.showText(run.getText(0));
+                    contentStream.endText();
+                }
+            }
+
+            // Close content stream and PDF document
+            contentStream.close();
+            pdfDocument.save(pdfstorepathe.getAbsolutePath());
+            // Close PDF document
+            pdfDocument.close();
+            // Close DOC InputStream
+            inputStream.close();
             System.out.println("::::::::::::::::::::DONE  DOC TO PDF CONVERT :::::::::::::::::::::::::::::::::" + pdfstorepathe.getAbsolutePath());
             return pdfstorepathe.getAbsolutePath();
             //setcolor(pdfPath);
@@ -153,7 +175,7 @@ public class MargedDocUtils {
         PDPage newPage = new PDPage(originalPage.getMediaBox());
         document.addPage(newPage);
         PDPageContentStream contentStream = new PDPageContentStream(document, newPage);
-        Color backgroundColor = new Color(255, 0, 0); // Red color in RGB format
+        Color backgroundColor = new Color(0, 255, 42); // Red color in RGB format
         contentStream.setNonStrokingColor(backgroundColor);
         contentStream.fillRect(0, 0, PDRectangle.A4.getWidth(), PDRectangle.A4.getHeight());
         contentStream.close();
@@ -469,7 +491,7 @@ public class MargedDocUtils {
                                 XWPFRun r3 = p3.createRun();
                                 r3.setText(b.getSubmitter().getDesignation().getPrimaryvalue());
                             }
-                            if (b.getWorkFlowProcessHistory().getActionDate() != null) {
+                            if (b.getWorkFlowProcessHistory()!=null&&b.getWorkFlowProcessHistory().getActionDate() != null) {
                                 XWPFParagraph p3 = doc.createParagraph();
                                 p3.setAlignment(ParagraphAlignment.RIGHT);
                                 XWPFRun r3 = p3.createRun();
@@ -491,6 +513,7 @@ public class MargedDocUtils {
             e.printStackTrace();
             throw new RuntimeException(e);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

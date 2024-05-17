@@ -36,7 +36,7 @@ public class CategoryDAOImpl extends AbstractHibernateDAO<Category> implements C
 
     @Override
     public List<Category> getAll(Context c) throws SQLException {
-        Query query = createQuery(c, "SELECT c FROM Category c");
+        Query query = createQuery(c, "SELECT c FROM Category c ORDER BY c.categoryname ASC");
         return query.getResultList();
 
     }

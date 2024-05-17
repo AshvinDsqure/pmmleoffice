@@ -142,16 +142,12 @@ public class BitstreamStorageServiceImpl implements BitstreamStorageService, Ini
 
     @Override
     public UUID store1(Context context, Bitstream bitstream, InputStream is) throws SQLException, IOException {
-
-
         BitStoreService store = this.getStore(incoming);
         //For efficiencies sake, PUT is responsible for setting bitstream size_bytes, checksum, and checksum_algorithm
         store.put1(bitstream, is);
         //bitstream.setSizeBytes(file.length());
         //bitstream.setChecksum(Utils.toHex(dis.getMessageDigest().digest()));
         //bitstream.setChecksumAlgorithm("MD5");
-
-
         return bitstream.getID();
     }
 

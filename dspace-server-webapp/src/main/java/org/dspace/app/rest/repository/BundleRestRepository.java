@@ -257,7 +257,6 @@ public class BundleRestRepository extends DSpaceObjectRestRepository<Bundle, Bun
             System.out.println("createWithoutBundle1 else.....");
             bitstream = bitstreamService.createWithoutBundle1(context, fileInputStream,bitstream);
            // bitstream.setName(context, originalFilename);
-
         }
         return bitstream;
     }

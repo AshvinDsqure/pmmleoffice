@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest.repository;
@@ -36,6 +36,7 @@ import org.dspace.app.rest.repository.handler.service.UriListHandlerService;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.ExcelHelper;
+import org.dspace.app.rest.utils.Utils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.Collection;
@@ -93,7 +94,6 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
 
 
-
     @Autowired
     private EPersonService es;
 
@@ -120,7 +120,9 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    //@PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+
     public ItemRest findOne(Context context, UUID id) {
         Item item = null;
         try {
@@ -138,7 +140,9 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    // @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+
     public Page<ItemRest> findAll(Context context, Pageable pageable) {
         try {
             // This endpoint only returns archived items
@@ -156,7 +160,9 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', #patch)")
+    // @PreAuthorize("hasPermission(#id, 'ITEM', #patch)")
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                          Patch patch) throws AuthorizeException, SQLException {
 
@@ -291,7 +297,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
     protected ItemRest createAndReturn(Context context) throws AuthorizeException, SQLException {
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         String owningCollectionUuidString = req.getParameter("owningCollection");
@@ -367,14 +373,10 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         if (item.getBundles(bundleRest.getName()).size() > 0) {
             throw new DSpaceBadRequestException("The bundle name already exists in the item");
         }
-
         Bundle bundle = bundleService.create(context, item, bundleRest.getName());
-
         metadataConverter.setMetadata(context, bundle, bundleRest.getMetadata());
         bundle.setName(context, bundleRest.getName());
-
         context.commit();
-
         return bundle;
     }
 
@@ -389,25 +391,26 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
 
     @SearchRestMethod(name = "getCounter")
     public Integer getCounter() {
-        int counter=1;
+        int counter = 1;
         try {
             // String baseurl = configurationService.getProperty("dspace.server.url");
-           // String counterFile = configurationService.getProperty("dspace.dir") +"/webapps/jspui/counter.txt";
-            File f; f=new File("D://testcounter.txt");
-            if(!f.exists())
-            { f.createNewFile(); }
-            else
-            {
+            // String counterFile = configurationService.getProperty("dspace.dir") +"/webapps/jspui/counter.txt";
+            File f;
+            f = new File("D://testcounter.txt");
+            if (!f.exists()) {
+                f.createNewFile();
+            } else {
                 ObjectInputStream inp = new ObjectInputStream(new FileInputStream(f));
-                if(inp.available()>0) { counter=inp.readInt(); }
+                if (inp.available() > 0) {
+                    counter = inp.readInt();
+                }
                 inp.close();
             }
             ObjectOutputStream oute = new ObjectOutputStream(new FileOutputStream(f));
             oute.writeInt(++counter);
             oute.flush();
             oute.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return counter;
@@ -424,11 +427,14 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
             long total = itemService.countTotal(context, startdate, enddate);
             List<Item> witems = itemService.getDataTwoDateRange(context, startdate, enddate, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-             return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
+
+
+            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
     @SearchRestMethod(name = "searchByTitle")
     public Page<ItemRest> searchByTitle(
             @Parameter(value = "searchtitle", required = true) String searchtitle,
@@ -443,9 +449,27 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
             throw new RuntimeException(e);
         }
     }
+
+    @SearchRestMethod(name = "searchBySinoNumber")
+    public ItemRest searchBySinoNumber(
+            @Parameter(value = "sinonumber", required = true) String sinonumber,
+            Pageable pageable) {
+        try {
+            ItemRest itemRest = null;
+            Context context = obtainContext();
+            Item obj = itemService.searchItemBySinoNumber(context, sinonumber);
+            itemRest = itemConverter.convert(obj, utils.obtainProjection());
+            return itemRest;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @SearchRestMethod(name = "searchByTitleOrYear")
     public Page<ItemRest> searchByTitleOrYear(
-                @Parameter(value = "searchtitleoryear", required = true) String searchtitleoryear,
+            @Parameter(value = "searchtitleoryear", required = true) String searchtitleoryear,
             Pageable pageable) {
         try {
             Context context = obtainContext();
@@ -458,5 +482,19 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
         }
     }
 
-
+    @SearchRestMethod(name = "searchByTitleAndYear")
+    public Page<ItemRest> searchByTitleAndYear(
+            @Parameter(value = "title", required = true) String title,
+            @Parameter(value = "year", required = true) String year,
+            Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            List<Item> witems = itemService.searchItemByTitleAndYear(context, title, year);
+            return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

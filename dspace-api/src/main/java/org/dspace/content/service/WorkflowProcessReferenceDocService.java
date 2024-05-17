@@ -8,12 +8,14 @@
 package org.dspace.content.service;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
 import org.dspace.content.WorkflowProcess;
 import org.dspace.content.WorkflowProcessReferenceDoc;
 import org.dspace.core.Context;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**

@@ -24,11 +24,14 @@ public enum WorkFlowStatus {
     MASTER("Workflow Status"),
     INPROGRESS("In Progress"),
     SUSPEND("Suspend"),
+    HOLD("Hold"),
     DRAFT("Draft"),
+
     CLOSE("Close"),
     REJECTED("Rejected"),
     REFER("Refer"),
     DISPATCH("Dispatch Ready"),
+    PARKED("Parked"),
     DISPATCHCLOSE("Dispatch close");
 
     private String status;

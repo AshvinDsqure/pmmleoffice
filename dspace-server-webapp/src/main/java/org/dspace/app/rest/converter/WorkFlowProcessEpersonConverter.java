@@ -9,6 +9,7 @@ package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.content.*;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.core.Context;
@@ -70,7 +71,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessDefinitionEpersonRest.setOwner(obj.getOwner());
         workflowProcessDefinitionEpersonRest.setIsrefer(obj.getIsrefer());
         workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
-
+        workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
         return workflowProcessDefinitionEpersonRest;
     }
 
@@ -86,7 +87,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
 
     public WorkflowProcessEperson convert(Context context, WorkflowProcessEpersonRest rest) throws SQLException {
         WorkflowProcessEperson workflowProcessEperson = new WorkflowProcessEperson();
-        if(rest.getePersonRest()!=null && rest.getePersonRest().getUuid()!=null) {
+        if(rest.getePersonRest()!=null && rest.getePersonRest().getUuid()!=null&& !DateUtils.isNullOrEmptyOrBlank(rest.getePersonRest().getUuid())) {
             workflowProcessEperson.setePerson(ePersonService.find(context, UUID.fromString(rest.getePersonRest().getUuid())));
         }
         if (rest.getDepartmentRest() != null)
@@ -94,7 +95,6 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if (rest.getOfficeRest() != null)
             workflowProcessEperson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest.getOfficeRest()));
         if (rest.getUserType() != null) {
-
             System.out.println("usertype id:::::::::::::"+rest.getUserType().getUuid());
             workflowProcessEperson.setUsertype(workFlowProcessMasterValueConverter.convert(context, rest.getUserType()));
         }

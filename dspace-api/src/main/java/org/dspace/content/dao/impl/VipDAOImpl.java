@@ -36,7 +36,7 @@ public class VipDAOImpl extends AbstractHibernateDAO<Vip> implements VipDAO {
 
     @Override
     public List<Vip> getAll(Context c) throws SQLException {
-        Query query = createQuery(c, "SELECT c FROM Vip c");
+        Query query = createQuery(c, "SELECT c FROM Vip c ORDER BY c.vip ASC");
         return query.getResultList();
 
     }

@@ -38,5 +38,6 @@ public interface CityService extends DSpaceObjectService<City>,DSpaceObjectLegac
      */
     public int countRows(Context context) throws SQLException;
     List<City>getCityByStateid(Context context, UUID stateid) throws SQLException;
+    List<City> getCityByStateid(Context context, UUID stateid,String searchcity) throws SQLException;
 
 }

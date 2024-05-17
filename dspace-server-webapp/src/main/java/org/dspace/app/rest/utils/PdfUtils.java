@@ -3,6 +3,8 @@ package org.dspace.app.rest.utils;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.layout.font.FontProvider;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.jsoup.Jsoup;
 
 import java.io.File;
@@ -13,21 +15,34 @@ public class PdfUtils {
     public static void main(String[] args) throws IOException {
 
 
-
-
-      /*  String s = "<html> text sds wsdsds sds</html>";
-        String string = "<b>સ્વાગત છે</b><p>Demo</p><p>AAAAAAAAAAAAAAAAAAAAAAAAA</p><p>じんけん の むし および けいぶ が、 じんるい の りょうしん を ふみにじった やばん こうい を もたらし、 げんろん および しんこう の じゆう が うけられ、 きょうふ および けつぼう の ない </p>";
-
-        ITextException sds = new ITextException();
-        FileOutputStream d = new FileOutputStream(new File("D://ss.pdf"));
-        HtmlconvertToPdf(string, d);
-        d.close();
-        System.out.println(htmlToText(s));
-        System.out.println(TextToHtml(htmlToText(s)));*/
-
+        try {
+            PDDocument document = PDDocument.load(new File("example.pdf"));
+            int lastParagraphEnd = getLastParagraphEnd(document);
+            System.out.println("End of last paragraph: " + lastParagraphEnd);
+            document.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    private static int getLastParagraphEnd(PDDocument document) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setSortByPosition(true);
 
+        // Extract text from the entire document
+        String text = stripper.getText(document);
+
+        // Split the text into paragraphs
+        String[] paragraphs = text.split("\\r?\\n\\r?\\n");
+
+        // Get the last paragraph
+        String lastParagraph = paragraphs[paragraphs.length - 1];
+
+        // Find the end position of the last paragraph
+        int lastParagraphEnd = text.lastIndexOf(lastParagraph) + lastParagraph.length();
+
+        return lastParagraphEnd;
+    }
 
     public static String htmlToText(String htmltext) {
         try {

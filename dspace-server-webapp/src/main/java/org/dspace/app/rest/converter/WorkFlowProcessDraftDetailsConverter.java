@@ -106,6 +106,16 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
         if (obj.getIsdelete() != null) {
             rest.setIsdelete(obj.getIsdelete());
         }
+        //sap
+        if(obj.getIssapdoc()!=null){
+            rest.setIssapdoc(obj.getIssapdoc());
+        }
+        if(!DateUtils.isNullOrEmptyOrBlank(obj.getSapdocumentno())){
+            rest.setSapdocumentno(obj.getSapdocumentno());
+        }
+        if(obj.getSapdocumenttype()!=null){
+            rest.setSapdocumenttypeRest(workFlowProcessMasterValueConverter.convert(obj.getSapdocumenttype(), projection));
+        }
         return rest;
     }
 
@@ -153,6 +163,16 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
         }
         if (rest.getIsdelete() != null) {
             obj.setIsdelete(rest.getIsdelete());
+        }
+        //sap
+        if(rest.getIssapdoc()!=null){
+            obj.setIssapdoc(rest.getIssapdoc());
+        }
+        if(!DateUtils.isNullOrEmptyOrBlank(rest.getSapdocumentno())){
+            obj.setSapdocumentno(rest.getSapdocumentno());
+        }
+        if(rest.getSapdocumenttypeRest()!=null){
+            obj.setSapdocumenttype(workFlowProcessMasterValueConverter.convert(context, rest.getSapdocumenttypeRest()));
         }
         obj.setDraftdate(new Date());
         return obj;

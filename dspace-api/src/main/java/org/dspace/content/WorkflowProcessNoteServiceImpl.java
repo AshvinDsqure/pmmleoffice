@@ -17,15 +17,13 @@ import org.dspace.content.service.WorkflowProcessDefinitionService;
 import org.dspace.content.service.WorkflowProcessNoteService;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.dspace.event.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
+import java.io.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Service implementation for the Item object.

@@ -67,6 +67,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     private WorkFlowProcessMasterValueRest actionRest = null;
 
+    private SAPResponse sapResponse;
+
     public WorkFlowProcessMasterValueRest getActionRest() {
         return actionRest;
     }
@@ -110,6 +112,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     private Boolean isreplydraft = false;
 
+    private Boolean isacknowledgement = false;
+
     @JsonProperty
     private String comment;
     private String margeddocuuid;
@@ -123,6 +127,10 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private List<ItemRest> itemsRests=new ArrayList<>();
     @JsonProperty
     List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = new ArrayList<>();
+    @JsonProperty
+    WorkFlowProcessCommentRest workFlowProcessCommentRest=null;
+
+
     @JsonProperty
     List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests = new ArrayList<>();
 
@@ -498,5 +506,29 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setMargeddocuuid(String margeddocuuid) {
         this.margeddocuuid = margeddocuuid;
+    }
+
+    public Boolean getIsacknowledgement() {
+        return isacknowledgement;
+    }
+
+    public void setIsacknowledgement(Boolean isacknowledgement) {
+        this.isacknowledgement = isacknowledgement;
+    }
+
+    public WorkFlowProcessCommentRest getWorkFlowProcessCommentRest() {
+        return workFlowProcessCommentRest;
+    }
+
+    public void setWorkFlowProcessCommentRest(WorkFlowProcessCommentRest workFlowProcessCommentRest) {
+        this.workFlowProcessCommentRest = workFlowProcessCommentRest;
+    }
+
+    public SAPResponse getSapResponse() {
+        return sapResponse;
+    }
+
+    public void setSapResponse(SAPResponse sapResponse) {
+        this.sapResponse = sapResponse;
     }
 }

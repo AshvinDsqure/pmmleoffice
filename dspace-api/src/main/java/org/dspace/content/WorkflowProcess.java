@@ -118,6 +118,11 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "isread")
     private Boolean isread = false;
 
+    @Column(name = "isacknowledgement")
+    private Boolean isacknowledgement = false;
+
+
+
 //    @Column(name = "assignduedate", columnDefinition = "timestamp with time zone")
 //    @Temporal(TemporalType.TIMESTAMP)
 //    private Date assignDueDate;

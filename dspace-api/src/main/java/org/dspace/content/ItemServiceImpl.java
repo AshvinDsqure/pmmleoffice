@@ -1672,13 +1672,25 @@ prevent the generation of resource policy entry values with null dspace_object a
     }
 
     @Override
+    public Item searchItemBySinoNumber(Context context, String sinoNumber) throws Exception {
+      // MetadataField metadataFields = metadataFieldService.findByElement(context, "casefile", "case", "cnrnumber");
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        return itemDAO.searchItemBySinoNumber(context,metadataFields,sinoNumber);
+    }
+    
+    @Override
     public List<Item> searchItemByTitleOrYear(Context context,String titleoryear) throws Exception {
         MetadataField metadatatitleField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
         MetadataField metadatayearField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "issued");
         return itemDAO.searchItemByTitleOrYear(context,metadatatitleField,metadatayearField,titleoryear);
     }
 
-
+    @Override
+    public List<Item> searchItemByTitleAndYear(Context context, String title, String year) throws Exception {
+        MetadataField metadatatitleField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        MetadataField metadatayearField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "issued");
+        return itemDAO.searchItemByTitleAndYear(context,metadatatitleField,metadatayearField,title,year);
+    }
     @Override
     public int countTotal(Context context, String startdate, String endDate) throws SQLException {
 
@@ -1696,7 +1708,6 @@ prevent the generation of resource policy entry values with null dspace_object a
         context.turnOffAuthorisationSystem();
 
         try {
-
             createOrcidQueueRecordsToDeleteOnOrcid(context, item);
             deleteOrcidHistoryRecords(context, item);
             deleteOrcidQueueRecords(context, item);

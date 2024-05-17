@@ -8,11 +8,13 @@
 package org.dspace.content.service;
 
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.WorkflowProcess;
 import org.dspace.content.WorkflowProcessDefinition;
 import org.dspace.content.WorkflowProcessNote;
 import org.dspace.content.WorkflowProcessReferenceDoc;
 import org.dspace.core.Context;
 
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -63,5 +65,6 @@ public interface WorkflowProcessNoteService extends DSpaceObjectService<Workflow
 
     public int countDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid) throws SQLException;
     public List<WorkflowProcessNote> getDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid, Integer offset, Integer limit) throws SQLException;
+
 
 }

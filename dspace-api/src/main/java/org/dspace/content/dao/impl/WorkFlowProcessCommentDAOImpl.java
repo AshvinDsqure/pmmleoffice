@@ -10,6 +10,7 @@ package org.dspace.content.dao.impl;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.WorkFlowProcessComment;
 import org.dspace.content.WorkFlowProcessComment;
+import org.dspace.content.WorkflowProcessSenderDiary;
 import org.dspace.content.dao.WorkFlowProcessCommentDAO;
 import org.dspace.core.AbstractHibernateDAO;
 import org.dspace.core.Context;
@@ -34,7 +35,7 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
     }
     @Override
     public List<WorkFlowProcessComment> getComments(Context context, UUID workflowprocessid) throws SQLException {
-        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp join c.workFlowProcessHistory as h WHERE wp.id=:workflowprocessid order by h.actionDate ASC");
+        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  WHERE wp.id=:workflowprocessid order by wp.InitDate ASC");
         query.setParameter("workflowprocessid", workflowprocessid);
         return query.getResultList();
     }
@@ -43,5 +44,13 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
         Query query = createQuery(context, "SELECT count(c) FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp WHERE wp.id=:workflowprocessid");
         query.setParameter("workflowprocessid", workflowprocessid);
         return count(query);
+    }
+
+    @Override
+    public WorkFlowProcessComment findCommentByworkflowprocessidAndissavedrafttrue(Context context, UUID workflowprocessid) throws SQLException {
+        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  WHERE wp.id=:workflowprocessid and c.isdraftsave=:isdraftsave");
+        query.setParameter("workflowprocessid", workflowprocessid);
+        query.setParameter("isdraftsave", true);
+        return (WorkFlowProcessComment) query.getSingleResult();
     }
 }

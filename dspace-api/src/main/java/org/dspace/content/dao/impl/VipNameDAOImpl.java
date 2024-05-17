@@ -37,7 +37,7 @@ public class VipNameDAOImpl extends AbstractHibernateDAO<VipName> implements Vip
 
     @Override
     public List<VipName> getByCountryId(Context context, UUID vipid) throws SQLException {
-        Query query = createQuery(context, "SELECT s FROM VipName s join s.vip as c where c.id=:vipid order by s.vipname");
+        Query query = createQuery(context, "SELECT s FROM VipName s join s.vip as c where c.id=:vipid order by s.vipname ASC");
         query.setParameter("vipid",vipid);
         return query.getResultList();
     }

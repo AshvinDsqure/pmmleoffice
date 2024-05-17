@@ -841,8 +841,9 @@ public interface ItemService
     List<Item> getDataTwoDateRangeDownload(Context context,String startdate, String endDate) throws SQLException;
 
     public List<Item> searchItemByTitle(Context context, String title) throws Exception;
-
+    public Item searchItemBySinoNumber(Context context,String sinoNumber) throws Exception;
     public List<Item> searchItemByTitleOrYear(Context context, String titleoryear) throws Exception;
 
+    public List<Item> searchItemByTitleAndYear(Context context, String title, String year) throws Exception;
 
 }

@@ -204,6 +204,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getWorkflowProcessSenderDiaryRest() != null) {
             workflowProcess.setWorkflowProcessSenderDiary(workflowProcessSenderDiaryConverter.convert(context, obj.getWorkflowProcessSenderDiaryRest()));
         }
+
         if (obj.getWorkFlowProcessInwardDetailsRest() != null) {
             workflowProcess.setWorkFlowProcessInwardDetails(workFlowProcessInwardDetailsConverter.convert(context, obj.getWorkFlowProcessInwardDetailsRest()));
         }
@@ -237,8 +238,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         List<WorkflowProcessEperson> listuser = new ArrayList<>();
 
         // set submitor...
+
         AtomicInteger index = new AtomicInteger(0);
-        listuser = obj.getWorkflowProcessEpersonRests().stream().map(we -> {
+        listuser = obj.getWorkflowProcessEpersonRests().stream().filter(d->d!=null).map(we -> {
             try {
                 if (we.getUserType() == null) {
                     int i = index.incrementAndGet();
@@ -259,6 +261,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
+
 
         workflowProcess.setWorkflowProcessEpeople(listuser);
         workflowProcess.setInitDate(obj.getInitDate());
@@ -400,6 +403,13 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         }
         if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")) {
             workFlowProcessRest.setMode(obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue());
+        }
+        if (obj.getItem() != null) {
+            try {
+                workFlowProcessRest.setItemRest(itemConverter.convertNameOnly(obj.getItem(), projection));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
         workFlowProcessRest.setUuid(obj.getID().toString());
         workFlowProcessRest.setIsmode(obj.getIsmode());

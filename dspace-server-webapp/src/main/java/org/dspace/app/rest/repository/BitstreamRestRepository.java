@@ -10,10 +10,7 @@ package org.dspace.app.rest.repository;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,6 +22,7 @@ import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.BitstreamRest;
 import org.dspace.app.rest.model.BundleRest;
+import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
@@ -202,7 +200,9 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
             if (bundles.size() != 0) {
                bitstreams=bundles.stream().findFirst().get().getBitstreams();
             }
+           // Comparator<Bitstream> comparator = (s1, s2) ->Integer.compare(s1.getStoreNumber(),s2.getStoreNumber()));
             bitstreams= bitstreams.stream().filter(f->!f.getName().contains("Note#")).collect(Collectors.toList());
+            //bitstreams.sort(comparator);
             return  converter.toRestPage(bitstreams,pageable,bitstreams.size(),utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

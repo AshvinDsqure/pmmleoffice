@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.content.dao.impl;
@@ -19,6 +19,9 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import com.amazonaws.util.DateUtils;
+import com.drew.lang.DateUtil;
+import net.cnri.util.StreamObjectUtil;
 import org.apache.logging.log4j.Logger;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
@@ -38,6 +41,8 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.type.StandardBasicTypes;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSourceType;
+import org.postgresql.core.NativeQuery;
 
 /**
  * Hibernate implementation of the Database Access Object interface class for the Item object.
@@ -84,11 +89,11 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         // NOTE: This query includes archived items, withdrawn items and older versions of items.
         //       It does not include workspace, workflow or template items.
         Query query = createQuery(
-            context,
-            "SELECT i FROM Item as i " +
-            "LEFT JOIN Version as v ON i = v.item " +
-            "WHERE i.inArchive=true or i.withdrawn=true or (i.inArchive=false and v.id IS NOT NULL) " +
-            "ORDER BY i.id"
+                context,
+                "SELECT i FROM Item as i " +
+                        "LEFT JOIN Version as v ON i = v.item " +
+                        "WHERE i.inArchive=true or i.withdrawn=true or (i.inArchive=false and v.id IS NOT NULL) " +
+                        "ORDER BY i.id"
         );
         return iterate(query);
     }
@@ -96,7 +101,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     @Override
     public Iterator<Item> findAll(Context context, boolean archived,
                                   boolean withdrawn, boolean discoverable, Date lastModified)
-        throws SQLException {
+            throws SQLException {
         StringBuilder queryStr = new StringBuilder();
         queryStr.append("SELECT i FROM Item i");
         queryStr.append(" WHERE (inArchive = :in_archive OR withdrawn = :withdrawn)");
@@ -128,7 +133,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public Iterator<Item> findBySubmitter(Context context, EPerson eperson, boolean retrieveAllItems)
-        throws SQLException {
+            throws SQLException {
         if (!retrieveAllItems) {
             return findBySubmitter(context, eperson);
         }
@@ -139,7 +144,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public Iterator<Item> findBySubmitter(Context context, EPerson eperson, MetadataField metadataField, int limit)
-        throws SQLException {
+            throws SQLException {
         StringBuilder query = new StringBuilder();
         query.append("SELECT item FROM Item as item ");
         addMetadataLeftJoin(query, Item.class.getSimpleName().toLowerCase(), Collections.singletonList(metadataField));
@@ -226,6 +231,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
             }
 
         };
+
         public abstract Criterion buildPredicate(String val, String regexClause);
     }
 
@@ -292,9 +298,9 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     public Iterator<Item> findByAuthorityValue(Context context, MetadataField metadataField, String authority,
                                                boolean inArchive) throws SQLException {
         Query query = createQuery(context,
-                  "SELECT item FROM Item as item join item.metadata metadatavalue " +
-                  "WHERE item.inArchive=:in_archive AND metadatavalue.metadataField = :metadata_field AND " +
-                      "metadatavalue.authority = :authority ORDER BY item.id");
+                "SELECT item FROM Item as item join item.metadata metadatavalue " +
+                        "WHERE item.inArchive=:in_archive AND metadatavalue.metadataField = :metadata_field AND " +
+                        "metadatavalue.authority = :authority ORDER BY item.id");
         query.setParameter("in_archive", inArchive);
         query.setParameter("metadata_field", metadataField);
         query.setParameter("authority", authority);
@@ -305,8 +311,8 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     public Iterator<Item> findArchivedByCollection(Context context, Collection collection, Integer limit,
                                                    Integer offset) throws SQLException {
         Query query = createQuery(context,
-              "select i from Item i join i.collections c " +
-              "WHERE :collection IN c AND i.inArchive=:in_archive ORDER BY i.id");
+                "select i from Item i join i.collections c " +
+                        "WHERE :collection IN c AND i.inArchive=:in_archive ORDER BY i.id");
         query.setParameter("collection", collection);
         query.setParameter("in_archive", true);
         if (offset != null) {
@@ -358,7 +364,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public Iterator<Item> findAllByCollection(Context context, Collection collection, Integer limit, Integer offset)
-        throws SQLException {
+            throws SQLException {
         Query query = createQuery(context,
                 "select i from Item i join i.collections c WHERE :collection IN c ORDER BY i.id");
         query.setParameter("collection", collection);
@@ -375,10 +381,10 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public int countItems(Context context, Collection collection, boolean includeArchived, boolean includeWithdrawn)
-        throws SQLException {
+            throws SQLException {
         Query query = createQuery(context,
-              "select count(i) from Item i join i.collections c " +
-              "WHERE :collection IN c AND i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
+                "select count(i) from Item i join i.collections c " +
+                        "WHERE :collection IN c AND i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
         query.setParameter("collection", collection);
         query.setParameter("in_archive", includeArchived);
         query.setParameter("withdrawn", includeWithdrawn);
@@ -393,8 +399,8 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
             return 0;
         }
         Query query = createQuery(context, "select count(distinct i) from Item i " +
-            "join i.collections collection " +
-            "WHERE collection IN (:collections) AND i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
+                "join i.collections collection " +
+                "WHERE collection IN (:collections) AND i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
         query.setParameter("collections", collections);
         query.setParameter("in_archive", includeArchived);
         query.setParameter("withdrawn", includeWithdrawn);
@@ -404,7 +410,7 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
 
     @Override
     public Iterator<Item> findByLastModifiedSince(Context context, Date since)
-        throws SQLException {
+            throws SQLException {
         Query query = createQuery(context,
                 "SELECT i FROM Item i WHERE last_modified > :last_modified ORDER BY id");
         query.setParameter("last_modified", since, TemporalType.TIMESTAMP);
@@ -420,17 +426,18 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     public int countItems(Context context, boolean includeArchived, boolean includeWithdrawn) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(*) FROM Item i " +
-                "WHERE i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
+                        "WHERE i.inArchive=:in_archive AND i.withdrawn=:withdrawn");
         query.setParameter("in_archive", includeArchived);
         query.setParameter("withdrawn", includeWithdrawn);
         return count(query);
     }
+
     @Override
     public int countItems(Context context, EPerson submitter, boolean includeArchived, boolean includeWithdrawn)
-        throws SQLException {
+            throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(*) FROM Item i join i.submitter submitter " +
-                "WHERE i.inArchive=:in_archive AND i.withdrawn=:withdrawn AND submitter = :submitter");
+                        "WHERE i.inArchive=:in_archive AND i.withdrawn=:withdrawn AND submitter = :submitter");
         query.setParameter("submitter", submitter);
         query.setParameter("in_archive", includeArchived);
         query.setParameter("withdrawn", includeWithdrawn);
@@ -439,66 +446,66 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     }
 
     @Override
-    public List<Item> getDataTwoDateRange(Context context, MetadataField metadataField, String startdate, String endDate,Integer offset,Integer limit) throws SQLException{
-
-        log.info("metadatafile:::::::::::::::"+metadataField);
-        log.info("startdate:::::::::::::::"+startdate);
-        log.info("enddate:::::::::::::::"+endDate);
+    public List<Item> getDataTwoDateRange(Context context, MetadataField metadataField, String startdate, String endDate, Integer offset, Integer limit) throws SQLException {
+        log.info("metadatafile:::::::::::::::" + metadataField);
+        log.info("startdate:::::::::::::::" + startdate);
+        log.info("enddate:::::::::::::::" + endDate);
         Query query = createQuery(context, "SELECT item FROM Item as item " +
                 "join item.metadata metadatavalue " +
                 "WHERE item.inArchive=:in_archive  " +
                 "AND  metadatavalue.metadataField = :metadataField " +
                 "AND STR(metadatavalue.value) >= :startdate " +
                 "AND STR(metadatavalue.value) <= :endDate  order by TO_DATE(STR(metadatavalue.value),'yyyy-MM-dd')");
-
-        query.setParameter("in_archive",true);
-        query.setParameter("metadataField",metadataField);
-        query.setParameter("startdate",startdate);
-        query.setParameter("endDate",endDate);
+        query.setParameter("in_archive", true);
+        query.setParameter("metadataField", metadataField);
+        query.setParameter("startdate", startdate);
+        query.setParameter("endDate", endDate);
         if (0 <= offset) {
             query.setFirstResult(offset);
-      }if (0 <= limit) {
+        }
+        if (0 <= limit) {
             query.setMaxResults(limit);
-       }
+        }
         return query.getResultList();
     }
-    @Override
-    public List<Item> getDataTwoDateRangeDownload(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException{
 
-        log.info("metadatafile:::::::::::::::"+metadataField);
-        log.info("startdate:::::::::::::::"+startdate);
-        log.info("enddate:::::::::::::::"+endDate);
+    @Override
+    public List<Item> getDataTwoDateRangeDownload(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException {
+
+        log.info("metadatafile:::::::::::::::" + metadataField);
+        log.info("startdate:::::::::::::::" + startdate);
+        log.info("enddate:::::::::::::::" + endDate);
         Query query = createQuery(context, "SELECT item FROM Item as item " +
                 "join item.metadata metadatavalue " +
                 "WHERE item.inArchive=:in_archive  " +
                 "AND  metadatavalue.metadataField = :metadataField " +
                 "AND STR(metadatavalue.value) >= :startdate " +
                 "AND STR(metadatavalue.value) <= :endDate order by TO_DATE(STR(metadatavalue.value),'yyyy-MM-dd hh:mm:ss')");
-        query.setParameter("in_archive",true);
-        query.setParameter("metadataField",metadataField);
-        query.setParameter("startdate",startdate);
-        query.setParameter("endDate",endDate);
+        query.setParameter("in_archive", true);
+        query.setParameter("metadataField", metadataField);
+        query.setParameter("startdate", startdate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }
 
     @Override
-    public int countTotal(Context context,MetadataField metadataField, String startdate, String endDate) throws SQLException {
-        log.info("metadatafile:::::::::::::::"+metadataField);
-        log.info("startdate:::::::::::::::"+startdate);
-        log.info("enddate:::::::::::::::"+endDate);
+    public int countTotal(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException {
+        log.info("metadatafile:::::::::::::::" + metadataField);
+        log.info("startdate:::::::::::::::" + startdate);
+        log.info("enddate:::::::::::::::" + endDate);
 
         Query query = createQuery(context, "SELECT count(*) FROM Item as item " +
                 "join item.metadata  metadatavalue " +
                 "WHERE item.inArchive=:in_archive  " +
                 "AND  metadatavalue.metadataField = :metadataField " +
                 "AND STR(metadatavalue.value) >= :startdate " +
-                "AND STR(metadatavalue.value) <= :endDate" );
+                "AND STR(metadatavalue.value) <= :endDate");
 
-        query.setParameter("in_archive",true);
-        query.setParameter("metadataField",metadataField);
-        query.setParameter("startdate",startdate);
-        query.setParameter("endDate",endDate);
+        query.setParameter("in_archive", true);
+        query.setParameter("metadataField", metadataField);
+        query.setParameter("startdate", startdate);
+        query.setParameter("endDate", endDate);
 
         return count(query);
     }
@@ -507,10 +514,18 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     public List<Item> searchItemByTitle(Context context, MetadataField metadataField, String title) throws Exception {
         Query query = createQuery(context, "SELECT item FROM Item as item join item.metadata  metadatavalue  WHERE item.inArchive=:in_archive  AND  metadatavalue.metadataField = :metadataField AND lower(STR(metadatavalue.value)) like :title");
         query.setParameter("in_archive", true);
-        query.setParameter("title", "%"+title.toLowerCase()+"%");
+        query.setParameter("title", "%" + title.toLowerCase() + "%");
         query.setParameter("metadataField", metadataField);
         return query.getResultList();
+    }
 
+    @Override
+    public Item searchItemBySinoNumber(Context context, MetadataField metadataField, String sinoNumber) throws Exception {
+        Query query = createQuery(context, "SELECT item FROM Item as item join item.metadata  metadatavalue  WHERE item.inArchive=:in_archive  AND  metadatavalue.metadataField = :metadataField AND lower(STR(metadatavalue.value)) =:title");
+        query.setParameter("in_archive", true);
+        query.setParameter("title", sinoNumber.toLowerCase());
+        query.setParameter("metadataField", metadataField);
+        return (Item) query.getSingleResult();
     }
 
     @Override
@@ -518,10 +533,33 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         Query query = createQuery(context, "SELECT item FROM Item as item join item.metadata  metadatavalue  WHERE item.inArchive=:in_archive  " +
                 "AND  (metadatavalue.metadataField = :metadataFieldTitle OR metadatavalue.metadataField = :metadataFieldYear) AND lower(STR(metadatavalue.value)) like :title");
         query.setParameter("in_archive", true);
-        query.setParameter("title", "%"+titleoryear.toLowerCase()+"%");
+        query.setParameter("title", "%" + titleoryear.toLowerCase() + "%");
         query.setParameter("metadataFieldTitle", metadataTitleField);
         query.setParameter("metadataFieldYear", metadataYearField);
         return query.getResultList();
     }
 
+    @Override
+    public List<Item> searchItemByTitleAndYear(Context context, MetadataField metadataTitleField, MetadataField metadataYearField, String title, String year) throws Exception {
+
+        StringBuffer sb = new StringBuffer("SELECT item FROM Item as item join item.metadata  metadatavalue  WHERE item.inArchive=:in_archive ");
+        if (title != null && !title.trim().isEmpty()) {
+            sb.append("AND  metadatavalue.metadataField = :metadataFieldTitle AND lower(STR(metadatavalue.value)) like :title ");
+        }
+        if (year != null && !year.trim().isEmpty()) {
+            sb.append("OR  metadatavalue.metadataField = :metadataFieldYear AND lower(STR(metadatavalue.value)) like :year ");
+        }
+        Query query = createQuery(context, sb.toString());
+        query.setParameter("in_archive", true);
+        if (title != null && !title.trim().isEmpty()) {
+            query.setParameter("title", "%" + title.toLowerCase() + "%");
+            query.setParameter("metadataFieldTitle", metadataTitleField);
+        }
+        if (year != null && !year.trim().isEmpty()) {
+            query.setParameter("year", "%" + year.toLowerCase() + "%");
+            query.setParameter("metadataFieldYear", metadataYearField);
+        }
+        System.out.println("Search title and search Query :::"+sb.toString());
+        return query.getResultList();
+    }
 }

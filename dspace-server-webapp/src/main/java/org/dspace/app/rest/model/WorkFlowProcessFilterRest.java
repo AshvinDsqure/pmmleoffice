@@ -53,6 +53,9 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
     private String subject;
     @JsonProperty
     private String inward;
+
+    @JsonProperty
+    private String year;
     @JsonProperty
     private String outward;
     @JsonProperty
@@ -318,5 +321,13 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
 
     public void setSenderpincode(String senderpincode) {
         this.senderpincode = senderpincode;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 }

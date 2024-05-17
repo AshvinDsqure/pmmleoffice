@@ -75,6 +75,16 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
     @Column(name = "isdelete")
     private Boolean isdelete = false;
 
+    @Column(name = "issapdoc")
+    private Boolean issapdoc = false;
+
+    @Column(name = "sapdocumentno")
+    private String sapdocumentno;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sapdocumenttype")
+    private WorkFlowProcessMasterValue sapdocumenttype;
+
+
     @Override
     public int getType() {
         return 0;
@@ -191,5 +201,30 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
 
     public void setIsdelete(Boolean isdelete) {
         this.isdelete = isdelete;
+    }
+
+
+    public Boolean getIssapdoc() {
+        return issapdoc;
+    }
+
+    public void setIssapdoc(Boolean issapdoc) {
+        this.issapdoc = issapdoc;
+    }
+
+    public String getSapdocumentno() {
+        return sapdocumentno;
+    }
+
+    public void setSapdocumentno(String sapdocumentno) {
+        this.sapdocumentno = sapdocumentno;
+    }
+
+    public WorkFlowProcessMasterValue getSapdocumenttype() {
+        return sapdocumenttype;
+    }
+
+    public void setSapdocumenttype(WorkFlowProcessMasterValue sapdocumenttype) {
+        this.sapdocumenttype = sapdocumenttype;
     }
 }

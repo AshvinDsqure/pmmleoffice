@@ -201,7 +201,8 @@ public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item> {
     int countTotal(Context context,MetadataField metadataField,String startdate,String endDate) throws SQLException;
 
     public List<Item> searchItemByTitle(Context context, MetadataField metadataField, String title) throws Exception;
+    public Item searchItemBySinoNumber(Context context, MetadataField metadataField, String sinoNumber) throws Exception;
     public List<Item> searchItemByTitleOrYear(Context context, MetadataField metadataTitleField ,MetadataField metadataYearField, String titleoryear) throws Exception;
-
+    public List<Item> searchItemByTitleAndYear(Context context, MetadataField metadataTitleField ,MetadataField metadataYearField, String title, String year) throws Exception;
 
 }

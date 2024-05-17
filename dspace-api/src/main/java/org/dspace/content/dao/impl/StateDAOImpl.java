@@ -37,7 +37,7 @@ public class StateDAOImpl extends AbstractHibernateDAO<State> implements StateDA
 
     @Override
     public List<State> getByCountryId(Context context, UUID countryid) throws SQLException {
-        Query query = createQuery(context, "SELECT s FROM State s join s.country as c where c.id=:countryid order by s.statename");
+        Query query = createQuery(context, "SELECT s FROM State s join s.country as c where c.id=:countryid order by s.statename ASC");
         query.setParameter("countryid",countryid);
         return query.getResultList();
     }

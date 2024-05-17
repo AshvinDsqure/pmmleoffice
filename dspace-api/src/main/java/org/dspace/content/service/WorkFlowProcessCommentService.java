@@ -31,4 +31,6 @@ public interface WorkFlowProcessCommentService extends DSpaceObjectService<WorkF
     public int countRows(Context context) throws SQLException;
     List<WorkFlowProcessComment> getComments(Context context, UUID workflowprocessid)  throws SQLException;
     public int countComment(Context context,UUID workflowprocessid) throws SQLException;
+    public WorkFlowProcessComment findCommentByworkflowprocessidAndissavedrafttrue(Context context,UUID workflowprocessid) throws SQLException;
+
 }

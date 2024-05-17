@@ -73,6 +73,11 @@ public class CityServiceImpl extends DSpaceObjectServiceImpl<City> implements Ci
     }
 
     @Override
+    public List<City> getCityByStateid(Context context, UUID stateid, String searchcity) throws SQLException {
+        return CityDAO.getCityByStateid(context,stateid,searchcity);
+    }
+
+    @Override
     public City find(Context context, UUID uuid) throws SQLException {
         return CityDAO.findByID(context,City.class,uuid);
     }

@@ -21,5 +21,6 @@ public interface CityDAO extends DSpaceObjectLegacySupportDAO<City>{
 
     List<City> getCityByStateid(Context context, UUID stateid) throws SQLException;
 
+    List<City> getCityByStateid(Context context, UUID stateid,String searchcity) throws SQLException;
 
 }

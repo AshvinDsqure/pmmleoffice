@@ -58,7 +58,27 @@ public class BitstreamConverter extends DSpaceObjectConverter<Bitstream, Bitstre
         b.setName(FileUtils.getNameWithoutExtension(obj.getName()));
         return b;
     }
-
+    public BitstreamRest convert1(org.dspace.content.Bitstream obj, Projection projection) {
+        BitstreamRest b = new BitstreamRest();
+        b.setSequenceId(obj.getSequenceID());
+        List<Bundle> bundles = null;
+        try {
+            bundles = obj.getBundles();
+        } catch (SQLException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        if (bundles != null && bundles.size() > 0) {
+            b.setBundleName(bundles.get(0).getName());
+        }
+        CheckSumRest checksum = new CheckSumRest();
+        checksum.setCheckSumAlgorithm(obj.getChecksumAlgorithm());
+        checksum.setValue(obj.getChecksum());
+        b.setCheckSum(checksum);
+        b.setSizeBytes(obj.getSizeBytes());
+        b.setName(FileUtils.getNameWithoutExtension(obj.getName()));
+        return b;
+    }
     public Bitstream convertByService(Context context, BitstreamRest rest) throws SQLException {
         return  bitstreamService.find(context, UUID.fromString(rest.getUuid()));
     }

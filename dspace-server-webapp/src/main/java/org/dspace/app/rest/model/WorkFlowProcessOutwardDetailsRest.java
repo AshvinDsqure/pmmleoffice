@@ -34,14 +34,13 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
     private WorkFlowProcessMasterValueRest outwardmediumRest = null;
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date dispatchdate;
-    @JsonProperty
-    @NotNull
-    @NotEmpty
+
     private String  awbno;
-    @JsonProperty
-    @NotNull
-    @NotEmpty
+
     private String  serviceprovider;
+
+    @JsonProperty
+    private String  body;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest categoryRest = null;
@@ -137,5 +136,13 @@ public class WorkFlowProcessOutwardDetailsRest extends  DSpaceObjectRest{
 
     public void setSubcategoryRest(WorkFlowProcessMasterValueRest subcategoryRest) {
         this.subcategoryRest = subcategoryRest;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 }

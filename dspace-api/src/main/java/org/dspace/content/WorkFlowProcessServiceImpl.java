@@ -7,6 +7,9 @@
  */
 package org.dspace.content;
 
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoDestinationManager;
+import com.sap.conn.jco.JCoFunction;
 import org.apache.logging.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.dao.WorkflowProcessDAO;
@@ -19,6 +22,7 @@ import org.dspace.eperson.EPerson;
 import org.dspace.event.Event;
 import org.dspace.workflow.WorkflowType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -114,6 +118,16 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
+    public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findCompletedFlow(context,eperson,statusid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countfindCompletedFlow(context,eperson,statusid,workflowtypeid);
+    }
+
+    @Override
     public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
         return workflowProcessDAO.countfindNotCompletedByUser(context, eperson, statusid, draftid);
     }
@@ -134,13 +148,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid, offset, limit);
+    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid, offset, limit);
     }
 
     @Override
-    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context, eperson, statusid);
+    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid);
     }
 
     @Override
@@ -320,6 +334,80 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return workflowProcessDAO.filterInwarAndOutWard(context, perameter, offset, limit);
     }
 
+    @Override
+    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid);
+    }
+
+    @Override
+    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countCloseTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid);
+    }
+
+    @Override
+    public List<WorkflowProcess> acknowledgementTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.acknowledgementTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countacknowledgementTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countacknowledgementTapal(context, eperson, statusdraftid, statuscloseid, workflowtypeid);
+    }
+
+    @Override
+    public List<WorkflowProcess> dispatchTapal(Context context, UUID eperson, UUID statusdraftid, UUID statusdspachcloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.dispatchTapal(context,eperson,statusdraftid,statusdspachcloseid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countdispatchTapal(Context context, UUID eperson, UUID statusdraftid, UUID statusdspachcloseid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countdispatchTapal(context,eperson,statusdraftid,statusdspachcloseid,workflowtypeid);
+    }
+
+    @Override
+    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.countparkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid);
+    }
+
+    @Override
+    public void CallSap(Context context) {
+
+
+
+        System.out.println("in CallSap SAP");
+        try {
+            JCoDestination destination = JCoDestinationManager.getDestination("ZDMS_DOCUMENT_POST");
+            JCoFunction function = destination.getRepository().getFunction("ZDMS_DOCUMENT_POST");
+            if (function == null) {
+                System.out.println("in if ");
+                throw new RuntimeException("ZDMS_DOCUMENT_POST not found in SAP.");
+            }else{
+                System.out.println("in Else ");
+                function.getImportParameterList().setValue("IT_MESSAGES", "IT_MESSAGES");
+                function.execute(destination);
+            }
+            System.out.println("out CallSap SAP");
+        }catch (Exception e){
+            System.out.println("in error CallSap"+e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);
@@ -352,4 +440,6 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         financialYears = s[0].toString().substring(2) + "-" + s[1].toString().substring(2);
         return financialYears;
     }
+
+
 }

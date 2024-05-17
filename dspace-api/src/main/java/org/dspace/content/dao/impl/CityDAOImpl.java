@@ -38,9 +38,22 @@ public class CityDAOImpl extends AbstractHibernateDAO<City> implements CityDAO {
 
     @Override
     public List<City> getCityByStateid(Context context, UUID stateid) throws SQLException {
-        Query query = createQuery(context, "SELECT c FROM City c join c.state as s where s.id=:stateid order by c.cityname");
+        Query query = createQuery(context, "SELECT c FROM City c join c.state as s where s.id=:stateid order by c.cityname ASC");
         query.setParameter("stateid",stateid);
         return query.getResultList();
+    }
+
+    @Override
+    public List<City> getCityByStateid(Context context, UUID stateid, String searchcity) throws SQLException {
+        try {
+            Query query = createQuery(context, "SELECT c from  City as c join c.state as s where s.id=:stateid and lower(c.cityname) LIKE :search");
+            query.setParameter("stateid",stateid);
+            query.setParameter("search", "%"+searchcity.toLowerCase()+"%");
+            return query.getResultList();
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return null;
+        }
     }
 
 }

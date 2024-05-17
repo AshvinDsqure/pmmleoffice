@@ -82,6 +82,8 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     private  Boolean isrefer=false;
     @JsonProperty
     private  Boolean isdelete=false;
+    @JsonProperty
+    private  Boolean isacknowledgement=false;
 
 
     @JsonProperty
@@ -265,5 +267,21 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setIsapproved(Boolean isapproved) {
         this.isapproved = isapproved;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
+    }
+
+    public Boolean getIsacknowledgement() {
+        return isacknowledgement;
+    }
+
+    public void setIsacknowledgement(Boolean isacknowledgement) {
+        this.isacknowledgement = isacknowledgement;
     }
 }

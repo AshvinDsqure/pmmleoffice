@@ -50,6 +50,10 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     private Boolean isdispatchbycru = false;
     private Boolean isdelete = false;
 
+    private Boolean issapdoc = false;
+
+    private String sapdocumentno;
+    private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
 
     public Integer getLegacyId() {
         return legacyId;
@@ -162,5 +166,29 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
 
     public void setIsdelete(Boolean isdelete) {
         this.isdelete = isdelete;
+    }
+
+    public Boolean getIssapdoc() {
+        return issapdoc;
+    }
+
+    public void setIssapdoc(Boolean issapdoc) {
+        this.issapdoc = issapdoc;
+    }
+
+    public String getSapdocumentno() {
+        return sapdocumentno;
+    }
+
+    public void setSapdocumentno(String sapdocumentno) {
+        this.sapdocumentno = sapdocumentno;
+    }
+
+    public WorkFlowProcessMasterValueRest getSapdocumenttypeRest() {
+        return sapdocumenttypeRest;
+    }
+
+    public void setSapdocumenttypeRest(WorkFlowProcessMasterValueRest sapdocumenttypeRest) {
+        this.sapdocumenttypeRest = sapdocumenttypeRest;
     }
 }

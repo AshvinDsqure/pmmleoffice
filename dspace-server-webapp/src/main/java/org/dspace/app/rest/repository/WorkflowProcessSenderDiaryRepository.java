@@ -72,7 +72,6 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
     @Override
     @PreAuthorize("hasAuthority('AUTHENTICATED')")
     public Page<WorkflowProcessSenderDiaryRest> findAll(Context context, Pageable pageable) throws SQLException {
-
         int total = workflowProcessSenderDiaryService.countRows(context);
         List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries = workflowProcessSenderDiaryService.findAll(context);
         return converter.toRestPage(workflowProcessSenderDiaries, pageable, total, utils.obtainProjection());

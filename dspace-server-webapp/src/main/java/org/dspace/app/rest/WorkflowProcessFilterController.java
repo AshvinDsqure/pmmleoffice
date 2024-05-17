@@ -167,6 +167,12 @@ public class WorkflowProcessFilterController {
                 map.put("inward", rest.getInward());
                 /*}*/
             }
+            if (rest.getYear() != null) {
+             /* WorkFlowProcessInwardDetails inward=workFlowProcessInwardDetailsService.getByInwardNumber(context,rest.getInward());
+              if(inward!=null) {*/
+                map.put("inward", rest.getYear());
+                /*}*/
+            }
             if (rest.getOutward() != null) {
                /* WorkFlowProcessOutwardDetails outward=workFlowProcessOutwardDetailsService.getByOutwardNumber(context,rest.getOutward());
                 if(outward!=null) {*/
@@ -294,6 +300,7 @@ public class WorkflowProcessFilterController {
             map.put("Subject", "text");
             map.put(WorkFlowType.INWARD.getAction() + " Number", "text");
             map.put(WorkFlowType.OUTWARED.getAction() + " Number", "text");
+            map.put("Year", "text");
             System.out.println("out getFilterPerameter ");
             return map;
         } catch (Exception e) {
@@ -701,6 +708,29 @@ public class WorkflowProcessFilterController {
             System.out.println("in Citys ");
             Context context = ContextUtil.obtainContext(request);
             List<City> list = cityService.getCityByStateid(context,UUID.fromString(stateid));
+            List<ContryDTO>rest=list.stream().map(d->{
+                ContryDTO contryDTO=new ContryDTO();
+                contryDTO.setCityname(d.getCityname());
+                contryDTO.setCityuuid(d.getID().toString());
+                contryDTO.setStatename(d.getState().getStatename());
+                contryDTO.setStateuuid(d.getState().getID().toString());
+                contryDTO.setContryname(d.getState().getCountry().getCountryname());
+                contryDTO.setContryuuid(d.getState().getCountry().getID().toString());
+                return contryDTO;
+            }).collect(Collectors.toList());
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/citySearchByState")
+    public List<ContryDTO> citySearchByState(HttpServletRequest request,@Parameter(value = "stateid", required = true) String stateid,@Parameter(value = "searchcity", required = true) String searchcity) {
+        try {
+            System.out.println("in Citys ");
+            Context context = ContextUtil.obtainContext(request);
+            List<City> list = cityService.getCityByStateid(context,UUID.fromString(stateid),searchcity);
             List<ContryDTO>rest=list.stream().map(d->{
                 ContryDTO contryDTO=new ContryDTO();
                 contryDTO.setCityname(d.getCityname());

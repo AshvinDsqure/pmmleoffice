@@ -45,11 +45,22 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     private WorkFlowProcessHistory workFlowProcessHistory;
 
     @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "note")
+    private WorkflowProcessReferenceDoc note;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflowprocess_fid")
     private WorkflowProcess workFlowProcess;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitter_id")
     private EPerson submitter = null;
+
+    @Column(name = "actiondate", columnDefinition = "timestamp with time zone")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date actionDate = new Date();
+
+    @Column(name = "isdraftsave")
+    private Boolean isdraftsave = false;
     @Override
     public int getType() {
         return 0;
@@ -97,5 +108,29 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     }
     public void setWorkFlowProcess(WorkflowProcess workFlowProcess) {
         this.workFlowProcess = workFlowProcess;
+    }
+
+    public Date getActionDate() {
+        return actionDate;
+    }
+
+    public void setActionDate(Date actionDate) {
+        this.actionDate = actionDate;
+    }
+
+    public WorkflowProcessReferenceDoc getNote() {
+        return note;
+    }
+
+    public void setNote(WorkflowProcessReferenceDoc note) {
+        this.note = note;
+    }
+
+    public Boolean getIsdraftsave() {
+        return isdraftsave;
+    }
+
+    public void setIsdraftsave(Boolean isdraftsave) {
+        this.isdraftsave = isdraftsave;
     }
 }
