@@ -12,13 +12,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.*;
+import javax.persistence.Entity;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.dspace.content.DSpaceObject;
-import org.dspace.content.DSpaceObjectLegacySupport;
-import org.dspace.content.Item;
-import org.dspace.content.WorkFlowProcessMasterValue;
+import org.dspace.content.*;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.eperson.factory.EPersonServiceFactory;
@@ -87,7 +85,6 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "designation_id")
     private WorkFlowProcessMasterValue designation;
-
 
     /**
      * The e-mail field (for sorting)

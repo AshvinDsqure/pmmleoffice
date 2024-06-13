@@ -743,7 +743,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     WorkFlowProcessRest workFlowProcessRest2 = new WorkFlowProcessRest();
                     sapResponse2.setMSGTYP("E");
                     sapResponse2.setMESSAGE(e.getMessage());
-                    workFlowProcessRest2.setSapResponse(sapResponse);
+                    workFlowProcessRest2.setSapResponse(sapResponse2);
                     System.out.println("Error in Call SAP is :"+e.getMessage());
                     e.printStackTrace();
                     return workFlowProcessRest2;
@@ -2537,7 +2537,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             InputStream note = null;
             for (WorkFlowProcessComment c : comments) {
                 if (c.getNote() != null && c.getNote().getBitstream() != null) {
-                    note = bitstreamService.retrieve(context, c.getNote().getBitstream());
+                        note = bitstreamService.retrieve(context, c.getNote().getBitstream());
                     Notes.add(note);
                 }
             }

@@ -336,8 +336,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
         try {
-
-
             boolean passwordChangeFound = false;
             for (Operation operation : patch.getOperations()) {
                 if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
@@ -356,8 +354,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                 }
             }
             System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
-
-
             EPerson ePerson = es.find(context, uuid);
             for (Operation operation : patch.getOperations()) {
                 System.out.println("value getOp " + operation.getOp());
