@@ -66,4 +66,10 @@ public interface WorkflowProcessReferenceDocService extends DSpaceObjectService<
     public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context , UUID itemid, Integer offset, Integer limit) throws SQLException;
     public List<WorkflowProcessReferenceDoc> getDocumentByworkflowprocessid(Context context ,UUID workflowprocessid) throws SQLException;
     public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context ,UUID signitoreid, UUID drafttypeid) throws SQLException;
+
+    public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context,UUID item,UUID workflowprocess,UUID drafttypeid) throws SQLException;
+    public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context ,UUID drafttypeid, UUID itemid) throws SQLException;
+
+
+
 }

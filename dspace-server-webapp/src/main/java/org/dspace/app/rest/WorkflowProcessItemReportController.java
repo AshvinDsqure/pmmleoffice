@@ -454,7 +454,8 @@ public class WorkflowProcessItemReportController {
         Context context = ContextUtil.obtainContext(request);
         Bitstream bitstreampdf = null;
         String namepdf = "";
-        Bitstream bitstreampkcs12 = null;
+       // Bitstream bitstreampkcs12 = null;
+        String bitstreampkcs12 = null;
         InputStream fileInputa = null;
         InputStream pkcs12File = null;
         try {
@@ -492,12 +493,14 @@ public class WorkflowProcessItemReportController {
                     namepdf = bitstreampdf.getName();
                 }
             }
-            WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getPksc12orpemdocuuid()));
-            if (pkcs12doc != null) {
-                bitstreampkcs12 = pkcs12doc.getBitstream();
-                pkcs12File = bitstreamService.retrieve(context, pkcs12doc.getBitstream());
+          //  WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString("8fcbb530-50ef-427b-9bca-db3fb60038c3"));
+          //  WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getPksc12orpemdocuuid()));
+            File p12 = new File(configurationService.getProperty("digital.sign.p12File"));
+            if (p12 != null) {
+                bitstreampkcs12 =p12.getName();
+                pkcs12File = new FileInputStream(p12);
             }
-            return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12.getName(), workflowProcessReferenceDoc);
+            return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12, workflowProcessReferenceDoc);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -599,7 +602,7 @@ public class WorkflowProcessItemReportController {
         Context context = ContextUtil.obtainContext(request);
         Bitstream bitstreampdf = null;
         String namepdf = "";
-        Bitstream bitstreampkcs12 = null;
+        String bitstreampkcs12 = null;
         InputStream fileInputa = null;
         InputStream pkcs12File = null;
         try {
@@ -646,12 +649,12 @@ public class WorkflowProcessItemReportController {
                     namepdf = bitstreampdf.getName();
                 }
             }
-            WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getPksc12orpemdocuuid()));
-            if (pkcs12doc != null) {
-                bitstreampkcs12 = pkcs12doc.getBitstream();
-                pkcs12File = bitstreamService.retrieve(context, pkcs12doc.getBitstream());
+            File p12 = new File(configurationService.getProperty("digital.sign.p12File"));
+            if (p12 != null) {
+                bitstreampkcs12 =p12.getName();
+                pkcs12File = new FileInputStream(p12);
             }
-            return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12.getName(), workflowProcessReferenceDoc);
+            return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12, workflowProcessReferenceDoc);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -809,6 +812,9 @@ public class WorkflowProcessItemReportController {
                                 WorkflowProcessReferenceDocVersion workflowProcessReferenceDocVersion1 = workflowProcessReferenceDocVersionService.find(context, workflowProcessReferenceDocVersion.get().getID());
                                 if (workflowProcessReferenceDocVersion1 != null && bitstreampdfsing != null) {
                                     workflowProcessReferenceDocVersion1.setBitstream(bitstreampdfsing);
+                                    workflowProcessReferenceDoc1.setBitstream(bitstreampdfsing);
+                                    workflowProcessReferenceDocService.update(context,workflowProcessReferenceDoc1);
+                                    System.out.println("::::::::::save Sing doc in docment done:::");
                                 }
                                 workflowProcessReferenceDocVersionService.update(context, workflowProcessReferenceDocVersion1);
                             }
@@ -1310,7 +1316,8 @@ public class WorkflowProcessItemReportController {
         if(logopath!=null) {
             sb.append("<center><img src=" + logopath + " style=\"margin:20px; height:200px;\"></center>");
         }
-
+         sb.append("<br><div style=\"float:right;padding-right:150px;\">");
+        sb.append("<p>"+DateUtils.DateToSTRDDMMYYYHHMMSS(new Date())+"</p> </div> <br>");
         if (workflowProcessReferenceDoc.getEditortext() != null) {
             isTextEditorFlow = true;
             sb.append("<div>" + workflowProcessReferenceDoc.getEditortext() + "</div>");

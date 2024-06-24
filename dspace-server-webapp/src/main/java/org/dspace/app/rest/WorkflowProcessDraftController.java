@@ -193,7 +193,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 c = workFlowProcessCommentService.findCommentByworkflowprocessidAndissavedrafttrue(context, workflowProcess.getID());
             } catch (Exception e) {
                 c = null;
-                e.printStackTrace();
+                System.out.println("error"+e.getMessage());
             }
             if (c != null) {
                 System.out.println("in update new draft");

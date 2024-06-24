@@ -74,6 +74,20 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
     }
 
     @Override
+    public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context, UUID drafttypeid, UUID itemid) throws SQLException {
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d " +
+                "left join d.drafttype as df " +
+                "left join d.workflowprocessnote as n " +
+                "left join d.workflowProcess as wp " +
+                "left join wp.item as i " +
+                "where i.id=:itemid " +
+                "and df.id=:drafttypeid and n.id IS NOT NULL");
+        query.setParameter("drafttypeid",drafttypeid);
+        query.setParameter("itemid",itemid);
+        return query.getResultList();
+    }
+
+    @Override
     public List<WorkflowProcessReferenceDoc> getDocumentByworkflowprocessid(Context context, UUID workflowprocessid) throws SQLException {
         Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d join d.workflowProcess as wp wp.id=:workflowprocessid");
         //query.setParameter("drafttypeid",drafttypeid);
@@ -94,5 +108,20 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
         query.setParameter("signitoreid",signitoreid);
         query.setParameter("drafttypeid",drafttypeuuid);
         return query.getResultList();
+    }
+
+    @Override
+    public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+                " left join d.drafttype as dt " +
+                " left join d.workflowProcess wp " +
+                 "left join wp.item as i " +
+                " where dt.id=:drafttypeid " +
+                " and wp.id=:workflowprocess " +
+                " and i.id=:item");
+        query.setParameter("drafttypeid",drafttypeid);
+        query.setParameter("workflowprocess",workflowprocess);
+        query.setParameter("item",item);
+        return (WorkflowProcessReferenceDoc) query.getSingleResult();
     }
 }

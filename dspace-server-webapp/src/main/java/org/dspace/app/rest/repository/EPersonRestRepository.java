@@ -435,8 +435,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             System.out.println("search value :" + searchdepartmentorofficeid);
             Context context = obtainContext();
             List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
-            ePersonRests = witems.stream().map(d -> {
-                return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
+            ePersonRests = witems.stream().filter(d->!d.getEmail().equalsIgnoreCase(context.getCurrentUser().getEmail())).map(d -> {
+                    return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
             }).collect(toList());
             return new PageImpl(ePersonRests, pageable,witems.size());
         } catch (SQLException e) {

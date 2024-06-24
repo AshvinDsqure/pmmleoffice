@@ -126,7 +126,7 @@ public enum WorkFlowType {
                     throw new RuntimeException(e);
                 }
             }).collect(Collectors.toList()));
-//sender diry
+            //sender diry
             if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
                 List<WorkflowProcessSenderDiary> list = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
                     WorkflowProcessSenderDiary workflowProcessSenderDiary = this.getWorkflowProcessSenderDiaryConverter().convert(context, d);
@@ -229,7 +229,15 @@ public enum WorkFlowType {
                     throw new RuntimeException(e);
                 }
             }).collect(Collectors.toList()));
-
+            //sender diry
+            if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
+                List<WorkflowProcessSenderDiary> list = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
+                    WorkflowProcessSenderDiary workflowProcessSenderDiary = this.getWorkflowProcessSenderDiaryConverter().convert(context, d);
+                    workflowProcessSenderDiary.setWorkflowProcess(finalWorkflowProcess);
+                    return workflowProcessSenderDiary;
+                }).collect(Collectors.toList());
+                workflowProcess.setWorkflowProcessSenderDiaries(list);
+            }
             //for not doc
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
@@ -237,7 +245,6 @@ public enum WorkFlowType {
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             return workFlowProcessRest;
         }
-
         @Override
         public WorkFlowProcessRest storeWorkFlowProcessDraft(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
             workFlowProcessRest.setWorkflowTypeStr("DRAFT");

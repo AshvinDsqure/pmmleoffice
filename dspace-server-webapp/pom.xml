@@ -7,11 +7,6 @@
     <description>
         DSpace Server Webapp (Spring Boot)
     </description>
-
-    <!--
-      A Parent POM that Maven inherits DSpace Default
-      POM attributes from.
-    -->
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-parent</artifactId>
@@ -22,13 +17,11 @@
     <properties>
         <!-- This is the path to the root [dspace-src] directory. -->
         <root.basedir>${basedir}/..</root.basedir>
-
         <!-- Default resource delimiter for Spring Boot, so it doesn't clash with Spring ${} placeholders-->
         <resource.delimiter>@</resource.delimiter>
         <!-- Define our starting class for our Spring Boot Application -->
         <start-class>org.dspace.app.rest.Application</start-class>
     </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -39,7 +32,7 @@
                     <warName>server</warName>
                     <!-- Filter the web.xml (needed for IDE compatibility/debugging) -->
                     <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
-                    <outputDirectory>E:\tomcate\apache-tomcat-9.0.72\webapps\</outputDirectory>
+                    <outputDirectory>E:\tomcate\tomcat\apache-tomcat-9.0.72\apache-tomcat-9.0.72\webapps\</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -83,8 +76,6 @@
                             <artifactId>lombok</artifactId>
                             <version>1.16.20</version>
                         </path>
-
-
                     </annotationProcessorPaths>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -274,9 +265,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
-
         <!-- Spring Boot dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -607,10 +596,6 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -662,7 +647,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
 
         <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
         <dependency>
@@ -834,8 +818,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-
     </dependencies>
     <repositories>
         <repository>

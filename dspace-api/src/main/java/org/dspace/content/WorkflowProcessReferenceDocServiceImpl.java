@@ -143,4 +143,14 @@ public class WorkflowProcessReferenceDocServiceImpl extends DSpaceObjectServiceI
     public List<WorkflowProcessReferenceDoc> getDocumentBySignitore(Context context, UUID signitoreid, UUID drafttypeid) throws SQLException {
         return workflowProcessReferenceDocDAO.getDocumentBySignitore(context,signitoreid,drafttypeid);
     }
+
+    @Override
+    public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
+        return workflowProcessReferenceDocDAO.findbydrafttypeandworkflowprocessAndItem(context,item,workflowprocess,drafttypeid);
+    }
+
+    @Override
+    public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context, UUID drafttypeid, UUID itemid) throws SQLException {
+        return workflowProcessReferenceDocDAO.getDocumentByItemid(context,drafttypeid,itemid);
+    }
 }
