@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -130,6 +131,7 @@ public class DiscoveryRestController implements InitializingBean {
         return facetsResource;
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'BITSTREAM', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = RequestMethod.GET, value = "/search/objects")
     public SearchResultsResource getSearchObjects(@RequestParam(name = "query", required = false) String query,
                                                   @RequestParam(name = "dsoType", required = false)
@@ -139,6 +141,7 @@ public class DiscoveryRestController implements InitializingBean {
                                                       configuration,
                                                   List<SearchFilter> searchFilters,
                                                   Pageable page) throws Exception {
+
 
         dsoTypes = emptyIfNull(dsoTypes);
 

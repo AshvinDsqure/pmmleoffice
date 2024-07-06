@@ -110,14 +110,14 @@ public class BitstreamRestController {
     @Autowired
     Utils utils;
 
-    @PreAuthorize("hasPermission(#uuid, 'BITSTREAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'BITSTREAM', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "content")
     public ResponseEntity retrieve(@PathVariable UUID uuid, HttpServletResponse response,
                                    HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
 
 
         Context context = ContextUtil.obtainContext(request);
-
+        context.turnOffAuthorisationSystem();
         Bitstream bit = bitstreamService.find(context, uuid);
         EPerson currentUser = context.getCurrentUser();
 

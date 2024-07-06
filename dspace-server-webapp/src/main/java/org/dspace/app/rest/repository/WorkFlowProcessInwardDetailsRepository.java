@@ -106,12 +106,13 @@ public class WorkFlowProcessInwardDetailsRepository extends DSpaceObjectRestRepo
         log.info("::::::End::::put::::::::::");
         return converter.toRest(workFlowProcessInwardDetails, utils.obtainProjection());
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchByInwardNumber")
     public Page<WorkFlowProcessOutwardDetailsRest> searchByInwardNumber(@Parameter(value = "inwardnumber", required = true) String name, Pageable pageable) {
         try {
             System.out.println("sear>>>>>>>>>>>" + name);
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             Optional<List<WorkFlowProcessInwardDetails>> workFlowProcessInwardDetails = Optional.ofNullable(workFlowProcessInwardDetailsService.searchInwardNumber(context, name));
             if (workFlowProcessInwardDetails.isPresent()) {
                 return converter.toRestPage(workFlowProcessInwardDetails.get(), pageable, 999, utils.obtainProjection());

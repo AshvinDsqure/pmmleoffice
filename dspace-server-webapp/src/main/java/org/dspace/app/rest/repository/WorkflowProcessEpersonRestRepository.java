@@ -71,8 +71,9 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         super(dso);
     }
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkflowProcessEpersonRest findOne(Context context, UUID id) {
+        context.turnOffAuthorisationSystem();
         WorkflowProcessEpersonRest WorkflowProcessEpersonRest=null;
         try {
             Optional<WorkflowProcessEperson> workflowProcessDefinitionOption = Optional.ofNullable(workflowProcessEpersonService.find(context, id));
@@ -84,10 +85,11 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         }
         return WorkflowProcessEpersonRest;
     }
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
     @Override
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<WorkflowProcessEpersonRest> findAll(Context context, Pageable pageable) {
         try {
+            context.turnOffAuthorisationSystem();
             List<WorkflowProcessEperson> workflowProcessDefinitions= workflowProcessEpersonService.findAll(context,pageable.getPageSize(),Math.toIntExact(pageable.getOffset()));
             return converter.toRestPage(workflowProcessDefinitions, pageable, 10, utils.obtainProjection());
         }catch (Exception e){
@@ -100,11 +102,13 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         return null;
     }
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected WorkflowProcessEpersonRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                           JsonNode jsonNode) throws Exception {
+        context.turnOffAuthorisationSystem();
         WorkflowProcessEpersonRest rest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessEpersonRest.class);
         System.out.println(":::::::::::::::E persion Update:::::::::");
+
         WorkflowProcessEperson workflowProcessEperson = workflowProcessEpersonService.find(context, id);
         if (workflowProcessEperson == null) {
             System.out.println("documentTypeRest id ::: is Null  document tye null");
@@ -117,7 +121,7 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         return converter.toRest(workflowProcessEperson, utils.obtainProjection());
     }
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
         patchDSpaceObject(apiCategory, model, uuid, patch);

@@ -156,7 +156,7 @@ public class WorkFlowProcessOutwardDetailsRepository extends DSpaceObjectRestRep
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchByOutwardNumber")
     public Page<WorkFlowProcessOutwardDetailsRest> searchByOutwardNumber(@Parameter(value = "outwardnumber", required = true) String name, Pageable pageable) {
         try {

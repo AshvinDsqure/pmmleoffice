@@ -142,6 +142,7 @@ public class WorkflowProcessFilterController {
     ) {
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             HashMap<String, String> map = new HashMap<>();
             if (rest.getPriorityRest() != null && rest.getPriorityRest().getUuid() != null) {
                 map.put("priority", rest.getPriorityRest().getUuid());
@@ -196,6 +197,7 @@ public class WorkflowProcessFilterController {
         try {
             System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             HashMap<String, String> map = new HashMap<>();
             if (rest.getPriorityRest() != null && rest.getPriorityRest().getUuid() != null) {
                 map.put("priority", rest.getPriorityRest().getUuid());
@@ -293,6 +295,7 @@ public class WorkflowProcessFilterController {
         try {
             System.out.println("in getFilterPerameter ");
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             HashMap<String, String> map = new HashMap<>();
             map.put("Priority", "dropdown");
             map.put("Status", "dropdown");
@@ -354,6 +357,7 @@ public class WorkflowProcessFilterController {
         try {
             System.out.println("in getFilterPerameterSearch ");
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             HashMap<String, String> map = new HashMap<>();
             map.put("Priority", "dropdown");
             map.put("Status", "dropdown");
@@ -375,6 +379,7 @@ public class WorkflowProcessFilterController {
         try {
             System.out.println("in getCountsDashboard ");
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             UUID userid = context.getCurrentUser().getID();
             UUID Lowid = null;
             UUID Mediumid = null;
@@ -396,6 +401,9 @@ public class WorkflowProcessFilterController {
             UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID tInProgressid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
             UUID tReferid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+            UUID parkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+            UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+
             //inward Map
             HashMap<String, Integer> mapInward = new HashMap<>();
             mapInward.put("Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid));
@@ -423,11 +431,12 @@ public class WorkflowProcessFilterController {
             mapDraft.put("Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid));
             mapDraft.put("Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid));
             mapDraft.put("High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid));
-
             mapDraft.put("Suspend", workflowProcessService.countByTypeAndStatus(context, draftid, tSuspendid, userid));
             mapDraft.put("Close", workflowProcessService.countByTypeAndStatus(context, draftid, tCloseid, userid));
             mapDraft.put("InProgress", workflowProcessService.countByTypeAndStatus(context, draftid, tInProgressid, userid));
             mapDraft.put("Refer", workflowProcessService.countByTypeAndStatus(context, draftid, tReferid, userid));
+            mapDraft.put("parked", workflowProcessService.countByTypeAndStatus(context, draftid, parkedid, userid));
+            mapDraft.put("created", workflowProcessService.countByTypeAndStatusNotwoner(context, draftid, createdid, userid));
 
             HashMap<String, HashMap<String, Integer>> maps = new HashMap<>();
             maps.put(WorkFlowType.INWARD.getAction(), mapInward);

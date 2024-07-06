@@ -94,6 +94,7 @@ public class DiscoveryRestRepository extends AbstractDSpaceRestRepository {
                                               final List<SearchFilter> searchFilters, final Pageable page,
                                               final Projection projection) {
         Context context = obtainContext();
+        context.turnOffAuthorisationSystem();
         IndexableObject scopeObject = scopeResolver.resolveScope(context, dsoScope);
         DiscoveryConfiguration discoveryConfiguration = searchConfigurationService
             .getDiscoveryConfigurationByNameOrDso(configuration, scopeObject);

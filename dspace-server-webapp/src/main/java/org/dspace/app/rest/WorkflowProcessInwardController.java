@@ -140,7 +140,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
 
     EPersonConverter ePersonConverter;
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = RequestMethod.POST,
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
                     MediaType.APPLICATION_JSON_VALUE},
@@ -157,6 +157,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRestTemp = null;
         HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         try {
             System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             Optional<WorkflowProcessEpersonRest> initiatorEpersion = Optional.ofNullable((getSubmitor(context)));
@@ -380,7 +381,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = RequestMethod.POST,
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
                     MediaType.APPLICATION_JSON_VALUE},
@@ -397,6 +398,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
 
         HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         try {
             System.out.println(":::::::::::::::::::::::::::::::::IN INWARD FLOW:::::::::::::::::::::::::::::");
             Optional<WorkflowProcessEpersonRest> initiatorEpersion = Optional.ofNullable((getSubmitor(context)));
@@ -485,7 +487,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
     }
 
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = RequestMethod.POST,
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
                     MediaType.APPLICATION_JSON_VALUE},
@@ -494,6 +496,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         InputStream fileInputStream = null;
         Bitstream bitstream = null;
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
@@ -553,7 +556,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 }
                 workFlowProcess.setWorkflowProcessSenderDiaries(workflowProcessSenderDiaries);
             }
+            EPerson inisiator=workFlowProcess.getWorkflowProcessEpeople().stream().filter(i->i.getIndex()==0).map(d->d.getePerson()).findFirst().get();
             List<String> olduser = null;
+            boolean isIntitiator=false;
             List<WorkflowProcessEperson> olduserlistuuid = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
             List<WorkflowProcessEperson> olduserlistuuidissequenstrue = workFlowProcess.getWorkflowProcessEpeople().stream().collect(Collectors.toList());
             if (olduserlistuuid != null && olduserlistuuid.size() != 0) {
@@ -563,6 +568,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                         .filter(d -> !d.getIssequence())
                         .map(d -> d.getePerson().getID().toString()).collect(Collectors.toList());
             }
+
             if (workFlowProcessRest.getWorkflowProcessEpersonRests() != null) {
                 List<WorkflowProcessEpersonRest> WorkflowProcessEpersonRestList = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
                 for (WorkflowProcessEpersonRest newEpesonrest : WorkflowProcessEpersonRestList) {
@@ -575,10 +581,16 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                     if (newEpesonrest.getePersonRest() != null && newEpesonrest.getePersonRest().getId() != null && olduser != null && olduser.contains(newEpesonrest.getePersonRest().getId())) {
                         System.out.println(":::::::::ALLREADY USE EPERSON IN SYSTEM");
                     } else {
+
+                        if(newEpesonrest.getePersonRest().getId().equalsIgnoreCase(inisiator.getID().toString()))
+                        {
+                            System.out.println("in isIntitiator..............>");
+                            isIntitiator=true;
+                        }else{
                         System.out.println("ADD NEW USER IN WORKFLOWEPERSON LIST");
                         System.out.println("New user index  : " + workflowProcessEperson.getIndex());
                         workFlowProcess.setnewUser(workflowProcessEperson);
-                        workflowProcessService.create(context, workFlowProcess);
+                        workflowProcessService.create(context, workFlowProcess);}
                     }
                 }
             }
@@ -594,7 +606,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             }
             WorkFlowAction action = WorkFlowAction.FORWARD;
             //user not select any next user then flow go initiator
-            if (olduser == null && workFlowProcessRest.getWorkflowProcessEpersonRests().size() == 0) {
+            if (isIntitiator) {
                 System.out.println("::::::::::::::::::::::::::::setInitiator :::::::true::::::::::::::::::::");
                 Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
                 if (workflowPro.isPresent()) {
@@ -658,13 +670,14 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         return docs;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/draft")
     public ResponseEntity draft(@RequestBody WorkFlowProcessRest workFlowProcessRest) throws Exception {
         try {
             System.out.println("workFlowProcessRest::" + new Gson().toJson(workFlowProcessRest));
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             workFlowProcessRest.getWorkflowProcessEpersonRests().clear();
             Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
             if (!WorkflowProcessEpersonRest.isPresent()) {
@@ -704,7 +717,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (cEPerson != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
-                    sb.append(department.getSecondaryvalue());
+                    sb.append("T/"+department.getSecondaryvalue());
                 }
             }
             if (cEPerson.getTablenumber() != null) {
@@ -725,20 +738,21 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         return map;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getInwardNumber")
     public Map<String, String> getInwardNumber() throws Exception {
         String inwardnumber = null;
         try {
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             EPerson currentuser = context.getCurrentUser();
             StringBuffer sb = new StringBuffer();
             WorkFlowProcessMasterValue department;
             if (currentuser != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
-                    sb.append(department.getSecondaryvalue());
+                    sb.append("T/"+department.getSecondaryvalue());
                 }
             }
             if (currentuser.getTablenumber() != null) {
@@ -760,13 +774,14 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         return map;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getDraftNumber")
     public Map<String, String> getDraftNumber() throws Exception {
         String inwardnumber = null;
         try {
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             EPerson currentuser = context.getCurrentUser();
             StringBuffer sb = new StringBuffer();
             WorkFlowProcessMasterValue department;

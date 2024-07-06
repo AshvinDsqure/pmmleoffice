@@ -57,66 +57,71 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
     @Override
     public WorkFlowProcessDraftDetailsRest convert(WorkFlowProcessDraftDetails obj, Projection projection) {
         WorkFlowProcessDraftDetailsRest rest = new WorkFlowProcessDraftDetailsRest();
-        List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests = new ArrayList<>();
-        if (obj.getDrafttype() != null) {
-            rest.setDrafttypeRest(workFlowProcessMasterValueConverter.convert(obj.getDrafttype(), projection));
-        }
-        if (obj.getDocumentsignator() != null) {
-            rest.setDocumentsignatorRest(ePersonConverter.convert(obj.getDocumentsignator(), projection));
-        }
-        //for reply tapal
-        if (obj.getConfidential() != null) {
-            rest.setConfidentialRest(workFlowProcessMasterValueConverter.convert(obj.getConfidential(), projection));
-        }
-        if (obj.getReplytype() != null) {
-            rest.setReplytypeRest(workFlowProcessMasterValueConverter.convert(obj.getReplytype(), projection));
+        try {
+            if (obj.getDrafttype() != null) {
+                rest.setDrafttypeRest(workFlowProcessMasterValueConverter.convert(obj.getDrafttype(), projection));
+            }
+            if (obj.getDocumentsignator() != null) {
+                rest.setDocumentsignatorRest(ePersonConverter.convert(obj.getDocumentsignator(), projection));
+            }
+            //for reply tapal
+            if (obj.getConfidential() != null) {
+                rest.setConfidentialRest(workFlowProcessMasterValueConverter.convert(obj.getConfidential(), projection));
+            }
+            if (obj.getReplytype() != null) {
+                rest.setReplytypeRest(workFlowProcessMasterValueConverter.convert(obj.getReplytype(), projection));
+            }
+
+            if (obj.getConfidential() != null) {
+                rest.setConfidentialRest(workFlowProcessMasterValueConverter.convert(obj.getConfidential(), projection));
+            }
+
+            if (obj.getDraftnature() != null) {
+                rest.setDraftnatureRest(workFlowProcessMasterValueConverter.convert(obj.getDraftnature(), projection));
+            }
+            if (!DateUtils.isNullOrEmptyOrBlank(obj.getReferencefilenumber())) {
+                rest.setReferencefilenumberRest(obj.getReferencefilenumber());
+            }
+            if (obj.getReferencetapalnumber() != null) {
+                rest.setReferencetapalnumberRest(workFlowProcessInwardDetailsConverter.convert(obj.getReferencetapalnumber(), projection));
+            }
+            if (!DateUtils.isNullOrEmptyOrBlank(obj.getSubject())) {
+                rest.setSubject(obj.getSubject());
+            }
+            if (obj.getDraftdate() != null) {
+                rest.setDraftdate(obj.getDraftdate());
+            }
+            if (!DateUtils.isNullOrEmptyOrBlank(obj.getID().toString())) {
+                rest.setUuid(obj.getID().toString());
+            }
+            if (obj.getIssinglatter() != null) {
+                rest.setIssinglatter(obj.getIssinglatter());
+            }
+            if (obj.getIsdispatchbyself() != null) {
+                rest.setIsdispatchbyself(obj.getIsdispatchbyself());
+            }
+            if (obj.getIsdispatchbycru() != null) {
+                rest.setIsdispatchbycru(obj.getIsdispatchbycru());
+            }
+            if (obj.getIsdelete() != null) {
+                rest.setIsdelete(obj.getIsdelete());
+            }
+            //sap
+            if (obj.getIssapdoc() != null) {
+                rest.setIssapdoc(obj.getIssapdoc());
+            }
+            if (!DateUtils.isNullOrEmptyOrBlank(obj.getSapdocumentno())) {
+                rest.setSapdocumentno(obj.getSapdocumentno());
+            }
+            if (obj.getSapdocumenttype() != null) {
+                rest.setSapdocumenttypeRest(workFlowProcessMasterValueConverter.convert(obj.getSapdocumenttype(), projection));
+            }
+            return rest;
+        }catch (Exception e){
+            System.out.println("error:::"+e.getMessage());
+            return null;
         }
 
-        if (obj.getConfidential() != null) {
-            rest.setConfidentialRest(workFlowProcessMasterValueConverter.convert(obj.getConfidential(), projection));
-        }
-
-        if (obj.getDraftnature() != null) {
-            rest.setDraftnatureRest(workFlowProcessMasterValueConverter.convert(obj.getDraftnature(), projection));
-        }
-        if (!DateUtils.isNullOrEmptyOrBlank(obj.getReferencefilenumber())) {
-            rest.setReferencefilenumberRest(obj.getReferencefilenumber());
-        }
-        if (obj.getReferencetapalnumber() != null) {
-            rest.setReferencetapalnumberRest(workFlowProcessInwardDetailsConverter.convert(obj.getReferencetapalnumber(), projection));
-        }
-        if (!DateUtils.isNullOrEmptyOrBlank(obj.getSubject())) {
-            rest.setSubject(obj.getSubject());
-        }
-        if (obj.getDraftdate() != null) {
-            rest.setDraftdate(obj.getDraftdate());
-        }
-        if (!DateUtils.isNullOrEmptyOrBlank(obj.getID().toString())) {
-            rest.setUuid(obj.getID().toString());
-        }
-        if (obj.getIssinglatter() != null) {
-            rest.setIssinglatter(obj.getIssinglatter());
-        }
-        if (obj.getIsdispatchbyself() != null) {
-            rest.setIsdispatchbyself(obj.getIsdispatchbyself());
-        }
-        if (obj.getIsdispatchbycru() != null) {
-            rest.setIsdispatchbycru(obj.getIsdispatchbycru());
-        }
-        if (obj.getIsdelete() != null) {
-            rest.setIsdelete(obj.getIsdelete());
-        }
-        //sap
-        if(obj.getIssapdoc()!=null){
-            rest.setIssapdoc(obj.getIssapdoc());
-        }
-        if(!DateUtils.isNullOrEmptyOrBlank(obj.getSapdocumentno())){
-            rest.setSapdocumentno(obj.getSapdocumentno());
-        }
-        if(obj.getSapdocumenttype()!=null){
-            rest.setSapdocumenttypeRest(workFlowProcessMasterValueConverter.convert(obj.getSapdocumenttype(), projection));
-        }
-        return rest;
     }
 
     public WorkFlowProcessDraftDetails convert(Context context, WorkFlowProcessDraftDetailsRest rest) throws SQLException {

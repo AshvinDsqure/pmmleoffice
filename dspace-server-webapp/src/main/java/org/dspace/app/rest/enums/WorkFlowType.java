@@ -262,6 +262,7 @@ public enum WorkFlowType {
                 }
             }
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
+
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d->d!=null).filter(d->d.getUuid()!=null).map(d -> {
                 try {
@@ -272,6 +273,17 @@ public enum WorkFlowType {
                     throw new RuntimeException(e);
                 }
             }).collect(Collectors.toList()));
+
+
+            //sender diry
+            if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
+                List<WorkflowProcessSenderDiary> list = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
+                    WorkflowProcessSenderDiary workflowProcessSenderDiary = this.getWorkflowProcessSenderDiaryConverter().convert(context, d);
+                    workflowProcessSenderDiary.setWorkflowProcess(finalWorkflowProcess);
+                    return workflowProcessSenderDiary;
+                }).collect(Collectors.toList());
+                workflowProcess.setWorkflowProcessSenderDiaries(list);
+            }
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
             //this.getWorkFlowAction().perfomeAction(context, workflowProcess, workFlowProcessRest);

@@ -57,14 +57,15 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException;
 
     int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
+    int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
 
     int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException;
 
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException;
 
-    List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException;
 
-    int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException;
+    int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statusidclose) throws SQLException;
 
     List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
 

@@ -70,7 +70,7 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
     }
 
     @Override
-    @PreAuthorize("hasAuthority('AUTHENTICATED')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<WorkflowProcessSenderDiaryRest> findAll(Context context, Pageable pageable) throws SQLException {
         int total = workflowProcessSenderDiaryService.countRows(context);
         List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries = workflowProcessSenderDiaryService.findAll(context);
@@ -159,12 +159,13 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
         System.out.println("WorkflowProcessSenderDiary update finished");
         return converter.toRest(workflowProcessSenderDiary, utils.obtainProjection());
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchByName")
     public Page<WorkflowProcessSenderDiaryRest> search(@Parameter(value = "name", required = true) String name, Pageable pageable) {
         try {
             System.out.println("sear>>>>>>>>>>>" + name);
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             Optional<List<WorkflowProcessSenderDiary>> workflowProcessSenderDiary = Optional.ofNullable(workflowProcessSenderDiaryService.searchSenderDiary(context, name));
             if (workflowProcessSenderDiary.isPresent()) {
                 return converter.toRestPage(workflowProcessSenderDiary.get(), pageable, 999, utils.obtainProjection());

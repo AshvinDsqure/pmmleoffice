@@ -63,8 +63,9 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkflowProcessTemplateRest findOne(Context context, UUID id) {
+        context.turnOffAuthorisationSystem();
         WorkflowProcessTemplateRest workflowProcessTemplateRest = null;
         try {
             Optional<WorkflowProcessTemplate> workflowProcessDefinitionOption = Optional.ofNullable(workflowProcessTemplateService.find(context, id));
@@ -77,7 +78,7 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
         return workflowProcessTemplateRest;
     }
 
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @Override
     public Page<WorkflowProcessTemplateRest> findAll(Context context, Pageable pageable) {
         try {
@@ -94,7 +95,7 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
         return null;
     }
 
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @Override
     protected WorkflowProcessTemplateRest createAndReturn(Context context)
             throws AuthorizeException {
@@ -114,8 +115,7 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
-    protected WorkflowProcessTemplateRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")protected WorkflowProcessTemplateRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                               JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkflowProcessTemplateRest workflowProcessTemplateRest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessTemplateRest.class);
         WorkflowProcessTemplate workflowProcessTemplate = workflowProcessTemplateService.find(context, id);
@@ -141,14 +141,13 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
-    protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')") protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
         patchDSpaceObject(apiCategory, model, uuid, patch);
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'DELETE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected void delete(Context context, UUID id) throws AuthorizeException {
         WorkflowProcessTemplate workflowProcessTemplate = null;
         try {
@@ -167,7 +166,7 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDocumentByItemID")
     public Page<WorkflowProcessTemplate> getDocumentByItemID(@Parameter(value = "template", required = true) UUID template, Pageable pageable) {
         try {

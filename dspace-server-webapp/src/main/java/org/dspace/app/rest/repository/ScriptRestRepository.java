@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.DSpaceRunnableParameterConverter;
+import org.dspace.app.rest.converter.ScriptConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.ParameterValueRest;
@@ -54,19 +55,22 @@ public class ScriptRestRepository extends DSpaceRestRepository<ScriptRest, Strin
     private ScriptService scriptService;
 
     @Autowired
+    ScriptConverter scriptConverter;
+
+    @Autowired
     private DSpaceRunnableParameterConverter dSpaceRunnableParameterConverter;
 
     // TODO: findOne() currently requires site ADMIN permissions as all scripts are admin-only at this time.
     // If scripts ever need to be accessible to Comm/Coll Admins, we would likely need to create a new GrantedAuthority
     // for Comm/Coll Admins in EPersonRestAuthenticationProvider to use on this endpoint
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public ScriptRest findOne(Context context, String name) {
-
+        context.turnOffAuthorisationSystem();
         ScriptConfiguration scriptConfiguration = scriptService.getScriptConfiguration(name);
         if (scriptConfiguration != null) {
             if (scriptConfiguration.isAllowedToExecute(context)) {
-                return converter.toRest(scriptConfiguration, utils.obtainProjection());
+                return scriptConverter.convert(scriptConfiguration, utils.obtainProjection());
             } else {
                 throw new AccessDeniedException("The current user was not authorized to access this script");
             }

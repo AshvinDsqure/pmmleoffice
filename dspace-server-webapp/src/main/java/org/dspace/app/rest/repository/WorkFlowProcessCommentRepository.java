@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -96,8 +97,10 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         log.info("::::::End::::put::::::::::");
         return converter.toRest(workFlowProcessComment, utils.obtainProjection());
     }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @Override
     public WorkFlowProcessCommentRest findOne(Context context, UUID uuid) {
+        context.turnOffAuthorisationSystem();
         WorkFlowProcessCommentRest workFlowProcessCommentRest =null;
         log.info("::::::start::::findOne::::::::::");
         try {
@@ -140,10 +143,12 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getComments")
     public Page<WorkFlowProcessHistoryRest> getComments(@Parameter(value = "workflowprocessid", required = true) UUID workflowprocessid, Pageable pageable) {
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             long total = workFlowProcessCommentService.countComment(context, workflowprocessid);
             List<WorkFlowProcessComment> witems = workFlowProcessCommentService.getComments(context, workflowprocessid);
             return converter.toRestPage(witems, pageable, total, utils.obtainProjection());

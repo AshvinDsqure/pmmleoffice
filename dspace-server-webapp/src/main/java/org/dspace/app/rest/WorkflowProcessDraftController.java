@@ -134,7 +134,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
     @Autowired
     private WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @ExceptionHandler(MissingParameterException.class)
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD})
     public ResponseEntity create(@RequestBody WorkFlowProcessRest workFlowProcessRest) throws Exception {
@@ -144,15 +144,15 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         try {
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
-            Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
-            if (!WorkflowProcessEpersonRest.isPresent()) {
+            context.turnOffAuthorisationSystem();
+            Optional<WorkflowProcessEpersonRest> workflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
+            if (!workflowProcessEpersonRest.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
             }
             WorkFlowType workFlowType = WorkFlowType.DRAFT;
             if (workFlowProcessRest != null && workFlowProcessRest.getId() != null) {
                 workFlowProcess = workFlowProcessConverter.convertDraftwithID(workFlowProcessRest, context, UUID.fromString(workFlowProcessRest.getId()));
                 if (workFlowProcess != null) {
-                    System.out.println("in Draft to create flow ");
                     Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.REJECTED.getUserTypeFromMasterValue(context);
                     if (workFlowTypeStatus.isPresent()) {
                         workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
@@ -165,12 +165,15 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             workFlowType.setWorkFlowAction(create);
             // create.setComment();
             workFlowType.setProjection(utils.obtainProjection());
-            workFlowProcessRest.getWorkflowProcessEpersonRests().add(WorkflowProcessEpersonRest.get());
+            WorkflowProcessEpersonRest ep=workflowProcessEpersonRest.get();
+            if(workFlowProcessRest.getRemark()!=null) {
+                ep.setRemark(workFlowProcessRest.getRemark());
+            }
+            workFlowProcessRest.getWorkflowProcessEpersonRests().add(ep);
+            System.out.println("ep size size : "+workFlowProcessRest.getWorkflowProcessEpersonRests().size());
             //perfome and stor to db
             workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
-            //create Note
-            //WorkflowProcessReferenceDoc workflowProcessReferenceDoc = createNote(context, workflowProcess);
             context.commit();
             create.setComment(null);
             create.setWorkflowProcessReferenceDocs(null);
@@ -398,14 +401,14 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
     }
 
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/draft")
     public ResponseEntity draft(@RequestBody WorkFlowProcessRest workFlowProcessRest, HttpServletRequest request) throws Exception {
         try {
             System.out.println("workFlowProcessRest::" + new Gson().toJson(workFlowProcessRest));
             //  HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
-            workFlowProcessRest.getWorkflowProcessEpersonRests().clear();
+            context.turnOffAuthorisationSystem();
             WorkFlowProcessRest workFlowProcessRest1 = workFlowProcessRest;
             Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
             if (!WorkflowProcessEpersonRest.isPresent()) {
@@ -415,13 +418,13 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             //status
             workFlowType.setWorkFlowStatus(WorkFlowStatus.DRAFT);
             WorkFlowAction create = WorkFlowAction.CREATE;
-
             workFlowType.setWorkFlowAction(create);
             workFlowType.setProjection(utils.obtainProjection());
             workFlowProcessRest.getWorkflowProcessEpersonRests().add(WorkflowProcessEpersonRest.get());
             //perfome and stor to db
             workFlowProcessRest = workFlowType.storeWorkFlowProcessDraft(context, workFlowProcessRest);
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
+            System.out.println("size ep "+workflowProcess1.getWorkflowProcessEpeople().size());
             context.commit();
             if (workFlowProcessRest1 != null && workFlowProcessRest1.getWorkFlowProcessCommentRest() != null) {
                 System.out.println("in savedraft");
@@ -435,17 +438,16 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         }
         return ResponseEntity.ok(workFlowProcessRest);
     }
-
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/savedraft")
     public ResponseEntity savedraft(@RequestBody WorkFlowProcessRest workFlowProcessRest, HttpServletRequest request) throws Exception {
         WorkflowProcess workFlowProcess = null;
         WorkFlowProcessRest workFlowProcessRest1 = workFlowProcessRest;
         System.out.println("data " + workFlowProcessRest);
         System.out.println("id " + workFlowProcessRest.getId());
-
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             if (workFlowProcessRest != null && workFlowProcessRest.getId() != null) {
                 workFlowProcess = workFlowProcessConverter.convertDraftwithID(workFlowProcessRest, context, UUID.fromString(workFlowProcessRest.getId()));
             }

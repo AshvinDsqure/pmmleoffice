@@ -60,7 +60,7 @@ public class ScriptProcessesController {
      * @throws Exception    If something goes wrong
      */
     @RequestMapping(method = RequestMethod.POST)
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public ResponseEntity<RepresentationModel<?>> startProcess(
         @PathVariable(name = "name") String scriptName,
         @RequestParam(name = "file", required = false) List<MultipartFile> files)

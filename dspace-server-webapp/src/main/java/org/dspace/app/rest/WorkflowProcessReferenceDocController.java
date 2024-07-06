@@ -149,7 +149,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/bitstream")
     //@PreAuthorize("hasPermission(#uuid, 'BUNDLE', 'ADD') && hasPermission(#uuid, 'BUNDLE', 'WRITE')")
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkflowProcessReferenceDocRest uploadBitstream(
             HttpServletRequest request,
             MultipartFile file, String workflowProcessReferenceDocRestStr) throws SQLException, AuthorizeException, IOException {
@@ -158,6 +158,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         Bitstream bitstream = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             System.out.println("ccuser   " + context.getCurrentUser().getEmail());
             ObjectMapper mapper = new ObjectMapper();
             InputStream fileInputStream = null;
@@ -549,7 +550,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                             version.setBitstream(bitstream);
                         }
                         version.setCreationdatetime(new Date());
-                        storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc, version.getVersionnumber());
+                       // storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc, version.getVersionnumber());
                         workflowProcessReferenceDocVersionService.update(context, version);
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         workflowProcessReferenceDocService.update(context,workflowProcessReferenceDoc);
@@ -561,10 +562,10 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                     if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
                         System.out.println("in create new version of Reply Note  ");
                         workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
-                        storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                         storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
                         if (workflowProcessReferenceDoc.getWorkflowProcess() != null) {
                             System.out.println("in store histitory create new version ");
-                            storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
+                           // storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
                         }
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         context.commit();
@@ -900,12 +901,13 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/outward")
     //@PreAuthorize("hasPermission(#uuid, 'BUNDLE', 'ADD') && hasPermission(#uuid, 'BUNDLE', 'WRITE')")
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public List<WorkflowProcessReferenceDocRest> uploadBitstreamoutward(HttpServletRequest request,
                                                                         @RequestBody List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRestListstr,
                                                                         @Nullable Pageable optionalPageable) throws SQLException, AuthorizeException, IOException {
         List<WorkflowProcessReferenceDocRest> rsponce = new ArrayList<>();
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         System.out.println("workflowProcessReferenceDocRestListstr::" + workflowProcessReferenceDocRestListstr);
         System.out.println("workflowProcessReferenceDocRestList size::" + workflowProcessReferenceDocRestListstr.size());
         rsponce = workflowProcessReferenceDocRestListstr.stream().map(wrd -> {
@@ -969,7 +971,14 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
         workFlowAction.setWorkflowProcess(workflowProcess);
-        //workflowProcess.getWorkflowProcessNote().getSubject();
+        Optional<WorkflowProcessEperson> sento = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getOwner()).findFirst();
+        if (sento != null) {
+            workFlowAction.setSenttoname(sento.get().getePerson().getFullName());
+        }
+        if (sento!=null) {
+            workFlowAction.setSentbyname(sento.get().getePerson().getFullName());
+        }
+            //workflowProcess.getWorkflowProcessNote().getSubject();
         workFlowAction.setComment("Update Version " + versionnumber + " for " + doc.getDrafttype().getPrimaryvalue() + ".");
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Update::version:::::: ");
@@ -1025,6 +1034,16 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Outward") && !doc.getIssignature()) {
             workFlowAction.setComment("Create Version  " + doc.getWorkflowProcessReferenceDocVersion().size() + " for  " + (doc.getDrafttype().getPrimaryvalue() != null ? doc.getDrafttype().getPrimaryvalue() : " "));
         }
+        if (doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note")) {
+            workFlowAction.setComment("Create Version  " + doc.getWorkflowProcessReferenceDocVersion().size() + " for  Reply Note.");
+        }
+        WorkflowProcessEperson current = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get();
+        if (current != null) {
+            workFlowAction.setWorkflowProcessEpeople(current);
+            workFlowAction.setSentto(current);
+            workFlowAction.setSenttoname(current.getePerson().getFullName());
+            workFlowAction.setSentbyname(current.getePerson().getFullName());
+        }
         workFlowProcessHistoryService.create(context, workFlowAction);
         System.out.println("::::::OUT :storeWorkFlowHistory::Document:::::::: ");
     }
@@ -1054,13 +1073,14 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         System.out.println("::::::::::::::::::getSignatureDocuments::::::::::::stop");
         return workflowProcessReferenceDocRests;
     }
-
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = RequestMethod.GET, value = "/getNoteAndApprovedReply")
     public List<ApprovedReplyDTO> getNoteAndApprovedReply(HttpServletRequest request,
                                                           @Parameter(value = "itemid", required = true) String itemid) {
         System.out.println("::::::::::::::::::getNoteAndApprovedReply::::::::::::start");
         List<ApprovedReplyDTO> approvedReplyDTOS = new ArrayList<>();
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
         UUID ReplyNoteID = null;
         UUID NoteUUID = null;
@@ -1096,17 +1116,18 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("error"+e.getMessage());
         }
         System.out.println("::::::::::::::::::getNoteAndApprovedReply::::::::::::stop");
         return approvedReplyDTOS;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getDocByDraftType")
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public List<WorkflowProcessReferenceDocRest> getDocByDraftType(@Parameter(value = "drafttypeid", required = true) String drafttypeid, HttpServletRequest request) {
         System.out.println("::::::::::::::::::getDocByDraftType::::::::::::start");
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
         try {
             List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workflowProcessReferenceDocService.getDocumentBySignitore(context, context.getCurrentUser().getID(), UUID.fromString(drafttypeid));

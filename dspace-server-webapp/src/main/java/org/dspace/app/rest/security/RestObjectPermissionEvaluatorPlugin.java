@@ -64,7 +64,7 @@ public abstract class RestObjectPermissionEvaluatorPlugin  implements RestPermis
 
         if (permission instanceof Patch) {
             return hasPatchPermission(authentication, targetId, targetType, (Patch) permission);
-        }else if(Constants.getTypeID(targetType) == Constants.NOTE ||Constants.getTypeID(targetType) == Constants.TAPAL){
+        }else if(Constants.getTypeID(targetType) == Constants.NOTE ||Constants.getTypeID(targetType) == Constants.TAPAL||Constants.getTypeID(targetType) == Constants.READ){
             return hasPatchPermissionWorkFlowPermition(authentication,targetType);
         } else {
             DSpaceRestPermission restPermission = DSpaceRestPermission.convert(permission);
@@ -101,7 +101,6 @@ public abstract class RestObjectPermissionEvaluatorPlugin  implements RestPermis
 
     public boolean hasPatchPermissionWorkFlowPermition(Authentication authentication, String name)  {
         boolean isValidated=false;
-        System.out.println("in tapal and note permition");
         try {
             Request request = requestService.getCurrentRequest();
             Context context = ContextUtil.obtainContext(request.getHttpServletRequest());
@@ -122,9 +121,7 @@ public abstract class RestObjectPermissionEvaluatorPlugin  implements RestPermis
         }catch (Exception e){
             isValidated=false;
         }
-
         return  isValidated;
-
     }
 
 }

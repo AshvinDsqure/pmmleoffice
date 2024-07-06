@@ -371,7 +371,6 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
         // We do this as we want the token to change anytime you login or logout
         csrfTokenRepository.saveToken(null, request, response);
         CsrfToken newToken = csrfTokenRepository.generateToken(request);
-        System.out.println("new token "+newToken);
         csrfTokenRepository.saveToken(newToken, request, response);
     }
 

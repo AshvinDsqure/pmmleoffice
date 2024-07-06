@@ -524,9 +524,14 @@ public enum WorkFlowAction {
         Optional<WorkflowProcessEperson> sentto = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getOwner()).findFirst();
         if (sentto.isPresent()) {
             workFlowAction.setSentto(sentto.get());
+
         }
         if (workFlowProcessRest.getCurrentrecipient() != null) {
             workFlowAction.setSenttoname(workFlowProcessRest.getCurrentrecipient());
+        }else{
+            if(sentto.isPresent()) {
+                workFlowAction.setSenttoname(sentto.get().getePerson().getFullName());
+            }
         }
         if (workFlowProcessRest.getSendername() != null) {
             workFlowAction.setSentbyname(workFlowProcessRest.getSendername());
@@ -539,9 +544,9 @@ public enum WorkFlowAction {
             workFlowAction.setComment(" Received.");
             return workFlowAction;
         }
-        if (!DateUtils.isNullOrEmptyOrBlank(workflowProcess.getRemark())) {
-            System.out.println("remark :" + workflowProcess.getRemark());
-            workFlowAction.setComment(workflowProcess.getRemark());
+        if (!DateUtils.isNullOrEmptyOrBlank(workFlowProcessRest.getRemark())) {
+            System.out.println("remark :" + workFlowProcessRest.getRemark());
+            workFlowAction.setComment(workFlowProcessRest.getRemark());
         }
 
         if (this.getComment() != null && !this.getComment().isEmpty()) {

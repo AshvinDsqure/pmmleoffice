@@ -44,6 +44,16 @@ public class WorkflowProcessReferenceDocVersionDAOImpl extends AbstractHibernate
         query.setParameter("docid",documentid);
         return count(query);
     }
+
+    @Override
+    public WorkflowProcessReferenceDocVersion findByCreator(Context context, UUID e,UUID documentid) throws SQLException {
+        Query query = createQuery(context, "SELECT v FROM WorkflowProcessReferenceDocVersion as v   where  v.creator.id=:e and v.workflowProcessReferenceDoc.id=:docid");
+        query.setParameter("e",e);
+        query.setParameter("docid",documentid);
+        query.setMaxResults(1);
+        return (WorkflowProcessReferenceDocVersion) query.getSingleResult();
+    }
+
     @Override
     public List<WorkflowProcessReferenceDocVersion> getDocVersionBydocumentID(Context context, UUID documentid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "SELECT v FROM WorkflowProcessReferenceDocVersion as v  where v.workflowProcessReferenceDoc.id=:docid order by v.versionnumber DESC");

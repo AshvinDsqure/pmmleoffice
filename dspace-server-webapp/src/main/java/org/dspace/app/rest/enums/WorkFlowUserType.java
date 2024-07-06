@@ -59,7 +59,6 @@ public enum WorkFlowUserType {
     public Optional<WorkFlowProcessMasterValue> getUserTypeFromMasterValue(Context context) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = MASTER.getMaster(context);
         WorkFlowProcessMasterValue workFlowProcessMasterValue= this.getWorkFlowProcessMasterValueService().findByName(context, this.getAction(), workFlowProcessMaster);
-        System.out.println("workFlowProcessMaster Master"+workFlowProcessMaster.getID() +"this.getAction()::"+workFlowProcessMasterValue);
         return Optional.ofNullable(workFlowProcessMasterValue );
     }
     public WorkFlowProcessMaster getMaster(Context context) throws SQLException {

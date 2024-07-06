@@ -89,6 +89,9 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     @Column(name = "isacknowledgement")
     private  Boolean isacknowledgement=false;
+    @Column(name = "remark")
+    private  String  remark;
+
 
     @Transient
     private List<EPerson> Persons = new ArrayList<>();
@@ -270,5 +273,13 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setIsacknowledgement(Boolean isacknowledgement) {
         this.isacknowledgement = isacknowledgement;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

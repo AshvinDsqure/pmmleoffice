@@ -41,9 +41,11 @@ import org.dspace.content.WorkflowProcess;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.EmptyWorkflowGroupException;
+import org.dspace.eperson.Group;
 import org.dspace.eperson.RegistrationData;
 import org.dspace.eperson.service.AccountService;
 import org.dspace.eperson.service.EPersonService;
+import org.dspace.eperson.service.GroupService;
 import org.dspace.eperson.service.RegistrationDataService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +95,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Autowired
     EPersonConverter ePersonConverter;
 
+    @Autowired
+    GroupService groupService;
+
 
     public EPersonRestRepository(EPersonService dsoService) {
         super(dsoService);
@@ -124,6 +129,17 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         // If no token is present, we simply do the admin execution
         EPerson eperson = createEPersonFromRestObject(context, epersonRest);
 
+        try {
+            Group note = groupService.findByName(context, "NOTE");
+           if(note!=null){
+               System.out.println("::::: add in note Group ::::");
+               groupService.addMember(context, note, eperson);
+               groupService.update(context, note);
+               System.out.println("::::: add in note Group :done:::");
+           }
+        }catch (Exception e){
+            System.out.println("error in NOTE group "+e.getMessage());
+        }
         return converter.toRest(eperson, utils.obtainProjection());
     }
 
@@ -238,8 +254,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'EPERSON', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public EPersonRest findOne(Context context, UUID id) {
+        context.turnOffAuthorisationSystem();
         EPerson eperson = null;
         try {
             eperson = es.find(context, id);
@@ -253,8 +270,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<EPersonRest> findAll(Context context, Pageable pageable) {
+        context.turnOffAuthorisationSystem();
         List<EPersonRest> ePersonRests;
         try {
             long total = es.countTotal(context);

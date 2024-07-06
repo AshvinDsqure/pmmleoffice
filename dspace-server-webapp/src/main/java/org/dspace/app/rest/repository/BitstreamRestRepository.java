@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.BitstreamConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -60,6 +61,9 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
     ItemService itemService;
 
     @Autowired
+    BitstreamConverter bitstreamConverter;
+
+    @Autowired
     AuthorizeService authorizeService;
 
     @Autowired
@@ -78,8 +82,9 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'METADATA_READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public BitstreamRest findOne(Context context, UUID id) {
+        context.turnOffAuthorisationSystem();
         Bitstream bit = null;
         try {
             bit = bs.find(context, id);
@@ -186,7 +191,7 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
     }
 
     @SearchRestMethod(name = "getBitstreamsByItemID")
-    @PreAuthorize("hasPermission(#id, 'BITSTREAM', 'METADATA_READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<BitstreamRest> getBitstreamsByItemID(@Parameter(value = "handle", required = true) UUID itemid
    ,Pageable pageable ) {
         if (itemid != null && StringUtils.isBlank(itemid.toString())) {
@@ -194,6 +199,7 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         }
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             Item item = itemService.find(context, itemid);
             List<Bundle> bundles = item.getBundles("ORIGINAL");
             List<Bitstream> bitstreams=new ArrayList<>();

@@ -60,7 +60,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
         super(dso);
     }
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkflowProcessNoteRest findOne(Context context, UUID id) {
         WorkflowProcessNoteRest workflowProcessNoteRest=null;
         try {
@@ -76,8 +76,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
         }
         return workflowProcessNoteRest;
     }
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
-    @Override
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')") @Override
     public Page<WorkflowProcessNoteRest> findAll(Context context, Pageable pageable) {
         try {
             List<WorkflowProcessNote> workflowProcessDefinitions= workflowProcessNoteService.findAll(context,pageable.getPageSize(),Math.toIntExact(pageable.getOffset()));
@@ -91,7 +90,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
     public Class<WorkflowProcessNoteRest> getDomainClass() {
         return null;
     }
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @Override
     protected WorkflowProcessNoteRest createAndReturn(Context context)
             throws AuthorizeException {
@@ -153,7 +152,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
         patchDSpaceObject(apiCategory, model, uuid, patch);
     }
     @Override
-    @PreAuthorize("hasPermission(#id, 'ITEM', 'DELETE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected void delete(Context context, UUID id) throws AuthorizeException {
         WorkflowProcessNote workflowProcessNote = null;
         try {
@@ -172,11 +171,12 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDocumentByItemID")
     public Page<WorkflowProcessNote> getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid, Pageable pageable) {
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             System.out.println("status id:"+statusid);
             long total = workflowProcessNoteService.countDocumentByItemid(context, itemid,statusid);

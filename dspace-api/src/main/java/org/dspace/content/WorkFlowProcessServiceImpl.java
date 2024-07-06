@@ -267,6 +267,12 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
+    public int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatusNotwoner(context, typeid, statusid, epersonid);
+
+    }
+
+    @Override
     public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException {
         return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid);
     }
@@ -335,13 +341,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,offset,limit);
+    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,offset,limit);
     }
 
     @Override
-    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid);
+    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid) throws SQLException {
+        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid,statuscloseid);
     }
 
     @Override

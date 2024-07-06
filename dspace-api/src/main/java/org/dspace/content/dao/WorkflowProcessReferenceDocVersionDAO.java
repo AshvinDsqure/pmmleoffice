@@ -28,6 +28,7 @@ public interface WorkflowProcessReferenceDocVersionDAO extends DSpaceObjectLegac
     int countRows(Context context) throws SQLException;
 
     public int countDocumentID(Context context , UUID documentid) throws SQLException;
+    WorkflowProcessReferenceDocVersion findByCreator(Context context,UUID uuid,UUID documentid) throws SQLException;
     public List<WorkflowProcessReferenceDocVersion> getDocVersionBydocumentID(Context context , UUID documentid, Integer offset, Integer limit) throws SQLException;
 
 }

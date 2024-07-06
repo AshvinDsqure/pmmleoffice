@@ -72,14 +72,14 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkflowProcessReferenceDocRest findOne(Context context, UUID id) throws SQLException {
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, id);
         return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<WorkflowProcessReferenceDocRest> findAll(Context context, Pageable pageable) {
         try {
             List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workflowProcessReferenceDocService.findAll(context, pageable.getPageSize(), Math.toIntExact(pageable.getOffset()));
@@ -95,17 +95,15 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected WorkflowProcessReferenceDocRest createAndReturn(Context context)
             throws AuthorizeException {
         return null;
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
-
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected void delete(Context context, UUID id) throws AuthorizeException {
-
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         try {
             workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, id);
@@ -126,7 +124,6 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
     @SearchRestMethod(name = "getDocumentBydraftTypeId")
     public Page<WorkflowProcessReferenceDocVersionRest> getDocumentBydraftTypeId(@Parameter(value = "drafttypeid", required = true) UUID drafttypeid, Pageable pageable) {
         try {

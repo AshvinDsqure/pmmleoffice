@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -104,6 +105,7 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
 
     @Override
     public WorkFlowProcessDraftDetailsRest findOne(Context context, UUID uuid) {
+      context.turnOffAuthorisationSystem();
         WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = null;
         log.info("::::::start::::findOne::::::::::");
         try {
@@ -129,6 +131,7 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
 
     protected void delete(Context context, UUID id) throws AuthorizeException {
         log.info("::::::in::::delete::::::::::");
+        context.turnOffAuthorisationSystem();
         WorkFlowProcessDraftDetails workFlowProcessDraftDetails = null;
         try {
             workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.find(context, id);
@@ -149,10 +152,12 @@ public class WorkFlowProcessDraftDetailsRepository extends DSpaceObjectRestRepos
         }
     }
     @SearchRestMethod(name = "discardDraft")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkFlowProcessDraftDetailsRest discardDraft(@Parameter(value = "draftid", required = true) UUID draftid) {
         WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = null;
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             WorkFlowProcessDraftDetails workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.find(context, draftid);
             if (workFlowProcessDraftDetails != null) {
                 workFlowProcessDraftDetails.setIsdelete(true);

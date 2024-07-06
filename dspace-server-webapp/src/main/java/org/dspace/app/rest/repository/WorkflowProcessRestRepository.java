@@ -89,8 +89,9 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkFlowProcessRest findOne(Context context, UUID id) throws SQLException {
+       context.turnOffAuthorisationSystem();
         WorkFlowProcessRest workFlowProcessRest = null;
         WorkflowProcess workflowProcess = workflowProcessService.find(context, id);
         workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
@@ -107,9 +108,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
 
     @Override
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public Page<WorkFlowProcessRest> findAll(Context context, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        context.turnOffAuthorisationSystem();
         try {
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
@@ -136,9 +138,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'WORKSPACEITEM', 'WRITE')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected WorkFlowProcessRest createAndReturn(Context context) throws AuthorizeException {
         // this need to be revisited we should receive an EPersonRest as input
+        context.turnOffAuthorisationSystem();
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
         WorkFlowProcessRest workFlowProcessRest = null;
@@ -226,12 +229,12 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         return workflowProcess;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getByWorkFlowType")
     public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
-            Context context = obtainContext();
+            Context context = obtainContext(); context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -245,12 +248,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "findCompletedFlowByWorkflowTypeid")
     public Page<WorkFlowProcessRest> findCompletedFlowByWorkflowTypeid(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countfindCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.findCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -264,13 +268,15 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "gethistory")
     public Page<WorkflowProcessDTO> gethistory(Pageable pageable) {
         log.info("in gethistory start ");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -286,17 +292,27 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentTapal")
     public Page<WorkflowProcessDTO> sentTapal(Pageable pageable) {
         System.out.println("in sentTapal");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
-            Context context = obtainContext();
-            UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+               Context context = obtainContext();
+               context.turnOffAuthorisationSystem();
+            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
+//            (Context context, UUID eperson,
+//                    UUID statusdraftid,
+//                    UUID statuscloseid,
+//                    UUID workflowtypeid,
+//                    Integer offset, Integer limit)
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(),
+                    statusid,
+                    statusidclose,workflowtypeid,
+                    Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -307,17 +323,19 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentEFile")
     public Page<WorkflowProcessDTO> sentEFile(Pageable pageable) {
         System.out.println("in sentEFile");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -328,15 +346,16 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "closeTapal")
     public Page<WorkflowProcessDTO> closeTapal(Pageable pageable) {
         System.out.println("in closeTapal");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusclose = WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -350,15 +369,16 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "closeEFile")
     public Page<WorkflowProcessDTO> closeEFile(Pageable pageable) {
         System.out.println("in closeEFile");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusclose = WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -372,13 +392,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "acknowledgementTapal")
     public Page<WorkflowProcessDTO> acknowledgementTapal(Pageable pageable) {
         System.out.println("in acknowledgementTapal");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
@@ -394,13 +415,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "dispatchTapal")
     public Page<WorkflowProcessDTO> dispatchTapal(Pageable pageable) {
         System.out.println("in dispatchTapal");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
@@ -416,13 +438,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "parkedWorkflow")
     public Page<WorkflowProcessDTO> parkedWorkflow(Pageable pageable) {
         System.out.println("in parkedWorkflow");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusparked = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
             //you get file work flow the change workflow type just
@@ -439,10 +462,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "dashboard")
     public Page<WorkFlowProcessRest> dashboard(Context context, Pageable pageable) {
         log.info("in dashboard start");
+        context.turnOffAuthorisationSystem();
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
@@ -460,13 +484,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraft")
     public Page<WorkFlowProcessRest> getDraft(Pageable pageable) {
         log.info("in getDraft start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid);
@@ -482,12 +507,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraftByWorkFlowType")
     public Page<WorkFlowProcessRest> getDraftByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -501,7 +527,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "filterbyInwardAndOutWard")
     public Page<WorkFlowProcessRest> filterbyInwardAndOutWard(
             @Parameter(value = "subject",required = false)String subject,
@@ -531,7 +557,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             @Parameter(value = "outward",required = false)String outward,
             Pageable pageable) {
         try {
-            Context context = obtainContext();
+            Context context = obtainContext(); context.turnOffAuthorisationSystem();
             System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
             HashMap<String, String> map = new HashMap<>();
             if (priority != null) {
@@ -628,13 +654,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
 
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraftNotePendingWorkflow")
     public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(Pageable pageable) {
         log.info("in getDraftNotePendingWorkflow start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID statuscloseid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
@@ -656,7 +683,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getReferWorkflow")
     public Page<WorkflowProcessDTO> getReferWorkflow(Pageable pageable) {
         log.info("in getReferWorkflow start!");
@@ -664,6 +691,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         List<WorkflowProcessDTO> workflowsRes1 = new ArrayList<WorkflowProcessDTO>();
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             UUID referstatusid = WorkFlowStatus.REFER.getUserTypeFromMasterValue(context).get().getID();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
@@ -690,6 +718,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         log.info("in getDocumentByItemID start!");
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             WorkflowProcess witems = workflowProcessService.getNoteByItemsid(context, itemid);
             log.info("in getDocumentByItemID stop!");
             return workFlowProcessConverter.convert(witems, utils.obtainProjection());
@@ -700,12 +729,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEM', 'WRITE')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchByTypeandSubject")
     public Page<WorkFlowProcessRest> searchByTypeandSubject(@Parameter(value = "workflowtypeid", required = true) UUID workflowtypeid, @Parameter(value = "subject", required = true) String subject, Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = null;
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             Optional<List<WorkflowProcess>> workflowProcesses = Optional.ofNullable(workflowProcessService.searchSubjectByWorkflowTypeandSubject(context, workflowtypeid, subject));
             if (workflowProcesses.isPresent()) {
                 workflowsRes = workflowProcesses.get().stream().map(d -> {

@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocVersionConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocVersionRest;
@@ -26,17 +27,22 @@ import org.dspace.content.service.WorkflowProcessReferenceDocVersionService;
 import org.dspace.core.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Component(WorkflowProcessReferenceDocVersionRest.CATEGORY + "." + WorkflowProcessReferenceDocVersionRest.NAME)
 
@@ -48,6 +54,8 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
 
     @Autowired
     WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
+    @Autowired
+    WorkflowProcessReferenceDocVersionConverter workflowProcessReferenceDocVersionConverter;
 
 
     @Autowired
@@ -88,6 +96,7 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
     }
 
     @Override
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected WorkflowProcessReferenceDocVersionRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                              JsonNode jsonNode) throws SQLException, AuthorizeException {
         log.info("::::::start::::put::::::::::");
@@ -149,21 +158,26 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getVersionByDocId")
     public Page<WorkflowProcessReferenceDocVersionRest> getVersionByDocId(@Parameter(value = "documentid", required = true) UUID documentid, Pageable pageable) {
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            List<WorkflowProcessReferenceDocVersionRest>rests = new ArrayList<>();
             long total = WorkflowProcessReferenceDocVersionService.countDocumentID(context, documentid);
             List<WorkflowProcessReferenceDocVersion> witems = WorkflowProcessReferenceDocVersionService.getDocVersionBydocumentID(context, documentid, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-            witems.stream().forEach(f-> System.out.println("date"+f.getCreationdatetime()));
-
-            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
+            rests = witems.stream().map(d -> {
+                return workflowProcessReferenceDocVersionConverter.convert(d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getDraftNotePendingWorkflow stop!");
+            return new PageImpl(rests, pageable, total);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "updateVersion")
         public WorkflowProcessReferenceDocVersionRest updateVersion(@Parameter(value = "versionid", required = true) UUID versionid) {
         try {

@@ -62,7 +62,10 @@ public class WorkflowProcessReferenceDocVersionConverter extends DSpaceObjectCon
         if(obj.getCreationdatetime()!=null){
             rest.setCreationdatetime(obj.getCreationdatetime());
         }
-        rest.setVersionnumber(obj.getVersionnumber());
+        if(obj.getVersionnumber()!=null){
+            rest.setVersionnumber(getVersionFormate(obj.getVersionnumber()));
+        }
+
         rest.setUuid(obj.getID().toString());
         return rest;
     }
@@ -92,5 +95,19 @@ public class WorkflowProcessReferenceDocVersionConverter extends DSpaceObjectCon
             return WorkflowProcessReferenceDocVersionService.find(context, UUID.fromString(rest.getId()));
         }
         return null;
+    }
+
+    public Double getVersionFormate(Double version){
+        if (version == 1) {
+            int jj=0;
+            Double d=Double.valueOf("1."+jj);
+            return d;
+        } else {
+            double d=version;
+            int intValue = (int) d;
+            int ss=intValue-1;
+            Double value=Double.valueOf("1."+ss);
+            return value;
+        }
     }
 }

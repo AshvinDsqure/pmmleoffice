@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- *
+ * <p>
  * http://www.dspace.org/license/
  */
 package org.dspace.content;
@@ -58,7 +58,7 @@ public class WorkflowProcessReferenceDocVersionServiceImpl extends DSpaceObjectS
 
     @Override
     public WorkflowProcessReferenceDocVersion find(Context context, UUID uuid) throws SQLException {
-        return WorkflowProcessReferenceDocVersionDAO.findByID(context,WorkflowProcessReferenceDocVersion.class,uuid);
+        return WorkflowProcessReferenceDocVersionDAO.findByID(context, WorkflowProcessReferenceDocVersion.class, uuid);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class WorkflowProcessReferenceDocVersionServiceImpl extends DSpaceObjectS
 
     @Override
     public void delete(Context context, WorkflowProcessReferenceDocVersion dso) throws SQLException, AuthorizeException, IOException {
-        WorkflowProcessReferenceDocVersionDAO.delete(context,dso);
+        WorkflowProcessReferenceDocVersionDAO.delete(context, dso);
     }
 
     @Override
@@ -80,18 +80,18 @@ public class WorkflowProcessReferenceDocVersionServiceImpl extends DSpaceObjectS
 
     @Override
     public WorkflowProcessReferenceDocVersion create(Context context, WorkflowProcessReferenceDocVersion WorkflowProcessReferenceDocVersion) throws SQLException, AuthorizeException {
-        return  WorkflowProcessReferenceDocVersionDAO.create(context,WorkflowProcessReferenceDocVersion);
+        return WorkflowProcessReferenceDocVersionDAO.create(context, WorkflowProcessReferenceDocVersion);
 
     }
 
     @Override
     public List<WorkflowProcessReferenceDocVersion> findAll(Context context) throws SQLException {
-        return Optional.ofNullable(WorkflowProcessReferenceDocVersionDAO.findAll(context,WorkflowProcessReferenceDocVersion.class)).orElse(new ArrayList<>());
+        return Optional.ofNullable(WorkflowProcessReferenceDocVersionDAO.findAll(context, WorkflowProcessReferenceDocVersion.class)).orElse(new ArrayList<>());
     }
 
     @Override
     public List<WorkflowProcessReferenceDocVersion> findAll(Context context, Integer limit, Integer offset) throws SQLException {
-        return  Optional.ofNullable(WorkflowProcessReferenceDocVersionDAO.findAll(context,WorkflowProcessReferenceDocVersion.class,limit,
+        return Optional.ofNullable(WorkflowProcessReferenceDocVersionDAO.findAll(context, WorkflowProcessReferenceDocVersion.class, limit,
                 offset)).orElse(new ArrayList<>());
     }
 
@@ -106,7 +106,22 @@ public class WorkflowProcessReferenceDocVersionServiceImpl extends DSpaceObjectS
     }
 
     @Override
-    public List<WorkflowProcessReferenceDocVersion> getDocVersionBydocumentID(Context context, UUID documentid,Integer offset, Integer limit) throws SQLException {
-        return WorkflowProcessReferenceDocVersionDAO.getDocVersionBydocumentID(context,documentid,offset,limit);
+    public List<WorkflowProcessReferenceDocVersion> getDocVersionBydocumentID(Context context, UUID documentid, Integer offset, Integer limit) throws SQLException {
+        return WorkflowProcessReferenceDocVersionDAO.getDocVersionBydocumentID(context, documentid, offset, limit);
+    }
+
+    @Override
+    public WorkflowProcessReferenceDocVersion findByCreator(Context context, UUID uuid,UUID documentid) throws SQLException {
+        try {
+            WorkflowProcessReferenceDocVersion v = WorkflowProcessReferenceDocVersionDAO.findByCreator(context, uuid,documentid);
+            if (v != null) {
+                return v;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            System.out.println("version" + e.getMessage());
+            return null;
+        }
     }
 }

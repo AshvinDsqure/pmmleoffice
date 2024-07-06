@@ -85,6 +85,9 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     @JsonProperty
     private  Boolean isacknowledgement=false;
 
+    @JsonProperty
+    private  String remark;
+
 
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
@@ -283,5 +286,13 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setIsacknowledgement(Boolean isacknowledgement) {
         this.isacknowledgement = isacknowledgement;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

@@ -127,7 +127,7 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     }
 
     @Override
-    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ')")
+    @PreAuthorize("hasPermission(#id, 'COLLECTION', 'READ') ||hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public CollectionRest findOne(Context context, UUID id) {
         Collection collection = null;
         try {
@@ -192,11 +192,13 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         }
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "findSubmitAuthorized")
     public Page<CollectionRest> findSubmitAuthorized(@Parameter(value = "query") String q,
                                                 Pageable pageable) throws SearchServiceException {
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             List<Collection> collections = cs.findCollectionsWithSubmit(q, context, null,
                                               Math.toIntExact(pageable.getOffset()),
                                               Math.toIntExact(pageable.getPageSize()));
@@ -207,12 +209,13 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
         }
     }
 
-    @PreAuthorize("hasAuthority('AUTHENTICATED')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "findAdminAuthorized")
     public Page<CollectionRest> findAdminAuthorized (
         Pageable pageable, @Parameter(value = "query") String query) {
         try {
             Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
             List<Collection> collections = authorizeService.findAdminAuthorizedCollection(context, query,
                 Math.toIntExact(pageable.getOffset()),
                 Math.toIntExact(pageable.getPageSize()));

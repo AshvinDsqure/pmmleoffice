@@ -176,18 +176,26 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
     private Boolean isslip = false;
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "forwordDraft")
     public WorkFlowProcessRest forwordDraft(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         log.info("in Forward Action start");
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             workFlowProcessRest = mapper.readValue(request.getInputStream(), WorkFlowProcessRest.class);
             WorkFlowProcessRest workFlowProcessRest1 = workFlowProcessRest;
             String comment = workFlowProcessRest.getComment();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
+            Optional<WorkflowProcessEperson> e=workFlowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getePerson().getID().equals(context.getCurrentUser().getID())).findFirst();
+            if(e.isPresent()){
+                System.out.println("remark added ");
+                WorkflowProcessEperson ee=e.get();
+                ee.setRemark(workFlowProcessRest.getRemark());
+                workflowProcessEpersonService.update(context,ee);
+            }
             WorkflowProcess workFlowProcessfinal=workFlowProcess;
             if(workFlowProcess!=null&&workFlowProcessRest1.getWorkflowProcessSenderDiaryRests()!=null &&workFlowProcessRest1.getWorkflowProcessSenderDiaryRests().size()!=0){
                 System.out.println("in sender ::::::::::::dirys");
@@ -267,6 +275,11 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             WorkflowProcess workflowProcess1 = workFlowProcess;
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            if(workFlowProcessRest1.getRemark()!=null) {
+                workFlowProcessRest.setRemark(workFlowProcessRest1.getRemark());
+            }else {
+                System.out.println("getRemark not found");
+            }
             action.perfomeAction(context, workFlowProcess, workFlowProcessRest);
             context.commit();
             action.setComment(null);
@@ -286,7 +299,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "backward")
     public WorkFlowProcessRest backward(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         log.info("in Backward Action start");
@@ -294,6 +307,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), WorkflowProcessEpersonRest.class);
             String comment = workflowProcessEpersonRest.getComment();
@@ -340,12 +354,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
     }
 
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.HEAD}, value = "deleteitem")
     public void deleteItem(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
         log.info("in deleteItem Action start");
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             if (workFlowProcess.getItem() != null) {
                 workFlowProcess.setItem(null);
@@ -361,13 +377,15 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.HEAD}, value = "discard")
     public WorkFlowProcessRest discard(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
         log.info("in discard Action start!");
         WorkFlowProcessRest workFlowProcessRest=new WorkFlowProcessRest();
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             if(workFlowProcess.getWorkFlowProcessDraftDetails()!=null &&workFlowProcess.getWorkFlowProcessDraftDetails().getIssapdoc()&&workFlowProcess.getWorkFlowProcessDraftDetails().getSapdocumentno()!=null){
                 SAPResponse sapResponse=new SAPResponse();
@@ -405,11 +423,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "callSAP")
     public void callSAP(@PathVariable UUID  uuid, HttpServletRequest request) throws Exception {
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             JCoDestination destination= sapService.getDestination();
             try {
                 if (destination != null && destination.isValid()) {
@@ -446,12 +466,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             log.error("error in discard" + e.getMessage());
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "callSAPPost")
     public SAPResponse SAPCallPOst(@PathVariable UUID  uuid, HttpServletRequest request) throws Exception {
         SAPResponse sapResponse=null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             String documentno="19000000332024";
                 JCoDestination destination= sapService.getDestination();
                 if (destination != null && destination.isValid()) {
@@ -467,13 +489,15 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             return sapResponse;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "digitalsign")
     public WorkflowProcessReferenceDocRest digitalsign(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         log.info("in digitalsign Action start!");
         WorkflowProcessReferenceDocRest workflowProcessReferenceDocRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, uuid);
             if (workflowProcessReferenceDoc != null) {
                 workflowProcessReferenceDoc.setIssignature(true);
@@ -502,13 +526,15 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+   
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "callback")
     public WorkFlowProcessRest callback(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         log.info("in callback Action start!");
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
@@ -528,12 +554,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "parked")
     public WorkFlowProcessRest parked(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             WorkFlowProcessRest workFlowProcessRest1 = mapper.readValue(request.getInputStream(), WorkFlowProcessRest.class);
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
@@ -560,12 +587,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "parkedreopen")
     public WorkFlowProcessRest parkedreopen(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent() && workFlowProcess != null) {
@@ -586,7 +614,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "reject")
     public WorkFlowProcessRest reject(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
         log.info("in reject Action start!");
@@ -594,6 +622,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), WorkflowProcessEpersonRest.class);
             String comment = workflowProcessEpersonRest.getComment();
@@ -630,7 +659,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return null;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "refer")
     public WorkFlowProcessRest refer(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         log.info("in refer Action start!");
@@ -638,6 +667,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), WorkflowProcessEpersonRest.class);
             String comment = workflowProcessEpersonRest.getComment();
@@ -684,13 +714,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "received")
     public WorkFlowProcessRest received(@PathVariable UUID uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         log.info("in received Action start!");
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             workFlowProcess.setIsmode(true);
             workflowProcessService.update(context, workFlowProcess);
@@ -711,7 +742,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "completed")
     public WorkFlowProcessRest complete(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
         log.info("in complete Action start!");
@@ -720,6 +751,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         SAPResponse sapResponse=new SAPResponse();
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             ObjectMapper mapper = new ObjectMapper();
             workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), WorkflowProcessEpersonRest.class);
             String comment = workflowProcessEpersonRest.getComment();
@@ -833,6 +865,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         log.info("in complete Action start!");
         System.out.println("test docflow");
         Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
         try {
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             createNoteDocWorkflow(context, workFlowProcess);
@@ -843,7 +876,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return null;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatch")
     public WorkFlowProcessRest dispatch(@PathVariable UUID uuid, HttpServletRequest request, @RequestBody CommentRest comment) throws IOException, SQLException, AuthorizeException {
 
@@ -852,6 +885,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DISPATCH.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
@@ -895,7 +929,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatchreplydraftCRU")
     public WorkFlowProcessRest dispatchreplydraftCRU(@PathVariable UUID uuid, HttpServletRequest request, @RequestBody WorkFlowProcessRest workFlowProcessRests) throws IOException, SQLException, AuthorizeException {
         System.out.println("in dispatchreplydraftCRU Action dispatchreplydraftCRU");
@@ -904,6 +938,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         Set<WorkflowProcessReferenceDocVersion> workflowProcessReferenceDocVersions = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
 
             Optional<WorkflowProcessReferenceDoc> doc = workFlowProcess.getWorkflowProcessReferenceDocs().stream().filter(d -> d.getDrafttype() != null).filter(d -> d.getDrafttype().getPrimaryvalue() != null).filter(d -> d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Tapal")).findFirst();
@@ -951,12 +986,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "dispatchbycrugetDoc")
     public Map<String, String> dispatchbycrugetDoc(@PathVariable String uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         Map<String, String> response = new HashMap<>();
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(uuid));
             if (workflowProcessReferenceDoc != null) {
                 WorkflowProcess workFlowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
@@ -982,13 +1018,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return response;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "dispatchbycrugetricipent")
     public RecipientDataDTO dispatchbycrugetricipent(@PathVariable String uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         RecipientDataDTO recipientDataDTO = new RecipientDataDTO();
         List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests = new ArrayList<>();
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(uuid));
             if (workflowProcessReferenceDoc != null) {
                 WorkflowProcess workFlowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
@@ -1012,13 +1049,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return recipientDataDTO;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatchbySelf")
     public WorkFlowProcessRest dispatchbySelf(@PathVariable String uuid, HttpServletRequest request, @RequestBody WorkFlowProcessRest workFlowProcessRests) throws IOException, SQLException, AuthorizeException {
         WorkFlowProcessRest workFlowProcessRest = null;
         String mrgeddoc = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             String comment = "";
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
             if (workFlowProcessRests.getWorkflowProcessSenderDiaryRests() != null) {
@@ -1097,12 +1135,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "acknowledgement")
     public Map<String, String> acknowledgement(@PathVariable String uuid, HttpServletRequest request) throws IOException, SQLException, AuthorizeException {
         Map<String, String> map = new HashMap<>();
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
             if (workFlowProcess != null) {
                 Optional<WorkflowProcessEperson> workflowProcessEperson =
@@ -1333,7 +1372,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatchCompleteByCRU")
     public WorkFlowProcessRest dispatchCompleteByCRU(@PathVariable String uuid, HttpServletRequest
             request, @RequestBody WorkFlowProcessOutwardDetailsRest outwardDetailsRest) throws
@@ -1343,6 +1382,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkflowProcess workFlowProcess = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             String comment = "Dispatch Close";
 
             WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(uuid));
@@ -1409,7 +1449,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatchComplete")
     public WorkFlowProcessRest dispatchComplete(@PathVariable String uuid, HttpServletRequest
             request, @RequestBody @Valid WorkFlowProcessOutwardDetailsRest outwardDetailsRest) throws
@@ -1418,6 +1458,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             String comment = "Close";
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
             if (workFlowProcess.getWorkFlowProcessOutwardDetails() == null || workFlowProcess.getWorkFlowProcessOutwardDetails().getOutwardDepartment() == null) {
@@ -1461,7 +1502,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "dispatchColose")
     public WorkFlowProcessRest dispatchColose(@PathVariable String uuid, HttpServletRequest request) throws
             IOException, SQLException, AuthorizeException {
@@ -1469,6 +1510,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             String comment = null;
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
             comment = sentMailElectronic(context, request, workFlowProcess, workFlowProcessRest);
@@ -1493,7 +1535,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return workFlowProcessRest;
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "suspend")
     public WorkFlowProcessRest suspend(@PathVariable UUID uuid, HttpServletRequest request) throws
             IOException, SQLException {
@@ -1501,6 +1543,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             if (workFlowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
                 createFinalNote(context, workFlowProcess);
@@ -1533,7 +1576,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         }
     }
 
-    @PreAuthorize("hasPermission(#uuid, 'ITEAM', 'READ')")
+     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "resumetask")
     public WorkFlowProcessRest resumetask(@PathVariable UUID uuid, HttpServletRequest request) throws
             IOException, SQLException, AuthorizeException {
@@ -1541,6 +1584,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessRest workFlowProcessRest = null;
         try {
             Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             if (workFlowProcess == null) {
                 throw new RuntimeException("Workflow not found");
@@ -2283,11 +2327,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         WorkFlowProcessHistory workFlowAction = null;
         workFlowAction = new WorkFlowProcessHistory();
         WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
-//        WorkflowProcessEperson current = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get();
-//        if (current != null) {
-//            workFlowAction.setWorkflowProcessEpeople(current);
-//            workFlowAction.setSentto(current);
-//        }
+        WorkflowProcessEperson current = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get();
+       if (current != null) {
+           workFlowAction.setWorkflowProcessEpeople(current);
+           workFlowAction.setSentto(current);
+           workFlowAction.setSenttoname(current.getePerson().getFullName());
+           workFlowAction.setSentbyname(current.getePerson().getFullName());
+       }
         WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.DISPATCHCLOSE.getAction(), workFlowProcessMaster);
         workFlowAction.setActionDate(new Date());
         workFlowAction.setAction(workFlowProcessMasterValue);
