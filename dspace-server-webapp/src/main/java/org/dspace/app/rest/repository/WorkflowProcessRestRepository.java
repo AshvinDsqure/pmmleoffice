@@ -295,34 +295,33 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentTapal")
     public Page<WorkflowProcessDTO> sentTapal(Pageable pageable) {
-        System.out.println("in sentTapal");
-        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
-        try {
-               Context context = obtainContext();
-               context.turnOffAuthorisationSystem();
-            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
-//            (Context context, UUID eperson,
-//                    UUID statusdraftid,
-//                    UUID statuscloseid,
-//                    UUID workflowtypeid,
-//                    Integer offset, Integer limit)
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(),
-                    statusid,
-                    statusidclose,workflowtypeid,
-                    Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
-            workflowsRes = workflowProcesses.stream().map(d -> {
-                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
-            }).collect(toList());
-            System.out.println("out sentTapal");
-            return new PageImpl(workflowsRes, pageable, count);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
+         System.out.println("in sentTapal");
+         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+         try {
+             Context context = obtainContext();
+             context.turnOffAuthorisationSystem();
+             UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
+             int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
+             List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
+                     context.getCurrentUser().getID(),
+                     statusid,
+                     workflowtypeid,
+                     statusidclose,
+                     Math.toIntExact(pageable.getOffset()),
+                     Math.toIntExact(pageable.getPageSize()));
+             workflowsRes = workflowProcesses.stream().map(d -> {
+                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+             }).collect(toList());
+             System.out.println("out sentTapal");
+             return new PageImpl(workflowsRes, pageable, count);
+         } catch (Exception e) {
+             e.printStackTrace();
+             throw new RuntimeException(e.getMessage(), e);
+         }
+
+     }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentEFile")
     public Page<WorkflowProcessDTO> sentEFile(Pageable pageable) {
@@ -335,7 +334,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
+                    context.getCurrentUser().getID(),
+                    statusid,
+                    workflowtypeid,
+                    statusidclose,
+                    Math.toIntExact(pageable.getOffset()),
+                    Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -527,6 +532,41 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "searchByFilenumberOrTapaleNumber")
+    public Page<WorkFlowProcessRest> searchByFilenumberOrTapaleNumber(
+            @Parameter(value = "tapalnumber",required = false)String tapalnumber,
+            @Parameter(value = "filenumber",required = false)String filenumber,
+            Pageable pageable) {
+        try {
+            Context context = obtainContext(); context.turnOffAuthorisationSystem();
+            System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
+            HashMap<String, String> map = new HashMap<>();
+            if (!isNullOrEmptyOrBlank(filenumber)) {
+                map.put("filenumber", filenumber);
+            }
+            if (!isNullOrEmptyOrBlank(tapalnumber)) {
+                map.put("tapalnumber", tapalnumber);
+            }
+            System.out.println("map :"+map);
+            Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
+            if(workFlowUserTypOptional.isPresent()){
+                map.put("initiator",workFlowUserTypOptional.get().getID().toString());
+            }
+            if(!map.isEmpty()) {
+                int count = 10;// workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
+                List<WorkflowProcess> list = workflowProcessService.searchByFilenumberOrTapaleNumber(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+                List<WorkFlowProcessRest> rests = list.stream().map(d -> {
+                    return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+                }).collect(Collectors.toList());
+                System.out.println("::::::::::::::::::::stop filterbyInwardAndOutWard :::::::::::::::::::");
+                return new PageImpl(rests, pageable, count);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "filterbyInwardAndOutWard")
     public Page<WorkFlowProcessRest> filterbyInwardAndOutWard(
@@ -555,6 +595,8 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             @Parameter(value = "senderpincode",required = false)String senderpincode,
             @Parameter(value = "inward",required = false)String inward,
             @Parameter(value = "outward",required = false)String outward,
+            @Parameter(value = "filenumber",required = false)String filenumber,
+
             Pageable pageable) {
         try {
             Context context = obtainContext(); context.turnOffAuthorisationSystem();
@@ -635,6 +677,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             }
             if (outward!= null) {
                 map.put("outward", outward);
+            }
+            if (filenumber!= null) {
+                System.out.println("filenumber ::::"+filenumber);
+                map.put("filenumber", filenumber);
             }
             UUID workflowtype_draftid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             String uui=workflowtype_draftid.toString();
@@ -747,5 +793,9 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean isNullOrEmptyOrBlank(String str) {
+        return str == null || str.trim().isEmpty();
     }
 }

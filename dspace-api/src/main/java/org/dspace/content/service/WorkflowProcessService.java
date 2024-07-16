@@ -104,6 +104,9 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context,UUID workflowtypeid, String subject) throws SQLException;
     List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
+
+    List<WorkflowProcess> searchByFilenumberOrTapaleNumber(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
+
     List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid,  Integer offset, Integer limit) throws SQLException;
     int countTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid) throws SQLException;
     List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID workflowtypeid,  Integer offset, Integer limit) throws SQLException;

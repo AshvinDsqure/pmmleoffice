@@ -144,7 +144,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.countfilterInwarAndOutWard(context, perameter, offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        return workflowProcessDAO.countfilterInwarAndOutWard(context,metadataFields,perameter, offset, limit);
     }
 
     @Override
@@ -337,7 +338,14 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.filterInwarAndOutWard(context, perameter, offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        return workflowProcessDAO.filterInwarAndOutWard(context,metadataFields, perameter, offset, limit);
+    }
+
+    @Override
+    public List<WorkflowProcess> searchByFilenumberOrTapaleNumber(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
+        return workflowProcessDAO.searchByFileNumberOrTapalNumber(context,metadataFields, perameter, offset, limit);
     }
 
     @Override

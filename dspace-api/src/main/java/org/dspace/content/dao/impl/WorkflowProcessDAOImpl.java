@@ -492,9 +492,63 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isdelete", false);
         return count(query);
     }
-
-
-
+    public static boolean isNullOrEmptyOrBlank(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+    @Override
+    public List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context, MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+      String filenumber="";
+      String tapalnumber="";
+      UUID initiator=null;
+        for (Map.Entry<String, String> map : perameter.entrySet()) {
+            System.out.println("key : " + map.getKey() + " value : " + map.getValue());
+            if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
+                filenumber = map.getValue();
+            }
+            if (map.getKey().equalsIgnoreCase("tapalnumber") && map.getValue() != null) {
+                tapalnumber = map.getValue();
+            }
+            if (map.getKey().equalsIgnoreCase("initiator") && map.getValue() != null) {
+                initiator = UUID.fromString(map.getValue());
+            }
+        }
+        StringBuffer sb = new StringBuffer("SELECT DISTINCT wp FROM " +
+                "WorkflowProcess as wp " +
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p left join ep.usertype as ut");
+        if(!isNullOrEmptyOrBlank(filenumber)) {
+                    sb.append(" left join wp.item as i  left join i.metadata as metadatavalue " +
+                    "where ut.id=:initiator and p.id=:eperson AND  metadatavalue.metadataField =:metadataField AND lower(STR(metadatavalue.value)) like :filenumber");
+            Query query = createQuery(context,sb.toString());
+            query.setParameter("eperson", context.getCurrentUser().getID());
+            query.setParameter("filenumber", "%" + filenumber.toLowerCase() + "%");
+            query.setParameter("metadataField", metadataField);
+            query.setParameter("initiator", initiator);
+            if (0 <= offset) {
+                query.setFirstResult(offset);
+            }
+            if (0 <= limit) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
+        }
+        if(!isNullOrEmptyOrBlank(tapalnumber)){
+            sb.append(" left join wp.workFlowProcessInwardDetails as inward  " +
+                      "where ut.id=:initiator and p.id=:eperson and inward.inwardNumber=:tapalnumber");
+            Query query = createQuery(context,sb.toString());
+            query.setParameter("eperson", context.getCurrentUser().getID());
+            query.setParameter("tapalnumber", tapalnumber);
+            query.setParameter("initiator", initiator);
+            if (0 <= offset) {
+                query.setFirstResult(offset);
+            }
+            if (0 <= limit) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
+        }
+        return null;
+    }
     @Override
     public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
@@ -647,7 +701,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> filterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
         StringBuffer sb = new StringBuffer("SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "left join wp.priority as p " +
                 "left join wp.workflowStatus as st " +
@@ -656,6 +710,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "left join wp.dispatchmode as mode  " +
                 "left join wp.workflowProcessSenderDiary as sender  " +
                 "left join wp.workFlowProcessInwardDetails as inward  " +
+                "left join wp.item as i  " +
+                "left join i.metadata as metadatavalue " +
                 "left join inward.category as cat " +
                 "left join inward.subcategory as subcat " +
                 "left join inward.inwardmode as inwmode " +
@@ -672,6 +728,13 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         int i = 0;
         for (Map.Entry<String, String> map : perameter.entrySet()) {
             System.out.println("key : " + map.getKey() + " value : " + map.getValue());
+            if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" metadatavalue.metadataField=:metadataField AND lower(STR(metadatavalue.value)) like:" + map.getKey());
+                } else {
+                    sb.append(" and metadatavalue.metadataField=:metadataField AND lower(STR(metadatavalue.value)) like:" + map.getKey());
+                }
+            }
             if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
                 if (i == 0) {
                     sb.append(" st.id=:" + map.getKey());
@@ -909,6 +972,10 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 query.setParameter(map.getKey(), "%" + map.getValue() + "%");
             } else if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
                 query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+            } else if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
+                query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+               //query.setParameter("title", "%" + map.getValue() + "%");
+                query.setParameter("metadataField", metadataField);
             }else  {
                 //uuid all perameter
                 query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
@@ -923,8 +990,10 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         return query.getResultList();
     }
 
+
+
     @Override
-    public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+    public int countfilterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
 
             StringBuffer sb = new StringBuffer("SELECT count(wp) FROM WorkflowProcess as wp " +
                     "left join wp.priority as p " +
@@ -934,6 +1003,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                     "left join wp.dispatchmode as mode  " +
                     "left join wp.workflowProcessSenderDiary as sender  " +
                     "left join wp.workFlowProcessInwardDetails as inward  " +
+                    "left join wp.item as i  " +
+                    "left join i.metadata as metadatavalue " +
                     "left join inward.category as cat " +
                     "left join inward.subcategory as subcat " +
                     "left join inward.inwardmode as inwmode " +
@@ -950,6 +1021,13 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             int i = 0;
             for (Map.Entry<String, String> map : perameter.entrySet()) {
                 System.out.println("key : " + map.getKey() + " value : " + map.getValue());
+                if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
+                    if (i == 0) {
+                        sb.append(" metadatavalue.metadataField=:metadataField AND lower(STR(metadatavalue.value)) like:" + map.getKey());
+                    } else {
+                        sb.append(" and metadatavalue.metadataField=:metadataField AND lower(STR(metadatavalue.value)) like:" + map.getKey());
+                    }
+                }
                 if (map.getKey().equalsIgnoreCase("status") && map.getValue() != null) {
                     if (i == 0) {
                         sb.append(" st.id=:" + map.getKey());
@@ -1187,7 +1265,10 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                     query.setParameter(map.getKey(), "%" + map.getValue() + "%");
                 } else if (map.getKey().equalsIgnoreCase("senderpincode") && map.getValue() != null) {
                     query.setParameter(map.getKey(), "%" + map.getValue() + "%");
-                }else {
+                } else if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
+                 query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                 query.setParameter("metadataField", metadataField);
+                } else {
                     //uuid all
                     query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
                 }

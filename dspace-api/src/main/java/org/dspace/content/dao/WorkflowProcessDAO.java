@@ -48,10 +48,9 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
 
     List<WorkflowProcess> Filter(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
 
-    List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
-
-    int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
-
+    List<WorkflowProcess> filterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+    int countfilterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException;
 
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException;

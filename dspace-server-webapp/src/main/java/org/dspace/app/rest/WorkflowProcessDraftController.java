@@ -454,12 +454,12 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             if (workFlowProcess == null) {
                 throw new RuntimeException("Workflow not found");
             }
-            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
             WorkflowProcess workflowProcess1 = workFlowProcess;
-            workflowProcessService.create(context, workFlowProcess);
+            workflowProcessService.update(context, workFlowProcess);
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             context.commit();
 

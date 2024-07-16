@@ -16,6 +16,13 @@ public class DigitalSignRequet {
     String p12FileName = null;
     String certFileName = null;
     String fileInputName = null;
+
+    float xCordinate;
+    float yCordinate;
+    String storepath = null;
+
+    int index=0;
+
     public String getPassword() {
         return password;
     }
@@ -120,4 +127,35 @@ public class DigitalSignRequet {
         this.fileInputName = fileInputName;
     }
 
+    public float getxCordinate() {
+        return xCordinate;
+    }
+
+    public void setxCordinate(float xCordinate) {
+        this.xCordinate = xCordinate;
+    }
+
+    public float getyCordinate() {
+        return yCordinate;
+    }
+
+    public void setyCordinate(float yCordinate) {
+        this.yCordinate = yCordinate;
+    }
+
+    public String getStorepath() {
+        return storepath;
+    }
+
+    public void setStorepath(String storepath) {
+        this.storepath = storepath;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
 }

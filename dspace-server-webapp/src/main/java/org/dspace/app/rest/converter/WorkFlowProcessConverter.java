@@ -335,8 +335,13 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workFlowProcessRest.setWorkflowStatus(workFlowProcessMasterValueConverter.convert(obj.getWorkflowStatus(), projection));
             workFlowProcessRest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
         }
-        workFlowProcessRest.setSubject(obj.getSubject());
-        workFlowProcessRest.setInitDate(obj.getInitDate());
+        if(obj.getSubject()!=null){
+            System.out.println("sub:::>>>>>>>>>>>>>>>>"+obj.getSubject());
+            workFlowProcessRest.setSubject(obj.getSubject());
+        }
+        if(obj.getInitDate()!=null){
+           workFlowProcessRest.setInitDate(obj.getInitDate());
+        }
         if (obj.getPriority() != null && obj.getPriority().getPrimaryvalue() != null) {
             workFlowProcessRest.setPriorityRest(workFlowProcessMasterValueConverter.convert(obj.getPriority(), projection));
             workFlowProcessRest.setPriority(obj.getPriority().getPrimaryvalue());
@@ -387,8 +392,10 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workFlowProcessRest.setSendername(sb.toString());
         }
         if (obj.getWorkFlowProcessInwardDetails() != null && obj.getWorkFlowProcessInwardDetails().getInwardDate() != null) {
-            workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));
             workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessInwardDetails().getInwardDate());
+        }
+        if(obj.getWorkFlowProcessInwardDetails()!=null){
+            workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));
         }
         if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardDate() != null) {
             workFlowProcessRest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(obj.getWorkFlowProcessOutwardDetails(), projection));

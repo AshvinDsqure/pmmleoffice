@@ -1912,6 +1912,11 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         Map<String, Object> map = new HashMap<String, Object>();
         InputStream input2 = null;
         DocToPdfConverter docToPdfConverter = null;
+        String password = configurationService.getProperty("digital.sign.password");
+        String reason = configurationService.getProperty("digital.sign.reason");
+        String location = configurationService.getProperty("digital.sign.location");
+        String p12=configurationService.getProperty("digital.sign.p12File");
+
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         System.out.println("start.......createFinalNote");
         StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
@@ -1943,9 +1948,24 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
         sb.append("<p> <b>Subject : " + workflowProcess.getSubject() + "</b></p>");
         isTextEditorFlow = true;
+        List<DigitalSignRequet>digitalSignRequets=new ArrayList<>();
+        DigitalSignRequet digitalSignRequet=null;
         List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
         int i = 1;
         for (WorkFlowProcessComment comment : comments) {
+            digitalSignRequet=new DigitalSignRequet();
+            if (!isNullOrEmptyOrBlank(password)) {
+                digitalSignRequet.setPassword(password);
+            }
+            if (!isNullOrEmptyOrBlank(reason)) {
+                digitalSignRequet.setReason(reason);
+            }
+            if (!isNullOrEmptyOrBlank(location)) {
+                digitalSignRequet.setLocation(location);
+            }  if (!isNullOrEmptyOrBlank(p12)) {
+                digitalSignRequet.setP12FileName(p12);
+            }
+            digitalSignRequet.setIndex(i);
             sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
             //coment count
             sb.append("<p><u>Note# " + i + "</u></p>");
@@ -1969,21 +1989,29 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             sb.append("</div>");
            // sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature :</B> </p></div>");
-            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature :</B> </p><B><span>");
+             String v="Signature_"+i;
+            digitalSignRequet.setCertType(v);
+            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>"+v+"</B> </p><B><span>");
+            sb.append("<br>");
+            sb.append("<br>");
+            sb.append("<br></span></B>");
             //MAnager
             if (comment.getSubmitter() != null) {
                 if (comment.getSubmitter().getFullName() != null) {
-                    sb.append("<br>Digitally signed by :" + comment.getSubmitter().getFullName() + ".");
+                    digitalSignRequet.setName(comment.getSubmitter().getFullName());
                 }
             }
             //
-            if (comment.getActionDate() != null) {
-                sb.append("<br>Date :" + DateFormate(comment.getActionDate()));
-            }
-            sb.append("<br>Reason :Digital Copy.</span></B>");
+//            if (comment.getActionDate() != null) {
+//                sb.append("<br>Date :" + DateFormate(comment.getActionDate()));
+//            }
+//            sb.append("<br>Reason :Digital Copy.</span></B>");
+//            sb.append("</div>");
             sb.append("</div>");
-            sb.append("</div>");
+
+            digitalSignRequets.add(digitalSignRequet);
             i++;
+
         }
         sb.append("</body></html>");
         if (isTextEditorFlow) {
@@ -1992,9 +2020,10 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             System.out.println("HTML:::" + sb.toString());
             int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
+           File finalnotepath= PDFTextSearch.getSingDoc(tempFile1html.getAbsolutePath(),digitalSignRequets);
             WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
             margedoc.setSubject(workflowProcess.getSubject());
-            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(tempFile1html.getName()));
+            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(finalnotepath.getName()));
             margedoc.setInitdate(new Date());
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
             if (workFlowProcessMaster != null) {
@@ -2005,9 +2034,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             margedoc.setWorkflowProcess(workflowProcess);
             InputStream fileInputStream1 = null;
-            FileInputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));
-            fileInputStream1= new FileInputStream(new File(tempFile1html.getAbsolutePath()));
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFile1html.getName());
+            FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
+            fileInputStream1= new FileInputStream(new File(finalnotepath.getAbsolutePath()));
+            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", finalnotepath.getName());
             margedoc.setBitstream(bitstream);
             margedoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
             if (workflowProcess.getWorkflowProcessNote() != null) {
