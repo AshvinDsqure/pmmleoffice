@@ -15,7 +15,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.dspace.app.rest.enums.WorkFlowAction;
+import org.dspace.app.rest.jbpm.models.JBPMCallbackRequest;
 import org.dspace.app.rest.jbpm.models.JBPMResponse;
+import org.dspace.app.rest.jbpm.models.JBPMResponse_;
 import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
 import org.dspace.content.WorkflowProcess;
@@ -66,9 +68,19 @@ public class JbpmServerImpl {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
-        return restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
+        String forwardResponce= restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
+        JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+       if(jbpmResponse!=null){
+           if(jbpmResponse.getType()!=null&&jbpmResponse.getType().equalsIgnoreCase("failure"))
+               {
+                 throw  new RuntimeException(jbpmResponse.getMessage()) ;
+               }
+       }
+       return forwardResponce;
+}
 
-    }
+
+
 
     public String completeTask(WorkFlowProcessRest workflowProcess, List<String> users) throws RuntimeException {
         System.out.println("::::::::::::::COMPLETE ACTION::::::::::::::::::::::");
@@ -189,17 +201,17 @@ public class JbpmServerImpl {
     }
 
     public String callback(WorkFlowProcessRest workflowProcess) throws RuntimeException {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
             String baseurl = configurationService.getProperty("jbpm.server");
-            HttpPost httpPost = new HttpPost(baseurl + JBPM.CALLBACK);
-            String requestBody = "{\"queueid\": \"" + workflowProcess.getId() + "\",\"procstatus\": \"inprogress\"}"; // Your request body JSON
-            System.out.println("jbpm json::" + requestBody);
-            httpPost.setEntity(new StringEntity(requestBody, "UTF-8"));
-            httpPost.setHeader("Content-Type", "application/json"); // Set request content type
-            HttpResponse response = httpClient.execute(httpPost);
-            String responseBody = EntityUtils.toString(response.getEntity());
-            return responseBody;
+            System.out.println("URL :" + baseurl + JBPM.CALLBACK);
+            JBPMCallbackRequest jbpmCallbackRequest=new JBPMCallbackRequest();
+            jbpmCallbackRequest.setQueueid(workflowProcess.getId());
+            jbpmCallbackRequest.setProcstatus("inprogress");
+            System.out.println("jbpm json::" + new Gson().toJson(jbpmCallbackRequest));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            HttpEntity<JBPMCallbackRequest> entity = new HttpEntity<JBPMCallbackRequest>(jbpmCallbackRequest, headers);
+            return restTemplate.exchange(baseurl + JBPM.CALLBACK, HttpMethod.POST, entity, String.class).getBody();
         } catch (Exception e) {
             e.printStackTrace();
         }

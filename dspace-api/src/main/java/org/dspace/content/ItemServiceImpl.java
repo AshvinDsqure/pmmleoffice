@@ -1691,6 +1691,12 @@ prevent the generation of resource policy entry values with null dspace_object a
         MetadataField metadatayearField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "issued");
         return itemDAO.searchItemByTitleAndYear(context,metadatatitleField,metadatayearField,title,year);
     }
+
+    @Override
+    public List<Object[]> getDepartmentWiseNoOfProcessWorkflowCounts(Context context, String startdate, String endtdate, String workflowtype) throws SQLException {
+        return itemDAO.getDepartmentWiseNoOfProcessWorkflowCounts(context,startdate,endtdate,workflowtype);
+    }
+
     @Override
     public int countTotal(Context context, String startdate, String endDate) throws SQLException {
 

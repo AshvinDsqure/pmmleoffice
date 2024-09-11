@@ -97,6 +97,30 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         sendErrorResponse(request, response, ex, "Request is invalid or incorrect", HttpServletResponse.SC_BAD_REQUEST);
     }
 
+    @ExceptionHandler({ InvalidDataException.class})
+    protected void handleInvalidDataException(HttpServletRequest request, HttpServletResponse response,
+                                                      Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "Invalid Data Exception", HttpStatus.NOT_ACCEPTABLE.value());
+    }
+
+    @ExceptionHandler(CanNotAccesssException.class)
+    protected void canCanNotAccesssException(HttpServletRequest request, HttpServletResponse response,
+                                            Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, "You Can Not Call Back!", HttpServletResponse.SC_NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler({ AlreadyDataExistException.class})
+    protected void handleAlreadyDataExistException(HttpServletRequest request, HttpServletResponse response,
+                                              Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "Already DataExist Exception", HttpStatus.ACCEPTED.value());
+    }
+
     @ExceptionHandler(SQLException.class)
     protected void handleSQLException(HttpServletRequest request, HttpServletResponse response, Exception ex)
         throws IOException {

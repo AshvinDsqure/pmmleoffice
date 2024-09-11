@@ -25,6 +25,9 @@ import java.util.UUID;
  */
 public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<WorkflowProcess> {
     List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException;
+    int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException;
+
     List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
     int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException;
 
@@ -58,7 +61,12 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
     int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
 
-    int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException;
+    int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+    int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+
+    int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+   int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID draftstatus) throws SQLException;
 
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException;
 
@@ -79,5 +87,4 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     int countdispatchTapal(Context context, UUID eperson, UUID statusdraftid, UUID statusdspachcloseid, UUID workflowtypeid) throws SQLException;
     List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
     int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid) throws SQLException;
-
 }

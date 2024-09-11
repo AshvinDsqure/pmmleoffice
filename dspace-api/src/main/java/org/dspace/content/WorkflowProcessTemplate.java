@@ -46,9 +46,17 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template")
     private WorkFlowProcessMasterValue template = null;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "templatetype")
+    private WorkFlowProcessMasterValue templatetype = null;
+    @Column(name = "editortext")
+    private String editortext;
     @JsonProperty
     @Column(name = "index")
     private Integer index;
+
+    @Column(name = "isdelete")
+    private Boolean isdelete = false;
     @Override
     public int getType() {
         return 0;
@@ -67,16 +75,12 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
         this.legacyId = legacyId;
     }
 
-
     public Date getInitDate() {
         return InitDate;
     }
-
     public void setInitDate(Date initDate) {
         InitDate = initDate;
     }
-
-
 
     public WorkFlowProcessMasterValue getTemplate() {
         return template;
@@ -100,5 +104,29 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
 
     public void setePerson(EPerson ePerson) {
         this.ePerson = ePerson;
+    }
+
+    public Boolean getIsdelete() {
+        return isdelete;
+    }
+
+    public void setIsdelete(Boolean isdelete) {
+        this.isdelete = isdelete;
+    }
+
+    public WorkFlowProcessMasterValue getTemplatetype() {
+        return templatetype;
+    }
+
+    public void setTemplatetype(WorkFlowProcessMasterValue templatetype) {
+        this.templatetype = templatetype;
+    }
+
+    public String getEditortext() {
+        return editortext;
+    }
+
+    public void setEditortext(String editortext) {
+        this.editortext = editortext;
     }
 }

@@ -113,6 +113,8 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private Boolean isreplydraft = false;
 
     private Boolean isacknowledgement = false;
+    @JsonProperty
+    private  Boolean issignnote=false;
 
     @JsonProperty
     private String comment;
@@ -197,6 +199,14 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setEligibleForFilingRest(WorkFlowProcessMasterValueRest eligibleForFilingRest) {
         this.eligibleForFilingRest = eligibleForFilingRest;
+    }
+
+    public Boolean getIssignnote() {
+        return issignnote;
+    }
+
+    public void setIssignnote(Boolean issignnote) {
+        this.issignnote = issignnote;
     }
 
     public ItemRest getItemRest() {

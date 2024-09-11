@@ -562,4 +562,44 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         System.out.println("Search title and search Query :::"+sb.toString());
         return query.getResultList();
     }
+
+    @Override
+    public List<Object[]> getDepartmentWiseNoOfProcessWorkflowCounts(Context context, String startdate, String endtdate, String workflowtype) throws SQLException {
+        try {
+            System.out.println("in sql :startdate::"+startdate);
+            System.out.println("in sql :endtdate::"+endtdate);
+            System.out.println("in sql :workflowtype::"+workflowtype);
+
+            StringBuffer HQL=new StringBuffer();
+            if(workflowtype.equalsIgnoreCase("Inward")) {
+                HQL.append("" +
+                        "SELECT d.primaryvalue,count(wp) FROM WorkflowProcess as wp " +
+                        "left join wp.workflowProcessEpeople as ep " +
+                        "left join wp.workFlowProcessInwardDetails as i " +
+                        "left join ep.ePerson as p " +
+                        "left join p.department as d " +
+                        "left join wp.workflowType as t " +
+                        "where t.primaryvalue=:workflowtype AND STR(i.inwardDate) >= :startDate AND STR(i.inwardDate) <= :endDate GROUP BY d.primaryvalue");
+            }
+            if(workflowtype.equalsIgnoreCase("Draft")) {
+                HQL.append("" +
+                        "SELECT d.primaryvalue,count(wp) FROM WorkflowProcess as wp " +
+                        "left join wp.workflowProcessEpeople as ep " +
+                        "left join wp.workFlowProcessDraftDetails as draft " +
+                        "left join ep.ePerson as p " +
+                        "left join p.department as d " +
+                        "left join wp.workflowType as t " +
+                        "where t.primaryvalue=:workflowtype AND STR(draft.draftdate) >= :startDate AND STR(draft.draftdate) <= :endDate GROUP BY d.primaryvalue");
+
+            }
+            Query query = createQuery(context,HQL.toString());
+            query.setParameter("startDate", startdate);
+            query.setParameter("endDate", endtdate);
+            query.setParameter("workflowtype", workflowtype);
+            return query.getResultList();
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

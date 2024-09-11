@@ -35,7 +35,7 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
     }
     @Override
     public List<WorkFlowProcessComment> getComments(Context context, UUID workflowprocessid) throws SQLException {
-        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  WHERE wp.id=:workflowprocessid order by wp.InitDate ASC");
+        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  WHERE wp.id=:workflowprocessid order by c.actionDate ASC");
         query.setParameter("workflowprocessid", workflowprocessid);
         return query.getResultList();
     }
@@ -51,6 +51,14 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
         Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  WHERE wp.id=:workflowprocessid and c.isdraftsave=:isdraftsave");
         query.setParameter("workflowprocessid", workflowprocessid);
         query.setParameter("isdraftsave", true);
+        return (WorkFlowProcessComment) query.getSingleResult();
+    }
+
+    @Override
+    public WorkFlowProcessComment findCommentBySubmiterandWorkflowProcessID(Context context, UUID submiter, UUID workflowprocessid) throws SQLException {
+        Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  join c.submitter as sub  WHERE wp.id=:workflowprocessid and sub.id=:submiter");
+        query.setParameter("workflowprocessid", workflowprocessid);
+        query.setParameter("submiter", submiter);
         return (WorkFlowProcessComment) query.getSingleResult();
     }
 }

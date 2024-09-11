@@ -89,9 +89,20 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     @Column(name = "isacknowledgement")
     private  Boolean isacknowledgement=false;
+
+
+    @Column(name = "issignnote")
+    private  Boolean issignnote=false;
     @Column(name = "remark")
     private  String  remark;
 
+    public Boolean getIssignnote() {
+        return issignnote;
+    }
+
+    public void setIssignnote(Boolean issignnote) {
+        this.issignnote = issignnote;
+    }
 
     @Transient
     private List<EPerson> Persons = new ArrayList<>();

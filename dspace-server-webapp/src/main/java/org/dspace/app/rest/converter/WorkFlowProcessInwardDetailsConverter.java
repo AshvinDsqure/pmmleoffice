@@ -52,47 +52,58 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
     @Override
     public WorkFlowProcessInwardDetailsRest convert(WorkFlowProcessInwardDetails obj, Projection projection) {
         WorkFlowProcessInwardDetailsRest rest = new WorkFlowProcessInwardDetailsRest();
-        if (obj.getInwardNumber() != null) {
-            rest.setInwardNumber(obj.getInwardNumber());
+
+        try {
+            if (obj.getInwardNumber() != null) {
+                rest.setInwardNumber(obj.getInwardNumber());
+            }
+            if (obj.getLetterrefno() != null) {
+                rest.setLetterrefno(obj.getLetterrefno());
+            }
+            if (obj.getFilereferencenumber() != null) {
+                rest.setFilereferencenumber(obj.getFilereferencenumber());
+            }
+            if (obj.getInwardDate() != null) {
+                rest.setInwardDate(obj.getInwardDate());
+            }
+            if (obj.getReceivedDate() != null) {
+                rest.setReceivedDate(obj.getReceivedDate());
+            }
+            if (obj.getLatterDate() != null) {
+                rest.setLatterDate(obj.getLatterDate());
+            }
+            if (obj.getCategory() != null) {
+                rest.setCategoryRest(obj.getCategory().getName());
+            }
+            try {
+                if (obj.getSubcategory() != null) {
+                    rest.setSubcategoryRest(obj.getSubcategory().getSubcategoryname());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (obj.getLettercategory() != null) {
+                rest.setLettercategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLettercategory(), projection));
+            }
+            if (obj.getInwardmode() != null) {
+                rest.setInwardmodeRest(workFlowProcessMasterValueConverter.convert(obj.getInwardmode(), projection));
+            }
+            if (obj.getVip() != null && obj.getVip().getVip() != null) {
+                rest.setVipRest(obj.getVip().getVip());
+            }
+            if (obj.getVipname() != null && obj.getVipname().getVipname() != null) {
+                rest.setVipnameRest(obj.getVipname().getVipname());
+            }
+            if (obj.getLanguage() != null) {
+                rest.setLanguageRest(workFlowProcessMasterValueConverter.convert(obj.getLanguage(), projection));
+            }
+            rest.setUuid(obj.getID().toString());
+            return rest;
+        }catch (Exception e){
+            e.printStackTrace();
+            return rest;
         }
-        if (obj.getLetterrefno() != null) {
-            rest.setLetterrefno(obj.getLetterrefno());
-        }
-        if (obj.getFilereferencenumber() != null) {
-            rest.setFilereferencenumber(obj.getFilereferencenumber());
-        }
-        if (obj.getInwardDate() != null) {
-            rest.setInwardDate(obj.getInwardDate());
-        }
-        if (obj.getReceivedDate() != null) {
-            rest.setReceivedDate(obj.getReceivedDate());
-        }
-        if (obj.getLatterDate() != null) {
-            rest.setLatterDate(obj.getLatterDate());
-        }
-        if (obj.getCategory() != null) {
-            rest.setCategoryRest(obj.getCategory().getName());
-        }
-        if (obj.getSubcategory() != null) {
-            rest.setSubcategoryRest(obj.getSubcategory().getSubcategoryname());
-        }
-        if (obj.getLettercategory() != null) {
-            rest.setLettercategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLettercategory(), projection));
-        }
-        if (obj.getInwardmode() != null) {
-            rest.setInwardmodeRest(workFlowProcessMasterValueConverter.convert(obj.getInwardmode(), projection));
-        }
-        if (obj.getVip() != null && obj.getVip().getVip() != null) {
-            rest.setVipRest(obj.getVip().getVip());
-        }
-        if (obj.getVipname() != null && obj.getVipname().getVipname() != null) {
-            rest.setVipnameRest(obj.getVipname().getVipname());
-        }
-        if (obj.getLanguage() != null) {
-            rest.setLanguageRest(workFlowProcessMasterValueConverter.convert(obj.getLanguage(), projection));
-        }
-        rest.setUuid(obj.getID().toString());
-        return rest;
     }
 
     public WorkFlowProcessInwardDetails convert(Context context, WorkFlowProcessInwardDetails obj, WorkFlowProcessInwardDetailsRest rest) throws SQLException {
@@ -114,9 +125,14 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getCategory() != null) {
             obj.setCategory(categoryService.find(context, UUID.fromString(rest.getCategoryRest())));
         }
+        try {
+
         if (rest.getSubcategoryRest() != null) {
             obj.setSubcategory(subcategoryService.find(context, UUID.fromString(rest.getSubcategoryRest())));
+        }}catch (Exception e){
+            e.printStackTrace();
         }
+
         if (rest.getLettercategoryRest() != null) {
             obj.setLettercategory(workFlowProcessMasterValueConverter.convert(context, rest.getLettercategoryRest()));
         }

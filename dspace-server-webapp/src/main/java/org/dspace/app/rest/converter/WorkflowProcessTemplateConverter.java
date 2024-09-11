@@ -55,6 +55,12 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
             if(obj.getTemplate()!=null){
                 rest.setTemplateRest(workFlowProcessMasterValueConverter.convert(obj.getTemplate(),projection));
             }
+            if(obj.getTemplatetype()!=null){
+                rest.setTemplatetypeRest(workFlowProcessMasterValueConverter.convert(obj.getTemplatetype(),projection));
+            }
+            if(obj.getEditortext()!=null){
+               rest.setEditortext(obj.getEditortext());
+            }
             if(obj.getePerson()!=null){
                 rest.setePersonRest(ePersonConverter.convertBYUSer(obj.getePerson(),projection));
             }
@@ -81,8 +87,15 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         if(rest.getePersonRest()!=null){
             obj.setePerson(ePersonConverter.convert(context,rest.getePersonRest()));
         }
+        if(rest.getTemplatetypeRest()!=null){
+            obj.setTemplatetype(workFlowProcessMasterValueConverter.convert(context,rest.getTemplatetypeRest()));
+        }
+        if(rest.getEditortext()!=null){
+            obj.setEditortext(rest.getEditortext());
+        }
         return obj;
     }
+
     public WorkflowProcessTemplate convert(Context context,WorkflowProcessTemplate obj,WorkflowProcessTemplateRest rest) throws SQLException {
         if(rest.getInitDate()!=null){
             obj.setInitDate(rest.getInitDate());
@@ -96,6 +109,13 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         if(rest.getePersonRest()!=null){
             obj.setePerson(ePersonConverter.convert(context,rest.getePersonRest()));
         }
+        if(rest.getTemplatetypeRest()!=null){
+            obj.setTemplatetype(workFlowProcessMasterValueConverter.convert(context,rest.getTemplatetypeRest()));
+        }
+        if(rest.getEditortext()!=null){
+            obj.setEditortext(rest.getEditortext());
+        }
+        rest.setUuid(obj.getID().toString());
         return obj;
     }
     public WorkflowProcessTemplate convertService(Context context, WorkflowProcessTemplateRest rest) throws SQLException {

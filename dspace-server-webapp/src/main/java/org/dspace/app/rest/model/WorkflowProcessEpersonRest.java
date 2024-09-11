@@ -88,6 +88,8 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     @JsonProperty
     private  String remark;
 
+    @JsonProperty
+    private  Boolean issignnote=false;
 
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
@@ -130,6 +132,14 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public WorkFlowProcessDefinitionRest getWorkflowProcessReferenceDocRest() {
         return workflowProcessReferenceDocRest;
+    }
+
+    public Boolean getIssignnote() {
+        return issignnote;
+    }
+
+    public void setIssignnote(Boolean issignnote) {
+        this.issignnote = issignnote;
     }
 
     public void setWorkflowProcessReferenceDocRest(WorkFlowProcessDefinitionRest workflowProcessReferenceDocRest) {

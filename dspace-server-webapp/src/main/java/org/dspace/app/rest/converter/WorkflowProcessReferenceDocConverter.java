@@ -82,7 +82,11 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         }
         if (obj.getCreatedate() != null) {
             workflowProcessDefinitionRest.setCreatedate(obj.getCreatedate());
+        } if (obj.getPassword() != null) {
+            workflowProcessDefinitionRest.setPassword(obj.getPassword());
         }
+
+
        /* if (obj.getDocumentsignator() != null) {
             workflowProcessDefinitionRest.setDocumentsignatorRest(ePersonConverter.convert(obj.getDocumentsignator(), projection));
         }*/
@@ -263,6 +267,8 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         }
         if (!DateUtils.isNullOrEmptyOrBlank(obj.getFiletype())) {
             workflowProcessReferenceDoc.setFiletype(obj.getFiletype());
+        } if (!DateUtils.isNullOrEmptyOrBlank(obj.getPassword())) {
+            workflowProcessReferenceDoc.setPassword(obj.getPassword());
         }
         return workflowProcessReferenceDoc;
     }

@@ -65,14 +65,12 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
      */
     public List<WorkflowProcess> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson,UUID statusid,UUID draftid,Integer offset, Integer limit)throws SQLException;
+    List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson,UUID statusid,UUID draftid,Integer offset, Integer limit)throws SQLException;
     List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
     int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException;
-
-
     int countfindNotCompletedByUser(Context context, UUID eperson,UUID statusid,UUID draftid)throws SQLException;
-
+    int countfindNotCompletedByUserDraft(Context context, UUID eperson,UUID statusid,UUID draftid)throws SQLException;
     List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException;
-
     int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException;
     int countfilterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
 
@@ -88,7 +86,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
      * @param workflowProcessReferenceDoc  workflowProcessReferenceDoc
      * @throws SQLException,AuthorizeException if database error
      */
-    public  void  storeWorkFlowMataDataTOBitsream(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc,Item item) throws SQLException, AuthorizeException ;
+    public   void   storeWorkFlowMataDataTOBitsream(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc,Item item) throws SQLException, AuthorizeException ;
     public  void  storeWorkFlowMataDataTOBitsream(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc) throws SQLException, AuthorizeException ;
     List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,Integer offset, Integer limit) throws SQLException;
     int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
@@ -99,8 +97,13 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
     int countByTypeAndStatus(Context context,UUID typeid,UUID statusid,UUID epersonid) throws SQLException;
     int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
+    int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID draftstatus) throws SQLException;
 
-    int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid) throws SQLException;
+    int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+    int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+
+    int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid,UUID statusid) throws SQLException;
     public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context,UUID workflowtypeid, String subject) throws SQLException;
     List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;

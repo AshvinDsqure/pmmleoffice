@@ -89,6 +89,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "remark")
     private String remark;
 
+    @Column(name = "issignnote")
+    private  Boolean issignnote=false;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_id")
     private WorkFlowProcessMasterValue action = null;
@@ -326,6 +329,8 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     public void setWorkflowProcessSenderDiaries(List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries) {
         this.workflowProcessSenderDiaries = workflowProcessSenderDiaries;
     }
+
+
 
     public Boolean getIsreplydraft() {
         return isreplydraft;

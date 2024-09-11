@@ -262,19 +262,20 @@ public enum WorkFlowType {
                 }
             }
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
-
             WorkflowProcess finalWorkflowProcess = workflowProcess;
-            workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d->d!=null).filter(d->d.getUuid()!=null).map(d -> {
-                try {
-                    WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
-                    workflowProcessReferenceDoc.setWorkflowProcess(finalWorkflowProcess);
-                    return workflowProcessReferenceDoc;
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }).collect(Collectors.toList()));
-
-
+            if(workFlowProcessRest.getWorkflowProcessReferenceDocRests()!=null){
+                System.out.println("in doc save asdraft ");
+                workflowProcess.getWorkflowProcessReferenceDocs().clear();
+                workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d -> d != null).filter(d -> d.getUuid() != null).map(d -> {
+                    try {
+                        WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
+                        workflowProcessReferenceDoc.setWorkflowProcess(finalWorkflowProcess);
+                        return workflowProcessReferenceDoc;
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toList()));
+            }
             //sender diry
             if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
                 List<WorkflowProcessSenderDiary> list = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
@@ -358,7 +359,6 @@ public enum WorkFlowType {
     }
 
     public Optional<WorkFlowProcessMasterValue> getUserTypeFromMasterValue(Context context) throws SQLException {
-
         WorkFlowProcessMaster workFlowProcessMaster = MASTER.getMaster(context);
         WorkFlowProcessMasterValue workFlowProcessMasterValue = this.getWorkFlowProcessMasterValueService().findByName(context, this.getAction(), workFlowProcessMaster);
         return Optional.ofNullable(workFlowProcessMasterValue);

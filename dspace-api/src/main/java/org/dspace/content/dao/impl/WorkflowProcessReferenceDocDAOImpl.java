@@ -111,6 +111,72 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
     }
 
     @Override
+    public List<WorkflowProcessReferenceDoc> getDocumentPendingSignBySignitore(Context context, UUID drafttypeuuid,UUID workflowtype,Integer offset, Integer limit) throws SQLException {
+
+        System.out.println(""+workflowtype);
+        System.out.println(""+drafttypeuuid);
+        System.out.println(""+offset);
+        System.out.println(""+limit);
+
+
+
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d " +
+                "left join d.drafttype as df " +
+                "left join d.workflowProcess as wp " +
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p " +
+                "left join wp.workflowType as t " +
+                "where df.id=:drafttypeid " +
+                "and p.id=:person " +
+                "and ep.issignnote=:issignnote " +
+                "and t.id=:type");
+        query.setParameter("drafttypeid",drafttypeuuid);
+        query.setParameter("person",context.getCurrentUser().getID());
+        query.setParameter("issignnote",false);
+        query.setParameter("type",workflowtype);
+
+
+
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int getDocumentPendingSignBySignitorecount(Context context, UUID drafttypeuuid, UUID workflowtype) throws SQLException {
+        Query query = createQuery(context, "SELECT count(d) FROM WorkflowProcessReferenceDoc as d " +
+                "left join d.drafttype as df " +
+                "left join d.workflowProcess as wp " +
+                "left join wp.workflowProcessEpeople as ep " +
+                "left join ep.ePerson as p " +
+                "left join wp.workflowType as t " +
+                "where df.id=:drafttypeid " +
+                "and p.id=:person " +
+                "and ep.issignnote=:issignnote " +
+                "and t.id=:type");
+        query.setParameter("drafttypeid",drafttypeuuid);
+        query.setParameter("person",context.getCurrentUser().getID());
+        query.setParameter("issignnote",false);
+        query.setParameter("type",workflowtype);
+        return count(query);
+    }
+
+    @Override
+    public WorkflowProcessReferenceDoc getDocumentBySignitoreAndDraftType(Context context, UUID signitoreid, UUID drafttypeid) throws SQLException {
+        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+                " left join d.drafttype as df " +
+                " left join d.documentsignator as ds " +
+                " where ds.id=:signitoreid " +
+                " and df.id=:drafttypeid");
+        query.setParameter("signitoreid",signitoreid);
+        query.setParameter("drafttypeid",drafttypeid);
+        return (WorkflowProcessReferenceDoc) query.getSingleResult();
+    }
+
+    @Override
     public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
         Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
                 " left join d.drafttype as dt " +

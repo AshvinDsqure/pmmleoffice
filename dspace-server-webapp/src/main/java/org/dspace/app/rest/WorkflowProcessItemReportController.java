@@ -8,9 +8,36 @@
 package org.dspace.app.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.schemas.office.office.STHow;
+
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoFunction;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import emh.Enum.Coordinates;
+import emh.Enum.PageTobeSigned;
+import emh.Enum.Token_Status;
+import emh.Enum.Token_Type;
+import emh.Model.RequestData.*;
+import emh.Model.ResponseData.*;
+import emh.emBridgeLib.emBridge;
+import emh.emBridgeLib.emBridgeSignerInput;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -57,6 +84,7 @@ import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.*;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
+import org.dspace.content.Collection;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
@@ -69,10 +97,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
@@ -90,6 +115,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -169,8 +195,6 @@ public class WorkflowProcessItemReportController {
     ItemConverter itemConverter;
     @Autowired
     DigitalSign digitalSign;
-
-
 
 
     /**
@@ -306,21 +330,22 @@ public class WorkflowProcessItemReportController {
         map.put("filenumber", filenumber);
         return map;
     }
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/callSAPPost")
-    public SAPResponse SAPCallPOst(@PathVariable UUID  uuid, HttpServletRequest request) throws Exception {
-        SAPResponse sapResponse=null;
+    public SAPResponse SAPCallPOst(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
+        SAPResponse sapResponse = null;
         try {
             Context context = ContextUtil.obtainContext(request);
-            String documentno="51056001142024";
-            JCoDestination destination= sapService.getDestination();
+            String documentno = "51056001142024";
+            JCoDestination destination = sapService.getDestination();
             if (destination != null && destination.isValid()) {
-                JCoFunction jCoFunction=  sapService.getFunctionZDMS_DOCUMENT_POST(destination);
-                sapResponse=sapService.executeSAP(jCoFunction,destination,documentno);
+                JCoFunction jCoFunction = sapService.getFunctionZDMS_DOCUMENT_POST(destination);
+                sapResponse = sapService.executeSAP(jCoFunction, destination, documentno);
                 return sapResponse;
             }
-        }catch (Exception e){
-            System.out.println("in error CallSap    ::"+e.getMessage());
+        } catch (Exception e) {
+            System.out.println("in error CallSap    ::" + e.getMessage());
             sapResponse.setMESSAGE(e.getMessage());
             sapResponse.setMSGTYP("E");
         }
@@ -371,7 +396,7 @@ public class WorkflowProcessItemReportController {
             Context context = ContextUtil.obtainContext(request);
             String filename = "ProductivityReport.xlsx";
             List<Item> list = itemService.getDataTwoDateRangeDownload(context, startdate, enddate);
-            System.out.println("size"+list.size());
+            System.out.println("size" + list.size());
             List<ExcelDTO> listDTo = list.stream().map(i -> {
                 String title = itemService.getMetadataFirstValue(i, "dc", "title", null, null);
                 String type = itemService.getMetadataFirstValue(i, "casefile", "case", "typename", null);
@@ -393,6 +418,46 @@ public class WorkflowProcessItemReportController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                     .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                     .body(file);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getDepartmentWiseNoOfProcessWorkflowCounts")
+    public ResponseEntity<Resource> getDepartmentWiseNoOfProcessWorkflowCounts(HttpServletRequest request,
+                                                 @Parameter(value = "startdate", required = true) String startdate,
+                                                 @Parameter(value = "enddate", required = true) String enddate,
+                                                 @Parameter(value = "workflowtype", required = true) String workflowtype) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            String filename = "statisticalReport.xlsx";
+            List<DepartmentDTO>DepartmentDTOLIST=new ArrayList<>();
+            System.out.println("in getDepartmentWiseNoOfProcessWorkflowCounts ");
+            if(workflowtype.equalsIgnoreCase("Draft")||workflowtype.equalsIgnoreCase("Inward")) {
+                List<Object[]> list = itemService.getDepartmentWiseNoOfProcessWorkflowCounts(context, startdate, enddate, workflowtype);
+                System.out.println("size" + list.size());
+                if (list != null) {
+                    for (Object[] result : list) {
+                        DepartmentDTO modeldto = new DepartmentDTO();
+                        String name = (String) result[0];
+                        Long count = (Long) (result[1] != null ? result[1] : 0);
+                        modeldto.setName(name);
+                        modeldto.setCount(count);
+                        DepartmentDTOLIST.add(modeldto);
+                    }
+                }
+                ByteArrayInputStream in = ExcelHelper.tutorialsToExceldEPARTMENT(DepartmentDTOLIST);
+                InputStreamResource file = new InputStreamResource(in);
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                        .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                        .body(file);
+            }else {
+                throw new RuntimeException("Enter Valid WorkflowType");
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -475,6 +540,7 @@ public class WorkflowProcessItemReportController {
                     // Generate a random 4-digit number
                     int randomNumber = random.nextInt(9000) + 1000;
                     File tempFile1html = new File(TEMP_DIRECTORY, "sing_" + randomNumber + ".pdf");
+
                     if (!tempFile1html.exists()) {
                         try {
                             tempFile1html.createNewFile();
@@ -485,6 +551,7 @@ public class WorkflowProcessItemReportController {
                     }
                     fileInputa = createFinalDraftDoc(context, workflowProcessReferenceDocVersion, tempFile1html);
                     Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputa, "", tempFile1html.getName());
+
                     workflowProcessReferenceDoc.setBitstream(bitstream);
                     namepdf = bitstream.getName();
                     WorkflowProcessReferenceDoc d = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
@@ -506,7 +573,6 @@ public class WorkflowProcessItemReportController {
             }
 
             //validation
-
             return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12, workflowProcessReferenceDoc);
 
         } catch (Exception e) {
@@ -514,6 +580,79 @@ public class WorkflowProcessItemReportController {
             return null;
         }
     }
+
+    @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/signPdfE")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    public Map<String, String> signPdfE(MultipartFile certFile,
+                                       String singPdfRequest, HttpServletRequest request) throws SQLException, AuthorizeException, ParseException {
+        Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
+        Bitstream bitstreampdf = null;
+        String namepdf = "";
+        // Bitstream bitstreampkcs12 = null;
+        String bitstreampkcs12 = null;
+        InputStream fileInputa = null;
+        InputStream pkcs12File = null;
+        try {
+
+
+            ObjectMapper mapper = new ObjectMapper();
+            SignPdfRequestDTO signPdfRequestDTO = mapper.readValue(singPdfRequest, SignPdfRequestDTO.class);
+            System.out.println("doc id" + signPdfRequestDTO.getDocumentuuid());
+            System.out.println("getPksc12orpemdocuuid  id" + signPdfRequestDTO.getPksc12orpemdocuuid());
+            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getDocumentuuid()));
+            if (workflowProcessReferenceDoc != null) {
+                WorkflowProcessReferenceDocVersion workflowProcessReferenceDocVersion=workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().stream().filter(i->i.getIsactive()).findFirst().get();
+                if (workflowProcessReferenceDocVersion!=null&&workflowProcessReferenceDocVersion.getEditortext() != null) {
+                    final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+                    Random random = new Random();
+                    // Generate a random 4-digit number
+                    int randomNumber = random.nextInt(9000) + 1000;
+                    File tempFile1html = new File(TEMP_DIRECTORY, "sing_" + randomNumber + ".pdf");
+                    if (!tempFile1html.exists()) {
+                        try {
+                            tempFile1html.createNewFile();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+
+                    fileInputa = createFinalDraftDoc(context, workflowProcessReferenceDocVersion, tempFile1html);
+
+                    Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputa, "", tempFile1html.getName());
+                    workflowProcessReferenceDoc.setBitstream(bitstream);
+                    namepdf = bitstream.getName();
+                    WorkflowProcessReferenceDoc d = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+                    workflowProcessReferenceDoc = d;
+                    fileInputa = bitstreamService.retrieve(context, workflowProcessReferenceDoc.getBitstream());
+                } else {
+                    System.out.println("in doc id" + workflowProcessReferenceDoc.getID());
+                    bitstreampdf = workflowProcessReferenceDoc.getBitstream();
+                    fileInputa = bitstreamService.retrieve(context, workflowProcessReferenceDoc.getBitstream());
+                    namepdf = bitstreampdf.getName();
+                }
+            }
+            //  WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString("8fcbb530-50ef-427b-9bca-db3fb60038c3"));
+            //  WorkflowProcessReferenceDoc pkcs12doc = workflowProcessReferenceDocService.find(context, UUID.fromString(signPdfRequestDTO.getPksc12orpemdocuuid()));
+            File p12 = new File(configurationService.getProperty("digital.sign.p12File"));
+            if (p12 != null) {
+                bitstreampkcs12 =p12.getName();
+                pkcs12File = new FileInputStream(p12);
+            }
+
+            //validation
+            return singData(context, signPdfRequestDTO, fileInputa, pkcs12File, certFile, namepdf, bitstreampkcs12, workflowProcessReferenceDoc);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
 
     @RequestMapping(method = RequestMethod.GET, value = "/digitalSignHighCourtofBihar")
     public Map<String, String> digitalSignHighCourtofBihar(HttpServletRequest request, @Parameter(value = "bitstreamid", required = true) String bitstreamid) throws SQLException, AuthorizeException, ParseException {
@@ -724,6 +863,7 @@ public class WorkflowProcessItemReportController {
                     System.out.println("file path" + tempsingpdf.getAbsolutePath());
                     FileInputStream pdfFileInputStream = new FileInputStream(new File(tempsingpdf.getAbsolutePath()));
                     Bitstream bitstreampdfsing = bundleRestRepository.processBitstreamCreationWithoutBundle1(context, pdfFileInputStream, "", tempsingpdf.getName(), bitstream);
+
                     if (bitstreampdfsing != null) {
                         Map<String, String> map = new HashMap<>();
                         map.put("bitstreampid", bitstreampdfsing.getID().toString());
@@ -757,6 +897,7 @@ public class WorkflowProcessItemReportController {
         //CloseableHttpClient httpClient = HttpClients.createDefault();
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         File tempsingpdf = new File(TEMP_DIRECTORY, "sign" + ".pdf");
+
         if(p12File==null){
             throw new RuntimeException("pkcs12File not valid");
         }if(fileInput==null){

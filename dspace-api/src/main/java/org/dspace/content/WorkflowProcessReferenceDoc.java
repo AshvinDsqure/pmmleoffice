@@ -48,6 +48,9 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
     private String referenceNumber;
     @Column(name = "editortext")
     private String editortext;
+
+    @Column(name = "password")
+    private String password;
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "bitstream")
     private Bitstream bitstream;
@@ -258,5 +261,14 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setFiletype(String filetype) {
         this.filetype = filetype;
+    }
+
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

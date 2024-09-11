@@ -164,7 +164,6 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                          Patch patch) throws AuthorizeException, SQLException {
         context.turnOffAuthorisationSystem();
-        System.out.println("test patch::::::::::::::::::::::::");
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 
@@ -298,12 +297,10 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected ItemRest createAndReturn(Context context) throws AuthorizeException, SQLException {
         context.turnOffAuthorisationSystem();
-        System.out.println("in create ::: >>");
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         String owningCollectionUuidString = req.getParameter("owningCollection");
         ObjectMapper mapper = new ObjectMapper();
         ItemRest itemRest = null;
-        System.out.println(":::::::::::::::::createAndReturn:::::::::::::::::::ITEM:::");
         try {
             ServletInputStream input = req.getInputStream();
             itemRest = mapper.readValue(input, ItemRest.class);

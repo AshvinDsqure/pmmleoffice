@@ -17,6 +17,7 @@ import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.converter.WorkflowProcessTemplateConverter;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkFlowProcessDefinitionRest;
+import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.app.rest.model.WorkflowProcessTemplateRest;
 import org.dspace.app.rest.model.patch.Patch;
 import org.dspace.authorize.AuthorizeException;
@@ -27,6 +28,7 @@ import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,10 +37,13 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is the rest repository responsible for managing WorkflowDefinition Rest objects
@@ -115,9 +120,11 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     }
 
     @Override
-    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")protected WorkflowProcessTemplateRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")protected WorkflowProcessTemplateRest
+    put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                               JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkflowProcessTemplateRest workflowProcessTemplateRest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessTemplateRest.class);
+        System.out.println("in update workflowProcessTemplateRest");
         WorkflowProcessTemplate workflowProcessTemplate = workflowProcessTemplateService.find(context, id);
         if (workflowProcessTemplate == null) {
             System.out.println("documentTypeRest id ::: is Null  document tye null");
@@ -125,8 +132,10 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
         }
         workflowProcessTemplate = workflowProcessTemplateConverter.convert(context,workflowProcessTemplate,workflowProcessTemplateRest);
         workflowProcessTemplateService.update(context, workflowProcessTemplate);
+        WorkflowProcessTemplateRest workflowProcessTemplateRest1= workflowProcessTemplateConverter.convert(workflowProcessTemplate,utils.obtainProjection());
         context.commit();
-        return converter.toRest(workflowProcessTemplate, utils.obtainProjection());
+        System.out.println("in update workflowProcessTemplateRest done");
+        return workflowProcessTemplateRest1;
     }
 
     private WorkflowProcessTemplate createworkflowProcessDefinitionFromRestObject(Context context, WorkflowProcessTemplateRest workflowProcessTemplateRest) throws AuthorizeException {
@@ -149,20 +158,17 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     @Override
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     protected void delete(Context context, UUID id) throws AuthorizeException {
-        WorkflowProcessTemplate workflowProcessTemplate = null;
         try {
-            workflowProcessTemplate = workflowProcessTemplateService.find(context, id);
+            WorkflowProcessTemplate workflowProcessTemplate = workflowProcessTemplateService.find(context, id);
             if (workflowProcessTemplate == null) {
                 throw new ResourceNotFoundException(WorkFlowProcessDefinitionRest.CATEGORY + "." + WorkFlowProcessDefinitionRest.NAME +
                         " with id: " + id + " not found");
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        try {
-            workflowProcessTemplateService.delete(context, workflowProcessTemplate);
+            workflowProcessTemplate.setIsdelete(true);
+            workflowProcessTemplateService.update(context,workflowProcessTemplate);
             context.commit();
-        } catch (SQLException | IOException e) {
+            System.out.println("delete done!");
+        } catch (SQLException  e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -171,14 +177,20 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
     public Page<WorkflowProcessTemplate> getDocumentByItemID(@Parameter(value = "template", required = true) UUID template, Pageable pageable) {
         try {
             Context context = obtainContext();
-            System.out.println("template id:"+template);
+            System.out.println("template id :"+template);
+            List<WorkflowProcessTemplateRest>workflowProcessTemplateRests= new ArrayList<WorkflowProcessTemplateRest>();;
             long total = workflowProcessTemplateService.getCountWorkflowProcessByTemplate(context, template);
             List<WorkflowProcessTemplate> witems = workflowProcessTemplateService.getWorkflowProcessByTemplate(context,template, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
+
+            System.out.println("size :"+witems.size());
+            workflowProcessTemplateRests = witems.stream().map(d -> {
+                return workflowProcessTemplateConverter.convert(d, utils.obtainProjection());
+            }).collect(toList());
+            System.out.println("out getDraftByWorkFlowTypeID");
+            return new PageImpl(workflowProcessTemplateRests, pageable, total);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
 }

@@ -10,9 +10,7 @@ package org.dspace.app.rest.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.dspace.content.WorkFlowProcessMasterValue;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * The rest resource used for workflow definitions
@@ -39,6 +37,10 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
     private Integer index;
     @JsonProperty
     private WorkFlowProcessMasterValueRest templateRest = null;
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest templatetypeRest = null;
+    @JsonProperty
+    private String editortext;
 
     @Override
     public String getCategory() {
@@ -81,5 +83,21 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
 
     public void setePersonRest(EPersonRest ePersonRest) {
         this.ePersonRest = ePersonRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getTemplatetypeRest() {
+        return templatetypeRest;
+    }
+
+    public void setTemplatetypeRest(WorkFlowProcessMasterValueRest templatetypeRest) {
+        this.templatetypeRest = templatetypeRest;
+    }
+
+    public String getEditortext() {
+        return editortext;
+    }
+
+    public void setEditortext(String editortext) {
+        this.editortext = editortext;
     }
 }

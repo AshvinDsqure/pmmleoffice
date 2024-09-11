@@ -145,6 +145,16 @@ public class WorkflowProcessReferenceDocServiceImpl extends DSpaceObjectServiceI
     }
 
     @Override
+    public WorkflowProcessReferenceDoc getDocumentBySignitoreAndDraftType(Context context, UUID signitoreid, UUID drafttypeid) throws SQLException {
+    try {
+        return workflowProcessReferenceDocDAO.getDocumentBySignitoreAndDraftType(context, signitoreid, drafttypeid);
+    }catch (Exception e){
+        System.out.println("error "+e.getMessage());
+        return null;
+    }
+    }
+
+    @Override
     public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
         return workflowProcessReferenceDocDAO.findbydrafttypeandworkflowprocessAndItem(context,item,workflowprocess,drafttypeid);
     }
@@ -152,5 +162,15 @@ public class WorkflowProcessReferenceDocServiceImpl extends DSpaceObjectServiceI
     @Override
     public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context, UUID drafttypeid, UUID itemid) throws SQLException {
         return workflowProcessReferenceDocDAO.getDocumentByItemid(context,drafttypeid,itemid);
+    }
+
+    @Override
+    public List<WorkflowProcessReferenceDoc> getDocumentPendingSignBySignitore(Context context, UUID drafttypeuuid, UUID workflowtype, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessReferenceDocDAO.getDocumentPendingSignBySignitore(context,drafttypeuuid,workflowtype,offset,limit);
+    }
+
+    @Override
+    public int getDocumentPendingSignBySignitorecount(Context context, UUID drafttypeuuid, UUID workflowtype) throws SQLException {
+        return workflowProcessReferenceDocDAO.getDocumentPendingSignBySignitorecount(context,drafttypeuuid,workflowtype);
     }
 }

@@ -464,6 +464,24 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         }
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    public Page<EPersonRest> getAll(Context context, Pageable pageable) {
+        context.turnOffAuthorisationSystem();
+        List<EPersonRest> ePersonRests;
+        try {
+            long total = es.countTotal(context);
+            List<EPerson> epersons = es.findAll(context, EPerson.EMAIL, pageable.getPageSize(),
+                    Math.toIntExact(pageable.getOffset()));
+            ePersonRests = epersons.stream().map(d -> {
+                return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(ePersonRests, pageable,total);
+            // return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
 
     @Override
     public Class<EPersonRest> getDomainClass() {

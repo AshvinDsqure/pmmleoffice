@@ -209,7 +209,7 @@ public class WorkflowProcessSenderDiaryConverter extends DSpaceObjectConverter<W
         }
         if (!DateUtils.isNullOrEmptyOrBlank(rest.getVipRest())) {
             try {
-                obj.setVip(vipService.find(context, UUID.fromString(rest.getVipRest())));
+                    obj.setVip(vipService.find(context, UUID.fromString(rest.getVipRest())));
             } catch (Exception e) {
                 e.printStackTrace();
             }

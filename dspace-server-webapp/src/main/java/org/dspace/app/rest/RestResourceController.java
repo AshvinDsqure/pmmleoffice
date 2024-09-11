@@ -221,7 +221,7 @@ RestResourceController implements InitializingBean {
                                                                                            String model, ID id) {
         DSpaceRestRepository<RestAddressableModel, ID> repository = utils.getResourceRepository(apiCategory, model);
 
-        System.out.println("Class Name is :\t"+repository.getClass());
+       // System.out.println("Class Name is :\t"+repository.getClass());
         Optional<RestAddressableModel> modelObject = Optional.empty();
         try {
             modelObject = repository.findById(id);
@@ -383,7 +383,6 @@ RestResourceController implements InitializingBean {
                                                        @PathVariable String model,
                                                        @RequestParam(required = false) String parent)
         throws HttpRequestMethodNotSupportedException {
-        System.out.println("create a save");
         return postJsonInternal(request, apiCategory, model, parent);
     }
 
@@ -937,7 +936,7 @@ RestResourceController implements InitializingBean {
             e.printStackTrace();
         }
         DSpaceRestRepository<T, ?> repository = utils.getResourceRepository(apiCategory, model);
-        System.out.println("repository::"+repository.getDomainClass()+repository.getClass());
+       // System.out.println("repository::"+repository.getDomainClass()+repository.getClass());
         Link link = linkTo(this.getClass(), apiCategory, model).slash(encodedParameterString).withSelfRel();
 
         Page<DSpaceResource<T>> resources;

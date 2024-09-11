@@ -83,7 +83,6 @@ public class BundleServiceImpl extends DSpaceObjectServiceImpl<Bundle> implement
                 log.debug(LogHelper.getHeader(context, "find_bundle",
                                                "bundle_id=" + id));
             }
-
             return bundle;
         }
     }
@@ -95,7 +94,6 @@ public class BundleServiceImpl extends DSpaceObjectServiceImpl<Bundle> implement
         }
         authorizeService.authorizeAction(context, item, Constants.ADD);
 
-
         // Create a table row
         Bundle bundle = bundleDAO.create(context, new Bundle());
         bundle.setName(context, name);
@@ -103,8 +101,6 @@ public class BundleServiceImpl extends DSpaceObjectServiceImpl<Bundle> implement
         if (!bundle.getItems().contains(item)) {
             bundle.addItem(item);
         }
-
-
         log.info(LogHelper.getHeader(context, "create_bundle", "bundle_id="
             + bundle.getID()));
 

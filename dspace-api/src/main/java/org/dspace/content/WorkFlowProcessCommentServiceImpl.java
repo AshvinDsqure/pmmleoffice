@@ -92,6 +92,11 @@ public class WorkFlowProcessCommentServiceImpl extends DSpaceObjectServiceImpl<W
     }
 
     @Override
+    public WorkFlowProcessComment findCommentBySubmiterandWorkflowProcessID(Context context, UUID submiter, UUID workflowprocessid) throws SQLException {
+        return workFlowProcessCommentDAO.findCommentBySubmiterandWorkflowProcessID(context,submiter,workflowprocessid);
+    }
+
+    @Override
     public WorkFlowProcessComment find(Context context, UUID uuid) throws SQLException {
         return workFlowProcessCommentDAO.findByID(context,WorkFlowProcessComment.class,uuid);
     }

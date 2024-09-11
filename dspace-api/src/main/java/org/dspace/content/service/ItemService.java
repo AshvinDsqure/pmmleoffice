@@ -845,5 +845,6 @@ public interface ItemService
     public List<Item> searchItemByTitleOrYear(Context context, String titleoryear) throws Exception;
 
     public List<Item> searchItemByTitleAndYear(Context context, String title, String year) throws Exception;
+    public List<Object[]> getDepartmentWiseNoOfProcessWorkflowCounts(Context context, String startdate,String endtdate,String workflowtype) throws SQLException;
 
 }

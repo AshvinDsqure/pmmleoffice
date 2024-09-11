@@ -78,6 +78,8 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     private WorkflowProcessReferenceDocVersionRest workflowProcessReferenceDocVersionRest;
     private String itemname;
 
+    private String password;
+
     private EPersonRest documentsignatorRest;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -248,5 +250,13 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setFiletype(String filetype) {
         this.filetype = filetype;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

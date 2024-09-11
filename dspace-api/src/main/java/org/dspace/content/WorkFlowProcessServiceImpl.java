@@ -118,6 +118,12 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
+    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid, offset, limit);
+
+    }
+
+    @Override
     public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
         return workflowProcessDAO.findCompletedFlow(context,eperson,statusid,workflowtypeid,offset,limit);
     }
@@ -133,15 +139,19 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
+    public int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
+        return workflowProcessDAO.countfindNotCompletedByUserDraft(context, eperson, statusid, draftid);
+
+    }
+
+    @Override
     public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
         return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid, offset, limit);
     }
-
     @Override
     public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
         return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context, eperson, statusid);
     }
-
     @Override
     public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
         MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
@@ -159,16 +169,20 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public void storeWorkFlowMataDataTOBitsream(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Item item) throws SQLException, AuthorizeException {
+    public synchronized void storeWorkFlowMataDataTOBitsream(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Item item) throws SQLException, AuthorizeException {
         Bitstream bitstream = workflowProcessReferenceDoc.getBitstream();
         if (bitstream != null) {
+            System.out.println("in store ::::storeWorkFlowMataDataTOBitsream");
             List<Bundle> bundles = item.getBundles("ORIGINAL");
+            System.out.println("bundles size"+bundles.size());
             Bundle finalBundle = null;
             if (bundles.size() == 0) {
+                System.out.println("create new Bundel");
                 finalBundle = bundleService.create(context, item, "ORIGINAL");
             } else {
                 finalBundle = bundles.stream().findFirst().get();
             }
+            System.out.println("finalBundle ::name "+finalBundle.getName());
             Bundle finalBundle1 = finalBundle;
             bundleService.addBitstream(context, finalBundle1, bitstream);
             if (workflowProcessReferenceDoc.getWorkFlowProcessReferenceDocType() != null) {
@@ -193,6 +207,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             if (workflowProcessReferenceDoc.getPage() != null) {
                 bitstreamService.addMetadata(context, bitstream, "dc", "page", null, null, workflowProcessReferenceDoc.getPage().toString());
             }
+        }else{
+            System.out.println("bitstream not::::::::::::::in thid doc ");
         }
 
     }
@@ -274,8 +290,29 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid);
+    public int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid, UUID draftstatus) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatusandNotDraft(context, typeid, statusid, epersonid,draftstatus);
+    }
+
+    @Override
+    public int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityNotDraft(context,typeid,priorityid,epersonid,statusid);
+    }
+
+    @Override
+    public int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityCreted(context,typeid,priorityid,epersonid,statusid);
+
+    }
+
+    @Override
+    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityClose(context,typeid,priorityid,epersonid,statusid);
+    }
+
+    @Override
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid,statusid);
     }
 
     @Override
@@ -421,7 +458,6 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             e.printStackTrace();
         }
     }
-
 
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);

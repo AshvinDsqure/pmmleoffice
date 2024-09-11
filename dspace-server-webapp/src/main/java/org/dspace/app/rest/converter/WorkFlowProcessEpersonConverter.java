@@ -74,7 +74,46 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessDefinitionEpersonRest.setOwner(obj.getOwner());
         workflowProcessDefinitionEpersonRest.setIsrefer(obj.getIsrefer());
         workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+        workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+        workflowProcessDefinitionEpersonRest.setIssignnote(obj.getIssignnote());
+
         workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
+        return workflowProcessDefinitionEpersonRest;
+    }
+
+    public WorkflowProcessEpersonRest convertByHistory(WorkflowProcessEperson obj, Projection projection) {
+        WorkflowProcessEpersonRest workflowProcessDefinitionEpersonRest = new WorkflowProcessEpersonRest();
+        if (obj.getePerson() != null) {
+            workflowProcessDefinitionEpersonRest.setePersonRest(ePersonConverter.convert(obj.getePerson(), projection));
+        }
+        if (obj.getDepartment() != null) {
+            workflowProcessDefinitionEpersonRest.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
+        }
+        if (obj.getOffice() != null) {
+            workflowProcessDefinitionEpersonRest.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
+        }
+        if (obj.getUsertype() != null) {
+            workflowProcessDefinitionEpersonRest.setUserType(workFlowProcessMasterValueConverter.convert(obj.getUsertype(), projection));
+        }
+        if (obj.getResponsebyallusers() != null) {
+            workflowProcessDefinitionEpersonRest.setResponsebyallusersRest(workFlowProcessMasterValueConverter.convert(obj.getResponsebyallusers(), projection));
+        }
+        if(obj.getInitiator()!=null) {
+            workflowProcessDefinitionEpersonRest.setInitiator(obj.getInitiator());
+        }
+        if(obj.getRemark()!=null){
+            workflowProcessDefinitionEpersonRest.setRemark(obj.getRemark());
+        }
+
+        workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
+        workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
+        workflowProcessDefinitionEpersonRest.setSequence(obj.getSequence());
+        workflowProcessDefinitionEpersonRest.setOwner(obj.getOwner());
+        workflowProcessDefinitionEpersonRest.setIsrefer(obj.getIsrefer());
+        workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+        workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
+        workflowProcessDefinitionEpersonRest.setIssignnote(obj.getIssignnote());
         return workflowProcessDefinitionEpersonRest;
     }
 
@@ -98,7 +137,6 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if (rest.getOfficeRest() != null)
             workflowProcessEperson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest.getOfficeRest()));
         if (rest.getUserType() != null) {
-            System.out.println("usertype id:::::::::::::"+rest.getUserType().getUuid());
             workflowProcessEperson.setUsertype(workFlowProcessMasterValueConverter.convert(context, rest.getUserType()));
         }
         if (rest.getResponsebyallusersRest() != null) {
@@ -117,6 +155,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessEperson.setSequence(rest.getSequence());
         workflowProcessEperson.setIsrefer(rest.getIsrefer());
         workflowProcessEperson.setIndex(rest.getIndex());
+        workflowProcessEperson.setIssignnote(rest.getIssignnote());
         return workflowProcessEperson;
     }
     public WorkflowProcessEperson convert(Context context, EPerson rest) {

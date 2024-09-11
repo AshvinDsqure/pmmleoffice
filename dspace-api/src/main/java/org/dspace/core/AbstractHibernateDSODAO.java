@@ -19,6 +19,7 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.MetadataField;
+import org.hibernate.SQLQuery;
 
 /**
  * Hibernate implementation used by DSpaceObject Database Access Objects.
@@ -149,6 +150,10 @@ public abstract class AbstractHibernateDSODAO<T extends DSpaceObject> extends Ab
                 }
             }
         }
+    }
+
+    public SQLQuery createSQLQuery(Context context, String query) throws SQLException {
+        return getHibernateSession(context).createSQLQuery(query);
     }
 
 }

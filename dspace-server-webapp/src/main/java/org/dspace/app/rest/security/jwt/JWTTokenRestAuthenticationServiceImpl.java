@@ -87,11 +87,9 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     public void addAuthenticationDataForUser(HttpServletRequest request, HttpServletResponse response,
                                              DSpaceAuthentication authentication, boolean addCookie) throws IOException {
         try {
-            System.out.println("in addAuthenticationDataForUser :::");
-            Context context = ContextUtil.obtainContext(request);
+           Context context = ContextUtil.obtainContext(request);
             context.setCurrentUser(ePersonService.findByEmail(context, authentication.getName()));
             String token = loginJWTTokenHandler.createTokenForEPerson(context, request,authentication.getPreviousLoginDate());
-           // AddCounter(context,token);
             System.out.println("login Email ID:::::::::"+context.getCurrentUser().getEmail());
             context.commit();
             // Add newly generated auth token to the response

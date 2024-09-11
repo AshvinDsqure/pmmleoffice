@@ -202,5 +202,6 @@ public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item> {
     public Item searchItemBySinoNumber(Context context, MetadataField metadataField, String sinoNumber) throws Exception;
     public List<Item> searchItemByTitleOrYear(Context context, MetadataField metadataTitleField ,MetadataField metadataYearField, String titleoryear) throws Exception;
     public List<Item> searchItemByTitleAndYear(Context context, MetadataField metadataTitleField ,MetadataField metadataYearField, String title, String year) throws Exception;
+    public List<Object[]> getDepartmentWiseNoOfProcessWorkflowCounts(Context context, String startdate,String endtdate,String workflowtype) throws SQLException;
 
 }

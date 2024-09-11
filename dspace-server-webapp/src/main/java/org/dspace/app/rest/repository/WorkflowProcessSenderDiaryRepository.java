@@ -163,7 +163,6 @@ public class WorkflowProcessSenderDiaryRepository extends DSpaceObjectRestReposi
     @SearchRestMethod(name = "searchByName")
     public Page<WorkflowProcessSenderDiaryRest> search(@Parameter(value = "name", required = true) String name, Pageable pageable) {
         try {
-            System.out.println("sear>>>>>>>>>>>" + name);
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             Optional<List<WorkflowProcessSenderDiary>> workflowProcessSenderDiary = Optional.ofNullable(workflowProcessSenderDiaryService.searchSenderDiary(context, name));

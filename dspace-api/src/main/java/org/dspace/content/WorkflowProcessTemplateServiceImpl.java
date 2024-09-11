@@ -75,7 +75,7 @@ public class WorkflowProcessTemplateServiceImpl extends DSpaceObjectServiceImpl<
 
     @Override
     public void delete(Context context, WorkflowProcessTemplate dso) throws SQLException, AuthorizeException, IOException {
-
+        workflowProcessTemplateDAO.delete(context, dso);
     }
 
     @Override
@@ -109,4 +109,5 @@ public class WorkflowProcessTemplateServiceImpl extends DSpaceObjectServiceImpl<
     public List<WorkflowProcessTemplate> getWorkflowProcessByTemplate(Context context, UUID template, Integer offset, Integer limit) throws SQLException {
         return workflowProcessTemplateDAO.getWorkflowProcessByTemplate(context,template,offset,limit);
     }
+
 }

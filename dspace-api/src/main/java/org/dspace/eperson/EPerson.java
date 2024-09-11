@@ -50,6 +50,7 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
     @Column(name = "email", unique = true, length = 64)
     private String email;
 
+
     @Column(name = "require_certificate")
     private boolean requireCertificate = false;
 

@@ -23,6 +23,7 @@ import com.google.common.collect.AbstractIterator;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.query.NativeQuery;
 
 /**
  * Hibernate implementation for generic DAO interface.  Also includes additional
@@ -137,6 +138,7 @@ public abstract class AbstractHibernateDAO<T> implements GenericDAO<T> {
     public Query createQuery(Context context, String query) throws SQLException {
         return getHibernateSession(context).createQuery(query);
     }
+
 
     /**
      * This method will return a list with unique results, no duplicates, made by the given CriteriaQuery and parameters

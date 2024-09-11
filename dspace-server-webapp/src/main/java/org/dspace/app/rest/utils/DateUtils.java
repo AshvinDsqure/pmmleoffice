@@ -104,12 +104,8 @@ public class DateUtils {
 
     public static String getFinancialYear (){
         LocalDate today = LocalDate.now();
-        System.out.println("todate date"+today);
         int year = today.getYear();
         int month = today.getMonthValue();
-        System.out.println("date\t"+today.getDayOfMonth());
-        System.out.println("dmonth\t"+today.getMonthValue());
-        System.out.println("year\t"+today.getYear());
         String financialYear;
         String financialYears;
         if (month <= 1) {

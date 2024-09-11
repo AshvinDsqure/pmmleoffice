@@ -37,8 +37,9 @@ public class WorkflowProcessTemplateDAOImpl extends AbstractHibernateDSODAO<Work
     @Override
     public List<WorkflowProcessTemplate> getWorkflowProcessByTemplate(Context context, UUID template, Integer offset, Integer limit) throws SQLException {
         try {
-            Query query = createQuery(context, "SELECT t from  WorkflowProcessTemplate as t join t.template as temp where temp.id=:temp  ORDER BY t.index");
+            Query query = createQuery(context, "SELECT t from  WorkflowProcessTemplate as t join t.template as temp where temp.id=:temp and t.isdelete=:isdelete ORDER BY t.index");
             query.setParameter("temp",template);
+            query.setParameter("isdelete",false);
             return query.getResultList();
         }catch (Exception e){
             System.out.println("in error " + e.getMessage());

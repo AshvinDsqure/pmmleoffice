@@ -142,6 +142,7 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
         try {
           //  eperson.setWorkflowProcess(null);
             eperson.setIsdelete(true);
+            eperson.setWorkflowProcess(null);
             workflowProcessEpersonService.update(context, eperson);
             context.commit();
             System.out.println("delete done !");

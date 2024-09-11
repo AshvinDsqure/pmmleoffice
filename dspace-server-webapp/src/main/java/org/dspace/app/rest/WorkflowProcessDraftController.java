@@ -34,6 +34,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
+import org.dspace.core.Utils;
 import org.dspace.disseminate.service.CitationDocumentService;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.ConfigurationService;
@@ -82,6 +83,18 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
     WorkflowProcessService workflowProcessService;
     @Autowired
     WorkFlowProcessConverter workFlowProcessConverter;
+    @Autowired
+    WorkFlowProcessDraftDetailsConverter workFlowProcessDraftDetailsConverter;
+    @Autowired
+    WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
+    @Autowired
+    WorkflowProcessSenderDiaryConverter workflowProcessSenderDiaryConverter;
+
+
+
+    @Autowired
+    ItemConverter itemConverter;
+
     @Autowired
     WorkFlowProcessEpersonConverter workFlowProcessEpersonConverter;
     @Autowired
@@ -157,6 +170,11 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                     if (workFlowTypeStatus.isPresent()) {
                         workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
                     }
+                    System.out.println("test");
+                    workFlowProcess.setIsdelete(true);
+                    workflowProcessService.update(context,workFlowProcess);
+                    workFlowProcessRest.setId(null);
+                    workFlowType.setWorkFlowStatus(WorkFlowStatus.INPROGRESS);
                 }
             }else {
                 workFlowType.setWorkFlowStatus(WorkFlowStatus.INPROGRESS);
@@ -169,8 +187,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             if(workFlowProcessRest.getRemark()!=null) {
                 ep.setRemark(workFlowProcessRest.getRemark());
             }
-            workFlowProcessRest.getWorkflowProcessEpersonRests().add(ep);
-            System.out.println("ep size size : "+workFlowProcessRest.getWorkflowProcessEpersonRests().size());
+            workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest.get());
             //perfome and stor to db
             workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
@@ -232,6 +249,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 WorkFlowProcessComment workFlowProcessComment = workFlowProcessCommentConverter.convert(context, workFlowProcessRest.getWorkFlowProcessCommentRest());
                 workFlowProcessComment.setWorkFlowProcess(workflowProcess);
                 workFlowProcessComment.setSubmitter(context.getCurrentUser());
+                workFlowProcessComment.setIsdraftsave(true);
                 WorkFlowProcessComment workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
                 System.out.println("SAVE NOTE AS DRAFT DONE ");
                 WorkFlowProcessComment workFlowProcessComment2 = workFlowProcessComment1;
@@ -246,7 +264,6 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                             throw new RuntimeException(e);
                         }
                     }).collect(Collectors.toList());
-
                     if (workflowProcessReferenceDocs != null && workflowProcessReferenceDocs.size() != 0) {
                         workFlowProcessComment1.setWorkflowProcessReferenceDoc(workflowProcessReferenceDocs);
                     }
@@ -409,6 +426,21 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             //  HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
+            WorkflowProcess workflowProcess=null;
+            WorkFlowProcessRest workFlowProcessRest2=workFlowProcessRest;
+            if (workFlowProcessRest != null && workFlowProcessRest.getId() != null) {
+                System.out.println("draft with id save");
+                workflowProcess = workFlowProcessConverter.convertDraftwithID(workFlowProcessRest, context, UUID.fromString(workFlowProcessRest.getId()));
+                WorkflowProcess workflowProcess1=workflowProcess;
+                workflowProcessService.update(context,workflowProcess);
+                context.commit();
+                if (workflowProcess1!=null&&workFlowProcessRest != null && workFlowProcessRest2.getWorkFlowProcessCommentRest() != null) {
+                    System.out.println("in savedraft");
+                    Context context12 = ContextUtil.obtainContext(request);
+                    saveCommentasDraft(context12, workflowProcess1, workFlowProcessRest, request);
+                }
+                return ResponseEntity.ok(workFlowProcessRest);
+            }
             WorkFlowProcessRest workFlowProcessRest1 = workFlowProcessRest;
             Optional<WorkflowProcessEpersonRest> WorkflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
             if (!WorkflowProcessEpersonRest.isPresent()) {
@@ -436,13 +468,17 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
         return ResponseEntity.ok(workFlowProcessRest);
+
     }
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "/savedraft")
     public ResponseEntity savedraft(@RequestBody WorkFlowProcessRest workFlowProcessRest, HttpServletRequest request) throws Exception {
         WorkflowProcess workFlowProcess = null;
         WorkFlowProcessRest workFlowProcessRest1 = workFlowProcessRest;
+        WorkFlowProcessRest workFlowProcessRest2 = workFlowProcessRest;
         System.out.println("data " + workFlowProcessRest);
         System.out.println("id " + workFlowProcessRest.getId());
         try {
@@ -454,19 +490,68 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             if (workFlowProcess == null) {
                 throw new RuntimeException("Workflow not found");
             }
-            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context);
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DRAFTNOTE.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
+            }
+            if (workFlowProcessRest.getWorkflowTypeStr() != null) {
+                WorkFlowType workFlowType = WorkFlowType.valueOf(workFlowProcessRest.getWorkflowTypeStr());
+                if (workFlowType != null) {
+                    Optional<WorkFlowProcessMasterValue> workFlowProcessMasterValue = workFlowType.getUserTypeFromMasterValue(context);
+                    if (workFlowProcessMasterValue.isPresent()) {
+                        workFlowProcess.setWorkflowType(workFlowProcessMasterValue.get());
+                    }
+                }
             }
             WorkflowProcess workflowProcess1 = workFlowProcess;
             workflowProcessService.update(context, workFlowProcess);
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
             context.commit();
-
             if (workFlowProcessRest1 != null && workFlowProcessRest1.getWorkFlowProcessCommentRest() != null) {
                 System.out.println("in savedraft");
                 Context context12 = ContextUtil.obtainContext(request);
                 saveCommentasDraft(context12, workflowProcess1, workFlowProcessRest1, request);
+            }
+            if(workFlowProcessRest2!=null&&workFlowProcessRest2.getId()!=null) {
+                System.out.println("in Doc and sender diry save !");
+                Context context12 = ContextUtil.obtainContext(request);
+                WorkflowProcess wp = workflowProcessService.find(context, UUID.fromString(workFlowProcessRest2.getId()));
+                if (wp != null) {
+                    WorkflowProcess workflowProcessfinal = wp;
+                    try {
+                        if (workFlowProcessRest2.getWorkflowProcessReferenceDocRests() != null && workFlowProcessRest2.getWorkflowProcessReferenceDocRests().size() != 0) {
+                            System.out.println("::::getWorkflowProcessReferenceDocRests::::");
+                            wp.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d -> d != null).filter(s -> !DateUtils.isNullOrEmptyOrBlank(s.getUuid())).map(d -> {
+                                try {
+                                    WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context12, d);
+                                    workflowProcessReferenceDoc.setWorkflowProcess(workflowProcessfinal);
+                                    return workflowProcessReferenceDoc;
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                    throw new RuntimeException(e);
+                                }
+                            }).collect(Collectors.toList()));
+                            workflowProcessService.update(context12,wp);
+                        }
+                        if (workFlowProcessRest2.getWorkflowProcessSenderDiaryRests() != null && workFlowProcessRest2.getWorkflowProcessSenderDiaryRests().size() != 0) {
+                            WorkflowProcess wp1 = workflowProcessService.find(context, UUID.fromString(workFlowProcessRest2.getId()));
+                            if(wp1!=null) {
+                                System.out.println("::::SenderDiary::::");
+                                List<WorkflowProcessSenderDiary> list = workFlowProcessRest2.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
+                                    WorkflowProcessSenderDiary workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(context12, d);
+                                    workflowProcessSenderDiary.setWorkflowProcess(workflowProcessfinal);
+                                    return workflowProcessSenderDiary;
+                                }).collect(Collectors.toList());
+                                wp1.setWorkflowProcessSenderDiaries(list);
+                                workflowProcessService.update(context12,wp1);
+                            }
+                        }
+                         context12.commit();
+                        System.out.println("in Doc and sender diry save done!");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return ResponseEntity.ok(workFlowProcessRest);
         } catch (RuntimeException e) {

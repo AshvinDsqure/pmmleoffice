@@ -120,7 +120,6 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
             System.out.println("in note doc");
             obj.setNote(workflowProcessReferenceDocConverter.convertByService(context,rest.getNoteRest()));
         }
-
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
     }

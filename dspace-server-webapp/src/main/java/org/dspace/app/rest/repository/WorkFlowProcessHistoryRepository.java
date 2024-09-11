@@ -153,7 +153,7 @@ public class WorkFlowProcessHistoryRepository extends DSpaceObjectRestRepository
             long total = workFlowProcessHistoryService.countHistory(context, workflowprocessid);
             List<WorkFlowProcessHistory> witems = workFlowProcessHistoryService.getHistory(context, workflowprocessid);
             workflowsRes = witems.stream().map(d -> {
-                return workFlowProcessHistoryConverter.convert(d, utils.obtainProjection());
+                return workFlowProcessHistoryConverter.convertbyEP(context,d, utils.obtainProjection());
             }).collect(toList());
             log.info("in getDraftNotePendingWorkflow stop!");
             return new PageImpl(workflowsRes, pageable, total);

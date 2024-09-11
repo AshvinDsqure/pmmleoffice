@@ -164,16 +164,23 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (!initiatorEpersion.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
             }
+            if (workFlowProcessRest.getRemark() != null && initiatorEpersion.get() != null) {
+                System.out.println("store Remark in inward!");
+                WorkflowProcessEpersonRest ep = initiatorEpersion.get();
+                ep.setRemark(workFlowProcessRest.getRemark());
+            }
+
             if (file != null) {
                 System.out.println("IN FILE SAVE");
                 WorkflowProcessReferenceDoc doc = new WorkflowProcessReferenceDoc();
                 fileInputStream = file.getInputStream();
-                InputStream pdfFileInputStream1=file.getInputStream();
+                InputStream pdfFileInputStream1 = file.getInputStream();
                 bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
                 System.out.println("bitstream:only pdf:" + bitstream.getName());
                 doc.setBitstream(bitstream);
                 doc.setPage(FileUtils.getPageCountInPDF(pdfFileInputStream1));
                 WorkFlowProcessInwardDetails workFlowProcessInwardDetails = workFlowProcessInwardDetailsConverter.convert(context, workFlowProcessRest.getWorkFlowProcessInwardDetailsRest());
+
                 if (workFlowProcessInwardDetails.getLatterDate() != null) {
                     doc.setInitdate(workFlowProcessInwardDetails.getLatterDate());
                 }
@@ -394,7 +401,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         WorkFlowProcessDraftDetailsRest workFlowProcessDraftDetailsRest = null;
         WorkflowProcessReferenceDocRest workflowProcessReferenceDocRest = null;
         workFlowProcessRest = mapper.readValue(workFlowProcessReststr, WorkFlowProcessRest.class);
-        System.out.println("workFlowProcessReststr::"+workFlowProcessRest);
+        System.out.println("workFlowProcessReststr::" + workFlowProcessRest);
 
         HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
         Context context = ContextUtil.obtainContext(request);
@@ -501,12 +508,25 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         Bitstream bitstream = null;
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         WorkflowProcessReferenceDocRest workflowProcessReferenceDocRest = null;
+        String remark="";
         log.info("in Forward Action start");
         try {
             ObjectMapper mapper = new ObjectMapper();
             workFlowProcessRest = mapper.readValue(workFlowProcessReststr, WorkFlowProcessRest.class);
             String comment = workFlowProcessRest.getComment();
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(workFlowProcessRest.getUuid()));
+            if (workFlowProcess != null) {
+                Optional<WorkflowProcessEperson> e = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().equals(context.getCurrentUser().getID())).findFirst();
+                if (e.isPresent() &&workFlowProcessRest.getComment()!=null) {
+                    System.out.println("remark added ");
+                    WorkflowProcessEperson ee = e.get();
+                    ee.setRemark(workFlowProcessRest.getComment());
+                    remark=workFlowProcessRest.getComment();
+                    workflowProcessEpersonService.update(context, ee);
+                    workFlowProcess.setRemark(workFlowProcessRest.getComment());
+                }
+
+            }
             if (file != null && workFlowProcess != null) {
                 WorkFlowProcessMasterValue electronic = getMastervalueData(context, "Dispatch Mode", "Electronic");
                 WorkFlowProcessInwardDetails workFlowProcessInwardDetails = workFlowProcess.getWorkFlowProcessInwardDetails();
@@ -556,9 +576,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 }
                 workFlowProcess.setWorkflowProcessSenderDiaries(workflowProcessSenderDiaries);
             }
-            EPerson inisiator=workFlowProcess.getWorkflowProcessEpeople().stream().filter(i->i.getIndex()==0).map(d->d.getePerson()).findFirst().get();
+            EPerson inisiator = workFlowProcess.getWorkflowProcessEpeople().stream().filter(i -> i.getIndex() == 0).map(d -> d.getePerson()).findFirst().get();
             List<String> olduser = null;
-            boolean isIntitiator=false;
+            boolean isIntitiator = false;
             List<WorkflowProcessEperson> olduserlistuuid = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
             List<WorkflowProcessEperson> olduserlistuuidissequenstrue = workFlowProcess.getWorkflowProcessEpeople().stream().collect(Collectors.toList());
             if (olduserlistuuid != null && olduserlistuuid.size() != 0) {
@@ -582,15 +602,15 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                         System.out.println(":::::::::ALLREADY USE EPERSON IN SYSTEM");
                     } else {
 
-                        if(newEpesonrest.getePersonRest().getId().equalsIgnoreCase(inisiator.getID().toString()))
-                        {
+                        if (newEpesonrest.getePersonRest().getId().equalsIgnoreCase(inisiator.getID().toString())) {
                             System.out.println("in isIntitiator..............>");
-                            isIntitiator=true;
-                        }else{
-                        System.out.println("ADD NEW USER IN WORKFLOWEPERSON LIST");
-                        System.out.println("New user index  : " + workflowProcessEperson.getIndex());
-                        workFlowProcess.setnewUser(workflowProcessEperson);
-                        workflowProcessService.create(context, workFlowProcess);}
+                            isIntitiator = true;
+                        } else {
+                            System.out.println("ADD NEW USER IN WORKFLOWEPERSON LIST");
+                            System.out.println("New user index  : " + workflowProcessEperson.getIndex());
+                            workFlowProcess.setnewUser(workflowProcessEperson);
+                            workflowProcessService.create(context, workFlowProcess);
+                        }
                     }
                 }
             }
@@ -635,6 +655,13 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 }
             }
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            if(remark!=null) {
+                System.out.println("forward reemark   tapal" );
+                workFlowProcessRest.setRemark(remark);
+            }else {
+                System.out.println("getRemark not found");
+            }
+
             action.perfomeAction(context, workFlowProcess, workFlowProcessRest);
             workflowProcessService.create(context, workFlowProcess);
             context.commit();
@@ -717,7 +744,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (cEPerson != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
-                    sb.append("T/"+department.getSecondaryvalue());
+                    sb.append("T/" + department.getSecondaryvalue());
                 }
             }
             if (cEPerson.getTablenumber() != null) {
@@ -752,7 +779,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (currentuser != null) {
                 department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
                 if (department.getPrimaryvalue() != null) {
-                    sb.append("T/"+department.getSecondaryvalue());
+                    sb.append("T/" + department.getSecondaryvalue());
                 }
             }
             if (currentuser.getTablenumber() != null) {

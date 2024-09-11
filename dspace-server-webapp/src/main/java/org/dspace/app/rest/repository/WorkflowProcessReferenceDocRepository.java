@@ -16,6 +16,8 @@ import org.dspace.app.rest.converter.WorkFlowProcessConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.enums.WorkFlowAction;
+import org.dspace.app.rest.enums.WorkFlowStatus;
+import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
@@ -27,6 +29,7 @@ import org.dspace.core.Context;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +40,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -62,7 +67,8 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
 
     @Autowired
     private WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
-
+    @Autowired
+    WorkFlowProcessMasterService  workFlowProcessMasterService;
 
     @Autowired
     ModelMapper modelMapper;
@@ -136,7 +142,6 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-
     @SearchRestMethod(name = "getDocumentByItemID")
     public Page<WorkflowProcessReferenceDocVersionRest> getDocumentByItemID(@Parameter(value = "itemid", required = true) UUID itemid, Pageable pageable) {
         try {
@@ -151,6 +156,37 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
                     .filter(f -> !f.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
                     .collect(Collectors.toList());
             return converter.toRestPage(filterlist, pageable, total, utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    public WorkFlowProcessMasterValue getMastervalueData(Context context, String mastername, String mastervaluename) throws
+            SQLException {
+        WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, mastername);
+        if (workFlowProcessMaster != null) {
+            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
+            if (workFlowProcessMasterValue != null) {
+                return workFlowProcessMasterValue;
+            }
+        }
+        return null;
+    }
+    @SearchRestMethod(name = "getPendingNoteSingbDoc")
+    public Page<WorkflowProcessReferenceDocRest> getPendingNoteSingbDoc(Pageable pageable) {
+        try {
+            System.out.println("getgetPendingNoteSingbDocs");
+            Context context = obtainContext();
+
+            List<WorkflowProcessReferenceDocRest>rest=new ArrayList<>();
+            WorkFlowProcessMasterValue docdraftty = getMastervalueData(context, "Draft Type", "Note");
+            UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            long total = workflowProcessReferenceDocService.getDocumentPendingSignBySignitorecount(context, docdraftty.getID(),workflowtypeid);
+
+            List<WorkflowProcessReferenceDoc> witems = workflowProcessReferenceDocService.getDocumentPendingSignBySignitore(context, docdraftty.getID(),workflowtypeid,
+                    Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            System.out.println("size"+total);
+            System.out.println("getgetPendingNoteSingbDocs");
+            return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

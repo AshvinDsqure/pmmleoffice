@@ -32,6 +32,7 @@ public enum WorkFlowStatus {
     REFER("Refer"),
     DISPATCH("Dispatch Ready"),
     PARKED("Parked"),
+    DRAFTNOTE("Draft Note"),
     DISPATCHCLOSE("Dispatch close");
 
     private String status;

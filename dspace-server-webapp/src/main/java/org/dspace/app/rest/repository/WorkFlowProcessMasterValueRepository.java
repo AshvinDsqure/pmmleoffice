@@ -123,12 +123,10 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
     @Override
     public WorkFlowProcessMasterValueRest findOne(Context context, UUID uuid) {
 
-        System.out.println("in findOne " + uuid);
         WorkFlowProcessMasterValueRest workFlowProcessMasterRest = null;
         try {
             Optional<WorkFlowProcessMasterValue> workFlowProcessMasterValue = Optional.ofNullable(workFlowProcessMasterValueService.find(context, uuid));
             if (workFlowProcessMasterValue.isPresent()) {
-                System.out.println("in findOne present name" + workFlowProcessMasterValue.get().getName());
                 workFlowProcessMasterRest = converter.toRest(workFlowProcessMasterValue.get(), utils.obtainProjection());
             }
         } catch (Exception e) {
@@ -136,7 +134,6 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         }
         return workFlowProcessMasterRest;
     }
-
     @Override
     public Page<WorkFlowProcessMasterValueRest> findAll(Context context, Pageable pageable) throws SQLException {
         int total = workFlowProcessMasterValueService.countRows(context);
@@ -182,7 +179,6 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             }
            workFlowProcessMasterValueRests = workFlowProcessMasterValueService.findByType(context, type, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             if(workflowstatus.equalsIgnoreCase(WorkFlowStatus.MASTER.getAction())){
-                System.out.println("if:::::::");
                 List<WorkFlowProcessMasterValueRest> transformedList = workFlowProcessMasterValueRests.stream()
                         .filter(wei -> !wei.getPrimaryvalue().equals(WorkFlowStatus.REFER.getAction()))
                         .map(f -> {
@@ -190,8 +186,6 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
                 }).collect(Collectors.toList());
                 return new PageImpl(transformedList, pageable, total);
             }else if(workflowstatus.equalsIgnoreCase("Priority")){
-                System.out.println("in ppppppp?>>>>>"
-                );
                 List<String> customOrder = Arrays.asList("Most Immediate", "High", "Medium", "Low");
                 List<WorkFlowProcessMasterValueRest> transformedList = null;
                 transformedList = workFlowProcessMasterValueRests.stream()
@@ -201,7 +195,6 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
                 }).collect(Collectors.toList());
                 return new PageImpl(transformedList, pageable, total);
             }else {
-                System.out.println("elese");
                 List<WorkFlowProcessMasterValueRest> transformedList = null;
                 transformedList = workFlowProcessMasterValueRests.stream().map(f -> {
                     return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
@@ -220,14 +213,13 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             @Parameter(value = "search", required = true) String search,
             Pageable pageable) {
         try {
-            System.out.println("master name :" + mastername);
-            System.out.println("search value :" + search);
             Context context = obtainContext();
             UUID masterid = null;
             WorkFlowProcessMaster master = masterService.findByName(context, mastername);
             if (master != null) {
                 masterid = master.getID();
             }
+
             List<WorkFlowProcessMasterValue> witems = workFlowProcessMasterValueService.searchByDepartment(context, masterid, search);
             return converter.toRestPage(witems, pageable, 1000, utils.obtainProjection());
         } catch (SQLException e) {
