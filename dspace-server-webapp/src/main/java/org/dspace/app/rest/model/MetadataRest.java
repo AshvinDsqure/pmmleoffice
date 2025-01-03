@@ -19,7 +19,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /**
  * Rest representation of a map of metadata keys to ordered lists of values.
  */
-public class MetadataRest {
+public class  MetadataRest {
 
     @JsonAnySetter
     private SortedMap<String, List<MetadataValueRest>> map = new TreeMap();

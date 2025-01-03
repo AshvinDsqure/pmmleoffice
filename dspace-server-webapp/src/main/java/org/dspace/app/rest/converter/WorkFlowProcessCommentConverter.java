@@ -16,6 +16,7 @@ import org.dspace.content.WorkFlowProcessComment;
 import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.WorkflowProcessEperson;
 import org.dspace.content.WorkflowProcessReferenceDoc;
+import org.dspace.content.service.WorkFlowProcessCommentService;
 import org.dspace.content.service.WorkFlowProcessHistoryService;
 import org.dspace.core.Context;
 import org.modelmapper.ModelMapper;
@@ -42,6 +43,8 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
 
     @Autowired
     WorkFlowProcessConverter workFlowProcessConverter;
+   @Autowired
+   WorkFlowProcessCommentService workFlowProcessCommentService;
 
     @Override
     public Class<WorkFlowProcessComment> getModelClass() {
@@ -60,6 +63,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if (obj.getWorkflowProcessReferenceDoc() != null) {
             rest.setWorkflowProcessReferenceDocRest(obj.getWorkflowProcessReferenceDoc().stream().map(we -> {
                 try {
+                    if(we.getDrafttype()!=null&&we.getDrafttype().getPrimaryvalue()!=null&&we.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note")){
+                        rest.setMargeddocuuid(we.getID().toString());
+                    }
                     WorkflowProcessReferenceDocRest workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(we, projection);
                     return workflowProcessReferenceDoc;
                 } catch (Exception e) {
@@ -90,8 +96,8 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         WorkFlowProcessComment obj = new WorkFlowProcessComment();
         if(rest.getComment()!=null){
             String htmlcomment = "<div>" + rest.getComment()+ "</div>";
-            System.out.println("::::::html::::::::::" + htmlcomment);
-            System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
+           // System.out.println("::::::html::::::::::" + htmlcomment);
+            //System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
             obj.setComment(htmlcomment);
         }
         if (rest.getWorkFlowProcessHistoryRest() != null) {
@@ -107,11 +113,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
                 }
             }).collect(Collectors.toList()));
         }
-        if (rest.getSubmitterRest() != null) {
-            obj.setSubmitter(ePersonConverter.convert(context, rest.getSubmitterRest()));
-        }
+
         if(rest.getWorkflowProcessRest()!=null){
-            obj.setWorkFlowProcess(workFlowProcessConverter.convert(rest.getWorkflowProcessRest(),context));
+            obj.setWorkFlowProcess(workFlowProcessConverter.convertByService(context,rest.getWorkflowProcessRest()));
         }
         if(rest.getActionDate()!=null){
             obj.setActionDate(rest.getActionDate());
@@ -120,6 +124,7 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
             System.out.println("in note doc");
             obj.setNote(workflowProcessReferenceDocConverter.convertByService(context,rest.getNoteRest()));
         }
+        obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
     }
@@ -159,5 +164,12 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
 
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
+    }
+
+    public WorkFlowProcessComment convertByService(Context context,WorkFlowProcessCommentRest rest) throws Exception {
+        if (rest != null && rest.getUuid() != null && rest.getUuid().trim().length() != 0) {
+            return workFlowProcessCommentService.find(context, UUID.fromString(rest.getId()));
+        }
+        return null;
     }
 }

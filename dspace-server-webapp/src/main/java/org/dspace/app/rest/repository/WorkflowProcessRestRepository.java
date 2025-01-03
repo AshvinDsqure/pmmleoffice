@@ -98,6 +98,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
         try {
             Optional<WorkflowProcessEperson> currentuser=workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getOwner()==true).filter(d->d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst();
+
             if (currentuser.isPresent()) {
                 System.out.println("Is Read Done");
                 workflowProcess.setIsread(true);
@@ -785,7 +786,36 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
-     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "getWorkflowAfterNoteApproved")
+    public Page<WorkFlowProcessRest> getWorkflowAfterNoteApproved(Pageable pageable) {
+        log.info("in getWorkflowAfterNoteApproved start");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            UUID statuscloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+           // UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
+            }
+            int count = workflowProcessService.getCountWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+            log.info("in getWorkflowAfterNoteApproved stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in getWorkflowAfterNoteApproved Error" + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getReferWorkflow")
     public Page<WorkflowProcessDTO> getReferWorkflow(Pageable pageable) {
         log.info("in getReferWorkflow start!");

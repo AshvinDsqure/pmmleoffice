@@ -450,11 +450,31 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             Pageable pageable) {
         List<EPersonRest> ePersonRests=null;
         try {
-            System.out.println("search value :" + searchdepartmentorofficeid);
             Context context = obtainContext();
             List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
+
             ePersonRests = witems.stream().filter(d->!d.getEmail().equalsIgnoreCase(context.getCurrentUser().getEmail())).map(d -> {
                     return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(ePersonRests, pageable,witems.size());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SearchRestMethod(name = "getAllUsers")
+    public Page<EPersonRest> getAllUsers(
+            @Parameter(value = "searchdepartmentorofficeid", required = true) UUID searchdepartmentorofficeid,
+            Pageable pageable) {
+        List<EPersonRest> ePersonRests=null;
+        try {
+            //System.out.println("search value :" + searchdepartmentorofficeid);
+            Context context = obtainContext();
+            List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
+            ePersonRests = witems.stream().filter(d->d!=null).map(d -> {
+                return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
             }).collect(toList());
             return new PageImpl(ePersonRests, pageable,witems.size());
         } catch (SQLException e) {

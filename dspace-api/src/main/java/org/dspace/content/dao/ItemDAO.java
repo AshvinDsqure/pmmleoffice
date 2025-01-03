@@ -170,6 +170,8 @@ public interface ItemDAO extends DSpaceObjectLegacySupportDAO<Item> {
      * @throws SQLException if database error
      */
     int countRows(Context context) throws SQLException;
+    int countFileNumberByVersion(Context context,boolean includeArchived, boolean includeWithdrawn,Integer version) throws SQLException;
+
 
     /**
      * Count number of items based on specific status flags

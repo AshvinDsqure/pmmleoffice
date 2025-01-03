@@ -90,9 +90,12 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     @Column(name = "isacknowledgement")
     private  Boolean isacknowledgement=false;
 
-
     @Column(name = "issignnote")
     private  Boolean issignnote=false;
+
+    @Column(name = "isdraftreview")
+    private  Boolean isdraftreview=false;
+
     @Column(name = "remark")
     private  String  remark;
 
@@ -292,5 +295,14 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+
+    public Boolean getIsdraftreview() {
+        return isdraftreview;
+    }
+
+    public void setIsdraftreview(Boolean isdraftreview) {
+        this.isdraftreview = isdraftreview;
     }
 }

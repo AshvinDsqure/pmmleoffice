@@ -121,6 +121,24 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
                 "Already DataExist Exception", HttpStatus.ACCEPTED.value());
     }
 
+    @ExceptionHandler({ JBPMServerExpetion.class})
+    protected void handleJBPMServerExpetion(HttpServletRequest request, HttpServletResponse response,
+                                              Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "JBPM Server Expetion", HttpStatus.NOT_ACCEPTABLE.value());
+    } @ExceptionHandler({ UsersSameExeception.class})
+    protected void handleUsersSameExeception(HttpServletRequest request, HttpServletResponse response,
+                                              Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "Users Same Exeception ", HttpStatus.NOT_ACCEPTABLE.value());
+    }
+
+
+
     @ExceptionHandler(SQLException.class)
     protected void handleSQLException(HttpServletRequest request, HttpServletResponse response, Exception ex)
         throws IOException {

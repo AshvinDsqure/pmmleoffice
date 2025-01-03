@@ -7,6 +7,7 @@
  */
 package org.dspace.content;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -75,8 +76,8 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitter_id")
     private EPerson submitter = null;
-
-
+    @Column(name = "version")
+    private  Integer version=0;
 
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "item")
     private List<WorkflowProcess> item = new ArrayList<>();
@@ -88,8 +89,6 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "itemtype")
     private WorkFlowProcessMasterValue itemtype=null;
-
-
 
     /**
      * The bundles in this item - kept in sync with DB
@@ -428,5 +427,13 @@ public class Item extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     public void setItemtype(WorkFlowProcessMasterValue itemtype) {
         this.itemtype = itemtype;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }

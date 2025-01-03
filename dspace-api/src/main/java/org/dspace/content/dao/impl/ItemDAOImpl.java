@@ -423,6 +423,22 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     }
 
     @Override
+    public int countFileNumberByVersion(Context context,boolean includeArchived, boolean includeWithdrawn,Integer version) throws SQLException {
+        try {
+        Query query = createQuery(context,
+                "SELECT count(i) FROM Item i " +
+                        "WHERE i.inArchive=:in_archive AND i.withdrawn=:withdrawn AND i.version=:version");
+        query.setParameter("in_archive", includeArchived);
+        query.setParameter("withdrawn", includeWithdrawn);
+        query.setParameter("version", version);
+        return count(query);
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
     public int countItems(Context context, boolean includeArchived, boolean includeWithdrawn) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(*) FROM Item i " +
@@ -470,24 +486,24 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
     }
 
     @Override
-    public List<Item> getDataTwoDateRangeDownload(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException {
+        public List<Item> getDataTwoDateRangeDownload(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException {
 
-        log.info("metadatafile:::::::::::::::" + metadataField);
-        log.info("startdate:::::::::::::::" + startdate);
-        log.info("enddate:::::::::::::::" + endDate);
-        Query query = createQuery(context, "SELECT item FROM Item as item " +
-                "join item.metadata metadatavalue " +
-                "WHERE item.inArchive=:in_archive  " +
-                "AND  metadatavalue.metadataField = :metadataField " +
-                "AND STR(metadatavalue.value) >= :startdate " +
-                "AND STR(metadatavalue.value) <= :endDate order by TO_DATE(STR(metadatavalue.value),'yyyy-MM-dd hh:mm:ss')");
-        query.setParameter("in_archive", true);
-        query.setParameter("metadataField", metadataField);
-        query.setParameter("startdate", startdate);
-        query.setParameter("endDate", endDate);
+            log.info("metadatafile:::::::::::::::" + metadataField);
+            log.info("startdate:::::::::::::::" + startdate);
+            log.info("enddate:::::::::::::::" + endDate);
+            Query query = createQuery(context, "SELECT item FROM Item as item " +
+                    "join item.metadata metadatavalue " +
+                    "WHERE item.inArchive=:in_archive  " +
+                    "AND  metadatavalue.metadataField = :metadataField " +
+                    "AND STR(metadatavalue.value) >= :startdate " +
+                    "AND STR(metadatavalue.value) <= :endDate order by TO_DATE(STR(metadatavalue.value),'yyyy-MM-dd hh:mm:ss')");
+            query.setParameter("in_archive", true);
+            query.setParameter("metadataField", metadataField);
+            query.setParameter("startdate", startdate);
+            query.setParameter("endDate", endDate);
 
-        return query.getResultList();
-    }
+            return query.getResultList();
+        }
 
     @Override
     public int countTotal(Context context, MetadataField metadataField, String startdate, String endDate) throws SQLException {
@@ -506,7 +522,6 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
         query.setParameter("metadataField", metadataField);
         query.setParameter("startdate", startdate);
         query.setParameter("endDate", endDate);
-
         return count(query);
     }
 

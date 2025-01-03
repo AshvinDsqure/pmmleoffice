@@ -217,13 +217,39 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
     @Override
     public List<EPerson> getByDepartment(Context context, UUID idd) throws SQLException {
         Query query = createQuery(context, "" +
-        "SELECT ep FROM EPerson as ep join ep.department as d join ep.office as o  where  d.id=:department OR o.id=:department");
-        query.setParameter("department",idd);
+        "SELECT DISTINCT ep FROM EPerson as ep left join ep.office as o where o.id=:office");
+        query.setParameter("office",idd);
         return query.getResultList();
     }
 
     @Override
-    public List<EPerson> getByName(Context context, String type) throws SQLException {
-        return null;
+    public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException {
+       try {
+           StringBuffer sql = new StringBuffer("select DISTINCT CAST(wv.uuid AS TEXT) AS departmentid,\n" +
+                   "wv.primaryvalue from eperson as e\n" +
+                   "left join workflowprocessmastervalue as wv \n" +
+                   "on e.department_id=wv.uuid\n" +
+                   "where e.office_id='" + officeid + "';");
+           return (List<Object[]>) createSQLQuery(context, sql.toString()).getResultList();
+       }catch (Exception e){
+           e.printStackTrace();
+           return null;
+       }
+
+    }
+
+    @Override
+    public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department, UUID officeid) throws SQLException {
+       try {
+           Query query = createQuery(context, "" +
+                   "SELECT DISTINCT ep FROM EPerson as ep left join ep.department as d  left join  ep.office as o where d.id=:department and o.id=:office");
+           query.setParameter("department", department);
+           query.setParameter("office", officeid);
+           return query.getResultList();
+       }catch (Exception e){
+           e.printStackTrace();
+           return null;
+
+       }
     }
 }

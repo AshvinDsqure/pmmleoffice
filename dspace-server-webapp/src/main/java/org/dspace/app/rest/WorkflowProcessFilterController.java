@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.ConverterService;
 import org.dspace.app.rest.converter.EPersonConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessConverter;
+import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -87,6 +88,8 @@ public class WorkflowProcessFilterController {
     VipService vipService;
    @Autowired
     CategoryService categoryService;
+
+
    @Autowired
     SubCategoryService subcategoryService;
 
@@ -98,9 +101,15 @@ public class WorkflowProcessFilterController {
     CityService cityService;
 
     @Autowired
+    EPersonService ePersonService;
+
+    @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+    @Autowired
+    WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
     @Autowired
     WorkFlowProcessOutwardDetailsService workFlowProcessOutwardDetailsService;
 
@@ -109,8 +118,6 @@ public class WorkflowProcessFilterController {
 
     @Autowired
     EPersonConverter ePersonConverter;
-    @Autowired
-    EPersonService ePersonService;
     @Autowired
     private DiscoverableEndpointsService discoverableEndpointsService;
 
@@ -589,7 +596,112 @@ public class WorkflowProcessFilterController {
         }
         return null;
     }
-    @RequestMapping(method = RequestMethod.GET, value = "/getSubCategoryByCategoryID")
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getDepartmentByOffice")
+    public List<UserDepartmentDTO> getDepartmentByOffice(HttpServletRequest request,@Parameter(value = "officeid", required = true) String officeid) {
+        try {
+            //System.out.println("in getDepartmentByOffice ");
+            Context context = ContextUtil.obtainContext(request);
+            List<UserDepartmentDTO> rest=new ArrayList<>();
+            List<Object[]> witems = ePersonService.getEPersonByOffice(context, UUID.fromString(officeid));
+           if(witems!=null) {
+              rest = witems.stream()
+                       .filter(row -> row[0] != null && row[1] != null)
+                       .map(d -> {
+                           UserDepartmentDTO contryDTO = new UserDepartmentDTO();
+                           contryDTO.setUuid(d[0].toString());
+                           contryDTO.setDepartmentname(d[1].toString());
+                           return contryDTO;
+                       }).collect(Collectors.toList());
+           }
+            return rest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getEpersonByDepartmentAndOffice")
+    public List<UsersDTO> getEpersonByDepartmentAndOffice(HttpServletRequest request
+            ,@Parameter(value = "officeid", required = true) String officeid
+            ,@Parameter(value = "departmentid", required = true) String departmentid
+             ,@Parameter(value = "isdisable", required = true) Boolean isdisable) {
+        List<UsersDTO> usersList = new ArrayList<>();
+        try {
+            // Obtain context
+            Context context = ContextUtil.obtainContext(request);
+
+            // Fetch EPerson data
+            List<EPerson> epersons = ePersonService.getEpersonByDepartmentAndOffice(
+                    context, UUID.fromString(departmentid), UUID.fromString(officeid)
+            );
+
+            // Filter based on `isdisable` flag
+            if (isdisable) {
+                UUID currentUserId = context.getCurrentUser().getID();
+                epersons = epersons.stream()
+                        .filter(d -> d != null && !d.getID().equals(currentUserId))
+                        .collect(Collectors.toList());
+            }
+
+            // Map EPerson to UsersDTO
+            usersList = epersons.stream()
+                    .filter(d -> d != null && d.getFullName() != null)
+                    .map(d -> mapToUsersDTO(context, d))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error processing request: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return usersList;
+    }
+    private UsersDTO mapToUsersDTO(Context context, EPerson eperson) {
+        UsersDTO usersDTO = new UsersDTO();
+        try {
+            usersDTO.setUuid(eperson.getID().toString());
+            usersDTO.setFullname(generateFullName(context, eperson));
+            if (eperson.getTablenumber() != null) {
+                usersDTO.setDeskno(eperson.getTablenumber());
+            }
+            if(eperson.getDesignation()!=null&&eperson.getDesignation().getPrimaryvalue()!=null){
+                usersDTO.setDesignation(eperson.getDesignation().getPrimaryvalue());
+            }
+            if(eperson.getDepartment()!=null&&eperson.getDepartment().getPrimaryvalue()!=null){
+                usersDTO.setDepartmentname(eperson.getDepartment().getPrimaryvalue());
+            }
+            if(eperson.getOffice()!=null&&eperson.getOffice().getPrimaryvalue()!=null){
+                usersDTO.setOfficename(eperson.getOffice().getPrimaryvalue());
+            }
+        } catch (Exception e) {
+            // Log mapping errors
+            System.err.println("Error mapping EPerson to UsersDTO: " + e.getMessage());
+        }
+        return usersDTO;
+    }
+    private String generateFullName(Context context, EPerson eperson) {
+        String fullName = eperson.getFullName();
+
+        if (eperson.getDesignation() != null) {
+            try {
+                WorkFlowProcessMasterValue designation = workFlowProcessMasterValueService.find(
+                        context, eperson.getDesignation().getID()
+                );
+                if (designation != null && designation.getPrimaryvalue() != null) {
+                    return fullName + " / " + designation.getPrimaryvalue();
+                }
+            } catch (Exception e) {
+               // System.err.println("Error fetching designation with"+eperson.getID()+" and name is  " + eperson.getFullName());
+                System.err.println("Error fetching designation: " + e.getMessage());
+            }
+        }
+        return fullName + ".";
+    }
+
+
+        @RequestMapping(method = RequestMethod.GET, value = "/getSubCategoryByCategoryID")
     public List<CategoryDTO> getSubCategoryByCategoryID(HttpServletRequest request,@Parameter(value = "categoryid", required = true) String categoryid) {
         try {
             Context context = ContextUtil.obtainContext(request);

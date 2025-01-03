@@ -255,6 +255,11 @@ public class S3BitStoreService extends BaseBitStoreService {
         }
     }
 
+    @Override
+    public String getFilePath(Bitstream bitstream) throws IOException {
+        return null;
+    }
+
     /**
      * Store a stream of bits.
      *

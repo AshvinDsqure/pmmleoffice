@@ -91,6 +91,8 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     @JsonProperty
     private  Boolean issignnote=false;
 
+    private  Boolean isdraftreview=false;
+
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date assignDate =null;
@@ -304,5 +306,14 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+
+    public Boolean getIsdraftreview() {
+        return isdraftreview;
+    }
+
+    public void setIsdraftreview(Boolean isdraftreview) {
+        this.isdraftreview = isdraftreview;
     }
 }

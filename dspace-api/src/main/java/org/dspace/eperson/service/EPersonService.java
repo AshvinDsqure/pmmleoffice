@@ -70,6 +70,9 @@ public interface EPersonService extends DSpaceObjectService<EPerson>, DSpaceObje
         throws SQLException;
 
     public List<EPerson> getByDepartment(Context context, UUID idd) throws SQLException;
+ public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException;
+
+ public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department,UUID officeid) throws SQLException;
 
     /**
      * Find the eperson by their netid.

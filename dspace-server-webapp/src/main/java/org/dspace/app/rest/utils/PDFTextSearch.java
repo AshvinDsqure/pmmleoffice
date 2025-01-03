@@ -245,10 +245,17 @@ public static File getSingDoc(String docfathe,List<DigitalSignRequet> digitalSig
                     System.out.println("Text: " + text.trim()); // Trim to remove leading/trailing whitespace
                     this.x = startX;
                     this.y = endY;
+
+                    int ey1=0;
                     int e=endX+60;
                     int e1=endX+65;
                     int ey=endY+6;
-                    int ey1=endY-40;
+                    if(endY>40){
+                        ey1=endY-40;
+                    }else{
+                        ey1=endY;
+                    }
+
                     this.coordinates=startX+","+ey1+","+e1+","+ey;
                 }
             }

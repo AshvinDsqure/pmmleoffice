@@ -348,7 +348,7 @@ public class EventDAOImpl extends AbstractHibernateDSODAO<Event> implements Even
         String queryString = "Select ge.country, " + GroupBy + ", count(" + GroupBy + "),e.dspaceobjecttype from event e LEFT JOIN geolocationevent ge "
                 + "ON e.geolocationeventid = ge.uuid where e.dspaceobjecttype in (2,0) and e.action=4 " + Query + "  GROUP BY " + GroupBy + " ,ge.country,e.dspaceobjecttype";
         Query query = createSQLQuery(cntxt, queryString);
-        System.out.println("Query of itemBarChart ::" + queryString);
+        //System.out.println("Query of itemBarChart ::" + queryString);
         query.setMaxResults(12);
         return query.list();
     }

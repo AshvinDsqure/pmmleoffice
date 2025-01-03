@@ -183,6 +183,7 @@ public class SubmissionService {
             try {
                 EPerson currentuser = context.getCurrentUser();
                 StringBuffer sb = new StringBuffer();
+                sb.append("F/PCMC/");
                 WorkFlowProcessMasterValue department;
                 if (currentuser != null) {
                     department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
@@ -190,10 +191,9 @@ public class SubmissionService {
                         sb.append(department.getSecondaryvalue());
                     }
                 }
-                sb.append("/File");
                 sb.append("/" + DateUtils.getFinancialYear());
-                int count = itemService.countTotal(context);
-                count = count + 1;
+                int count = itemService.countFileNumberByVersion(context,true,false,DateUtils.getVersion());
+                System.out.println("count:::-->"+count);
                 sb.append("/0000" + count);
                 filenumber = sb.toString();
             } catch (Exception e) {

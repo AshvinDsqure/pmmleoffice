@@ -258,8 +258,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public int getCountByType(Context context, UUID typeid) throws SQLException {
-        return workflowProcessDAO.getCountByType(context, typeid);
+    public int getCountByType(Context context, UUID typeid,Integer version) throws SQLException {
+        return workflowProcessDAO.getCountByType(context, typeid,version);
     }
 
     @Override
@@ -377,6 +377,16 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     public List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
         MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
         return workflowProcessDAO.filterInwarAndOutWard(context,metadataFields, perameter, offset, limit);
+    }
+
+    @Override
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,offset,limit);
+    }
+
+    @Override
+    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException {
+        return workflowProcessDAO.getCountWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid);
     }
 
     @Override

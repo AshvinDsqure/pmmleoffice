@@ -240,11 +240,12 @@ public class Utils {
     public DSpaceRestRepository getResourceRepositoryByCategoryAndModel(String apiCategory, String modelSingular)
             throws RepositoryNotFoundException {
         try {
-            System.out.println("apiCategory + \".\" + modelSingular,"+apiCategory + "." + modelSingular);
+            //System.out.println("apiCategory + \".\" + modelSingular,"+apiCategory + "." + modelSingular);
             return applicationContext.getBean(apiCategory + "." + modelSingular, DSpaceRestRepository.class);
         } catch (NoSuchBeanDefinitionException e) {
             e.printStackTrace();
-            throw new RepositoryNotFoundException(apiCategory, modelSingular);
+            return  null;
+        //    throw new RepositoryNotFoundException(apiCategory, modelSingular);
         }
     }
 

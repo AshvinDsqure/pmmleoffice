@@ -30,10 +30,17 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
     public static final String GROUPS = "groups";
     private Integer legacyId;
     private String comment;
+    private String subject;
     private List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRest = new ArrayList<>();
     private WorkFlowProcessHistoryRest workFlowProcessHistoryRest;
 
     private EPersonRest submitterRest = null;
+    private ItemRest itemRest = null;
+    private String margeddocuuid;
+
+    private String sapdocumentno;
+    private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
+
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date actionDate = null;
@@ -125,5 +132,46 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     public void setIsdraftsave(Boolean isdraftsave) {
         this.isdraftsave = isdraftsave;
+    }
+
+    public ItemRest getItemRest() {
+        return itemRest;
+    }
+
+    public void setItemRest(ItemRest itemRest) {
+        this.itemRest = itemRest;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+
+    public String getSapdocumentno() {
+        return sapdocumentno;
+    }
+
+    public void setSapdocumentno(String sapdocumentno) {
+        this.sapdocumentno = sapdocumentno;
+    }
+
+    public WorkFlowProcessMasterValueRest getSapdocumenttypeRest() {
+        return sapdocumenttypeRest;
+    }
+
+    public void setSapdocumenttypeRest(WorkFlowProcessMasterValueRest sapdocumenttypeRest) {
+        this.sapdocumenttypeRest = sapdocumenttypeRest;
+    }
+
+    public String getMargeddocuuid() {
+        return margeddocuuid;
+    }
+
+    public void setMargeddocuuid(String margeddocuuid) {
+        this.margeddocuuid = margeddocuuid;
     }
 }

@@ -92,6 +92,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "issignnote")
     private  Boolean issignnote=false;
 
+    @Column(name = "version")
+    private  Integer version;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_id")
     private WorkFlowProcessMasterValue action = null;
@@ -100,6 +103,11 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
     @OrderBy("index desc")
     private List<WorkflowProcessEperson> workflowProcessEpeople;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
+    @OrderBy("index desc")
+    private List<WorkflowProcessSenderDiaryEperson> workflowProcessSenderDiaryEpeople;
+
     @Column(name = "init_date", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date InitDate = new Date();
@@ -121,6 +129,10 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "isread")
     private Boolean isread = false;
 
+
+    @Column(name = "isinternal")
+    private Boolean isinternal = false;
+
     @Column(name = "isacknowledgement")
     private Boolean isacknowledgement = false;
 
@@ -139,6 +151,14 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setWorkFlowProcessHistory(List<org.dspace.content.WorkFlowProcessHistory> workFlowProcessHistory) {
         WorkFlowProcessHistory = workFlowProcessHistory;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 
     @Override
@@ -338,5 +358,14 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setIsreplydraft(Boolean isreplydraft) {
         this.isreplydraft = isreplydraft;
+    }
+
+
+    public Boolean getIsinternal() {
+        return isinternal;
+    }
+
+    public void setIsinternal(Boolean isinternal) {
+        this.isinternal = isinternal;
     }
 }

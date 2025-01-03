@@ -85,6 +85,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         } if (obj.getPassword() != null) {
             workflowProcessDefinitionRest.setPassword(obj.getPassword());
         }
+        if(obj.getIndex()!=null){
+            workflowProcessDefinitionRest.setIndex(obj.getIndex());
+        }
 
 
        /* if (obj.getDocumentsignator() != null) {
@@ -169,6 +172,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         if (!DateUtils.isNullOrEmptyOrBlank(rest.getFiletype())) {
             workflowProcessReferenceDoc.setFiletype(rest.getFiletype());
         }
+        if(rest.getIndex()!=null){
+            workflowProcessReferenceDoc.setIndex(rest.getIndex());
+        }
         return workflowProcessReferenceDoc;
     }
 
@@ -218,6 +224,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
         }*/
         if (rest.getPage() != null) {
             workflowProcessReferenceDoc.setPage(rest.getPage());
+        }
+        if(rest.getIndex()!=null){
+            workflowProcessReferenceDoc.setIndex(rest.getIndex());
         }
         workflowProcessReferenceDoc.setIssignature(rest.getIssignature());
         return workflowProcessReferenceDoc;
@@ -269,6 +278,9 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
             workflowProcessReferenceDoc.setFiletype(obj.getFiletype());
         } if (!DateUtils.isNullOrEmptyOrBlank(obj.getPassword())) {
             workflowProcessReferenceDoc.setPassword(obj.getPassword());
+        }
+        if(obj.getIndex()!=null){
+            workflowProcessReferenceDoc.setIndex(obj.getIndex());
         }
         return workflowProcessReferenceDoc;
     }

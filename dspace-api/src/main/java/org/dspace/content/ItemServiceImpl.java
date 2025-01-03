@@ -1705,6 +1705,11 @@ prevent the generation of resource policy entry values with null dspace_object a
 
     }
 
+    @Override
+    public int countFileNumberByVersion(Context context, boolean includeArchived, boolean includeWithdrawn, Integer version) throws SQLException {
+        return itemDAO.countFileNumberByVersion(context,includeArchived,includeWithdrawn,version);
+    }
+
     private void removeOrcidSynchronizationStuff(Context context, Item item) throws SQLException, AuthorizeException {
 
         if (isNotProfileOrOrcidEntity(item)) {

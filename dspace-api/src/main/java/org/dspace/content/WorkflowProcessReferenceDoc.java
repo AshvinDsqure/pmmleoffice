@@ -44,6 +44,9 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
     private Integer legacyId;
     @Column(name = "subject")
     private String subject;
+
+    @Column(name = "index")
+    private Integer index;
     @Column(name = "referencenumber")
     private String referenceNumber;
     @Column(name = "editortext")
@@ -270,5 +273,13 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Integer getIndex() {
+        return index;
+    }
+
+    public void setIndex(Integer index) {
+        this.index = index;
     }
 }

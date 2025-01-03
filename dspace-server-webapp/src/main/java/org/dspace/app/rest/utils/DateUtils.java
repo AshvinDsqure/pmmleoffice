@@ -1,9 +1,11 @@
 package org.dspace.app.rest.utils;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -12,8 +14,28 @@ public class DateUtils {
 
     public static void main(String[] args) throws ParseException {
         Date d=new Date();
-        System.out.println(getFinancialYear());
-        System.out.println(getShortName("Computer Application"));
+       // System.out.println(DateFormateMMDDYYYY(new Date()));
+        //System.out.println(getCurrentDDMMYY());
+        //System.out.println(getShortName("Computer Application"));
+      //  System.out.println(getFolderTmp("UnSign"));
+
+        //String s=getFolderTmp("UnSign");
+       // System.out.println("s"+s);
+        int currentYear = Year.now().getValue();
+        System.out.println("cyear:::::::::"+currentYear);
+
+       // String s="2024-12-23 00:00:00.0";
+
+        //System.out.println("DA>>>"+DateSTRToDateFormatedd_mm_yyyy(s));
+
+
+
+        //deleteFolderTmp("E:\\tomcate\\tomcat\\apache-tomcat-9.0.72\\apache-tomcat-9.0.72\\temp\\UnSign_17Dec2024162705");
+
+
+       // deleteFolder("E:\\tomcate\\tomcat\\apache-tomcat-9.0.72\\apache-tomcat-9.0.72\\temp\\UnSign_17Dec2024162705");
+
+
        // System.out.println("test::"+strDateToString("2023-06-17 16:09:41.481"))
     }
     public static boolean isNullOrEmptyOrBlank(String str) {
@@ -125,6 +147,10 @@ public class DateUtils {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return formatter.format(date);
     }
+    public static String DateFormateMMDDYYYY(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+        return formatter.format(date);
+    }
     public static String strDateToString(String date) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return DateFormateDDMMYYYY(dateFormat.parse(date));
@@ -141,6 +167,80 @@ public class DateUtils {
         }
         return date1;
     }
+
+    public static String DateSTRToDateFormatedd_mm_yyyy(String inputDate) {
+
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+            Date date = inputFormat.parse(inputDate);
+            // Format the Date object into the desired format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy");
+            String formattedDate = outputFormat.format(date);
+            System.out.println("Formatted Date: " + formattedDate);
+            return formattedDate;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public static String getCurrentDDMMYY(){
+        LocalDate currentDate = LocalDate.now();
+        // Define the date format (ddMMyyyy)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        // Format the current date
+        return currentDate.format(formatter);
+    }
+
+    public static String getFolderTmp(String folderName) {
+        final String tempDirectory = System.getProperty("java.io.tmpdir");
+        String timestamp = java.time.format.DateTimeFormatter.ofPattern("ddMMMyyyyHHmmss")
+                .format(java.time.LocalDateTime.now().plusMinutes(3));
+        File directory = new File(tempDirectory + File.separator + folderName + "_" + timestamp);
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new RuntimeException("Failed to create temporary directory: " + directory.getAbsolutePath());
+        }
+        return directory.getAbsolutePath();
+    }
+
+    public static void deleteFolderTmp(String s){
+        String folderPath = s;
+        System.out.println(":::::::::"+folderPath);
+        File folder = new File(folderPath);
+        if (folder.exists()) {
+            boolean isDeleted = deleteFolder(folder);
+            if (isDeleted) {
+                System.out.println("Folder deleted successfully: " + folderPath);
+            } else {
+                System.out.println("Failed to delete folder: " + folderPath);
+            }
+        } else {
+            System.out.println("Folder does not exist: " + folderPath);
+        }
+    }
+
+    public static boolean deleteFolder(File folder) {
+        if (folder.isDirectory()) {
+            //System.out.println("in ");
+            for (File file : folder.listFiles()) {
+                //System.out.println("in sub");
+                deleteFolder(file); // Recursive call for files and subdirectories
+            }
+        }
+      //  System.out.println("in out"+folder.delete());
+        return folder.delete(); // Deletes the folder or file
+    }
+
+    public static Integer getVersion() throws Exception {
+        int currentYear = Year.now().getValue();
+       // System.out.println("::::::::currentYear:::::::::::"+currentYear);
+        if(currentYear==2025){
+            return 1;
+        }
+        return  0;
+    }
+
 
 
 }

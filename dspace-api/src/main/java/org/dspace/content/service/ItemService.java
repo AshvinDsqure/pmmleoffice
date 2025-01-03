@@ -732,6 +732,7 @@ public interface ItemService
      */
     int countTotal(Context context) throws SQLException;
     int countTotal(Context context,String startdate,String endDate) throws SQLException;
+    int countFileNumberByVersion(Context context,boolean includeArchived, boolean includeWithdrawn,Integer version) throws SQLException;
 
     /**
      * counts all items not in archive

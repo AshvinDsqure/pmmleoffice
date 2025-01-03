@@ -152,7 +152,7 @@ public class WorkflowProcessOutwardController extends AbstractDSpaceRestReposito
             }
             sb.append("/OUT");
             sb.append("/"+DateUtils.getFinancialYear());
-            int count = workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.OUTWARED.getAction()).getID());
+            int count=workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.INWARD.getAction()).getID(),DateUtils.getVersion());
             count = count + 1;
             sb.append("/0000" + count);
             inwardnumber = sb.toString();

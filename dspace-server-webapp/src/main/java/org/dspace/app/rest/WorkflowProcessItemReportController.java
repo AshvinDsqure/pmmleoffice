@@ -317,10 +317,9 @@ public class WorkflowProcessItemReportController {
                 }
             }
             sb.append("/" + DateUtils.getFinancialYear());
-            int count = itemService.countTotal(context);
-            count = count + 1;
+            int count=0;
+            count = itemService.countFileNumberByVersion(context,true,false,DateUtils.getVersion());
             sb.append("/0000" + count);
-
             filenumber = sb.toString();
         } catch (Exception e) {
             e.printStackTrace();

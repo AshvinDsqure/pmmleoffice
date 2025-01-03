@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,11 +41,7 @@ import org.dspace.app.rest.utils.CollectionRestEqualityUtils;
 import org.dspace.app.util.AuthorizeUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
-import org.dspace.content.Bitstream;
-import org.dspace.content.Collection;
-import org.dspace.content.Community;
-import org.dspace.content.EntityType;
-import org.dspace.content.Item;
+import org.dspace.content.*;
 import org.dspace.content.service.BitstreamService;
 import org.dspace.content.service.CollectionService;
 import org.dspace.content.service.CommunityService;
@@ -197,12 +194,22 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     public Page<CollectionRest> findSubmitAuthorized(@Parameter(value = "query") String q,
                                                 Pageable pageable) throws SearchServiceException {
         try {
+
+            System.out.println(":::::::findSubmitAuthorized::::::::::::::");
+
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             List<Collection> collections = cs.findCollectionsWithSubmit(q, context, null,
                                               Math.toIntExact(pageable.getOffset()),
                                               Math.toIntExact(pageable.getPageSize()));
+
             int tot = cs.countCollectionsWithSubmit(q, context, null);
+            
+            if(context.getCurrentUser().getDepartment()!=null) {
+                List<Collection> c = collections.stream().filter(d ->context.getCurrentUser().getDepartment().getPrimaryvalue().equalsIgnoreCase(d.getName())).collect(Collectors.toList());
+                return converter.toRestPage(c, pageable, tot, utils.obtainProjection());
+            }
+
             return converter.toRestPage(collections, pageable, tot, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -213,6 +220,8 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     @SearchRestMethod(name = "findAdminAuthorized")
     public Page<CollectionRest> findAdminAuthorized (
         Pageable pageable, @Parameter(value = "query") String query) {
+
+        System.out.println(":::::::findAdminAuthorized::::::::::::::");
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();

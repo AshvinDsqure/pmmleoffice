@@ -7,16 +7,10 @@
  */
 package org.dspace.app.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.app.rest.model.helper.MyDateConverter;
-import org.dspace.content.WorkFlowProcessMasterValue;
 
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import java.util.Date;
 
 public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{

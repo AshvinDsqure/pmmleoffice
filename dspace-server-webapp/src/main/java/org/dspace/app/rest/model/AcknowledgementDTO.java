@@ -5,7 +5,10 @@ public class AcknowledgementDTO {
    private  String receiveddate;
    private  String office ;
    private  String department ;
-   private  String subject ;
+    private  String name ;
+    private  String designation ;
+
+    private  String subject ;
    private  String RecipientName ;
    private  String RecipientDesignation ;
    private  String RecipientOrganization ;
@@ -101,5 +104,21 @@ public class AcknowledgementDTO {
 
     public void setRecipientemail(String recipientemail) {
         Recipientemail = recipientemail;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
     }
 }

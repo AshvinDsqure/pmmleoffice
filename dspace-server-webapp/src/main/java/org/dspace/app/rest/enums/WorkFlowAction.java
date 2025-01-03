@@ -183,6 +183,26 @@ public enum WorkFlowAction {
         }
     },
     DELETE("Delete"),
+    REVIEW("Review"){
+        @Override
+        public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
+           Optional<WorkflowProcessEperson> workflowProcessEperson=workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d!=null)
+                    .filter(d->d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst();
+           if(workflowProcessEperson.isPresent()){
+
+               WorkflowProcessEperson ep=this.getWorkflowProcessEpersonService().find(context,workflowProcessEperson.get().getID());
+               if(ep!=null){
+                   ep.setIsdraftreview(true);
+                   this.getWorkflowProcessEpersonService().update(context,ep);
+                   System.out.println("Reivew Done!");
+               }
+               WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, workflowProcessEperson.get(), workFlowProcessRest);
+               return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
+           }
+            return null;
+        }
+    },
+
     UPDATE("Update"),
     APPROVED("Approved"),
     PENDING("Pending"),
@@ -459,11 +479,13 @@ public enum WorkFlowAction {
 
     public List<Object> removeInitiatorgetUserList2Forward(Context context, WorkFlowProcessRest workFlowProcessRest) {
         List<Object> userlist = new ArrayList<>();
+
         List<WorkflowProcessEpersonRest> removeInitiatorafterlist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
                 .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.INITIATOR.getAction()))
                 .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).collect(Collectors.toList());
         //remove Initiator after workflowEperson index list
         List<WorkflowProcessEpersonRest> tmplist = removeInitiatorafterlist;
+
         List<Integer> indexAllEpersonList = removeInitiatorafterlist.stream().map(d -> d.getIndex()).collect(Collectors.toList());
         //this check how many time dublicate index
         Map<Integer, Long> multipleusersameindex = indexAllEpersonList.stream().collect(Collectors.groupingBy(i -> i, Collectors.counting()));
@@ -552,18 +574,6 @@ public enum WorkFlowAction {
         if (!DateUtils.isNullOrEmptyOrBlank(workFlowProcessRest.getRemark())) {
             System.out.println("remark t :" + workFlowProcessRest.getRemark());
             workFlowAction.setComment(workFlowProcessRest.getRemark());
-        }
-        if (this.getComment() != null && !this.getComment().isEmpty()) {
-            if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
-                String htmlcomment = "<div>" + this.getComment() + "</div>";
-                System.out.println("::::::html::::::::::" + htmlcomment);
-                System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
-                WorkFlowProcessComment workFlowProcessComment = new WorkFlowProcessComment();
-                workFlowProcessComment.setComment(PdfUtils.htmlToText(htmlcomment));
-                workFlowProcessComment.setWorkFlowProcessHistory(workFlowAction);
-                workFlowProcessComment.setSubmitter(context.getCurrentUser());
-                workFlowProcessComment.setWorkFlowProcess(workflowProcess);
-            }
         }
         System.out.println("::::::OUT :storeWorkFlowHistory:::::::::: ");
         return workFlowAction;
@@ -806,7 +816,15 @@ public enum WorkFlowAction {
         }
 
         if (jbpmResponse.getPerformed_by_user() != null && !jbpmResponse.getPerformed_by_user().isEmpty()) {
-            currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getPerformed_by_user()))).findFirst().get();
+            Optional<WorkflowProcessEperson>   currentOwners = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getPerformed_by_user()))).findFirst();
+            if(!currentOwners.isPresent()){
+                currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get();
+                if (currentOwner.getePerson().getEmail() != null) {
+                    System.out.println("::when::::getPerformed_by:::::" + currentOwner.getePerson().getEmail());
+                }
+            }else{
+                currentOwner=currentOwners.get();
+            }
             if (currentOwner.getePerson().getEmail() != null) {
                 System.out.println("getPerformed_by::::::::::::" + currentOwner.getePerson().getEmail());
             }
@@ -872,7 +890,29 @@ public enum WorkFlowAction {
             });
         }
         if (jbpmResponse.getNext_user() != null && jbpmResponse.getNext_user().trim().length() != 0) {
-            WorkflowProcessEperson workflowProcessEpersonOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getNext_user()))).findFirst().get();
+            WorkflowProcessEperson workflowProcessEpersonOwner=null;
+            Optional<WorkflowProcessEperson> workflowProcessEperson = workflowProcess.getWorkflowProcessEpeople().stream().filter(we -> we.getID().equals(UUID.fromString(jbpmResponse.getNext_user()))).findFirst();
+            if(!workflowProcessEperson.isPresent()){
+               WorkflowProcessEperson e=  workflowProcessEpersonService.find(context,UUID.fromString(jbpmResponse.getNext_user()));
+               if(e!=null){
+                  Optional<WorkflowProcessEperson> workflowProcessEpersonOwner1 = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getIndex()==e.getIndex()).findFirst();
+                   if(!workflowProcessEpersonOwner1.isPresent()){
+                       System.out.println("intitttttt::::");
+                       workflowProcessEpersonOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getIndex()==0).findFirst().get();
+                   }else{
+                       workflowProcessEpersonOwner=workflowProcessEpersonOwner1.get();
+                   }
+               }
+                if (workflowProcessEpersonOwner.getePerson().getEmail() != null) {
+                    System.out.println(":::::::getNext_user::when nulll::::::::::" + workflowProcessEpersonOwner.getePerson().getEmail());
+                }
+                workflowProcessEpersonOwner.setOwner(true);
+                workflowProcessEpersonOwner.setSender(false);
+                workflowProcessEpersonOwner.setIssequence(true);
+                this.getWorkflowProcessEpersonService().update(context, workflowProcessEpersonOwner);
+            }else{
+                workflowProcessEpersonOwner= workflowProcessEperson.get();
+            }
             currentOwner = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get();
             if (workflowProcessEpersonOwner.getePerson().getEmail() != null) {
                 System.out.println(":::::::getNext_user::::::::::::" + workflowProcessEpersonOwner.getePerson().getEmail());
@@ -912,7 +952,7 @@ public enum WorkFlowAction {
     }
 
     public WorkFlowProcessMaster getMaster(Context context) throws SQLException {
-        System.out.println("Mastyer::::" + this.getAction());
+       // System.out.println("Mastyer::::" + this.getAction());
         return this.getWorkFlowProcessMasterService().findByName(context, this.getAction());
     }
 

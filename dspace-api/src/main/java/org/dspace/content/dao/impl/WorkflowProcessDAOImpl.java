@@ -176,9 +176,10 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int getCountByType(Context context, UUID typeid) throws SQLException {
-        Query query = createQuery(context, "SELECT count(wp) FROM WorkflowProcess as wp join wp.workflowType as t where t.id=:typeid");
+    public int getCountByType(Context context, UUID typeid,Integer version) throws SQLException {
+        Query query = createQuery(context, "SELECT count(wp) FROM WorkflowProcess as wp join wp.workflowType as t where t.id=:typeid and wp.version=:version");
         query.setParameter("typeid", typeid);
+        query.setParameter("version", version);
         return count(query);
     }
 
@@ -262,6 +263,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         return count(query);
     }
 
+
+
     @Override
     public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
@@ -281,6 +284,55 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         }
         return query.getResultList();
     }
+    @Override
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+        Query query = createQuery(context,"SELECT wp FROM WorkflowProcess as wp " +
+                "left join wp.priority as p " +
+                "left join wp.workflowStatus as st " +
+                "left join wp.workflowType as t  " +
+                "left join wp.workFlowProcessDraftDetails as draft  " +
+                "left join draft.documentsignator as p  " +
+                "where draft.issinglatter=:issinglatter " +
+                "and st.id=:statusid and t.id=:workflowtype " +
+                "and p.id=:eperson and wp.isdelete=:isdelete order by wp.InitDate desc");
+        query.setParameter("issinglatter", false);
+        query.setParameter("eperson", eperson);
+        query.setParameter("statusid", statuscloseid);
+        query.setParameter("workflowtype", workflowtypeid);
+        query.setParameter("isdelete", false);
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException {
+        try {
+            Query query = createQuery(context,"SELECT count(wp) FROM WorkflowProcess as wp " +
+                    "left join wp.priority as p " +
+                    "left join wp.workflowStatus as st " +
+                    "left join wp.workflowType as t  " +
+                    "left join wp.workFlowProcessDraftDetails as draft  " +
+                    "left join draft.documentsignator as p  " +
+                    "where draft.issinglatter=:issinglatter " +
+                    "and st.id=:statusid and t.id=:workflowtype " +
+                    "and p.id=:eperson and wp.isdelete=:isdelete");
+            query.setParameter("issinglatter", false);
+            query.setParameter("eperson", eperson);
+            query.setParameter("statusid", statuscloseid);
+            query.setParameter("workflowtype", workflowtypeid);
+            query.setParameter("isdelete", false);
+            return count(query);
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     //sent tapal and efile both are include this query just status n=and workflow type change as per
     @Override
     public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException {
@@ -1029,6 +1081,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         }
         return query.getResultList();
     }
+
 
 
 

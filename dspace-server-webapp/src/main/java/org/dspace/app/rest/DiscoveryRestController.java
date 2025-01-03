@@ -113,6 +113,7 @@ public class DiscoveryRestController implements InitializingBean {
                                     Pageable page) throws Exception {
 
         dsoTypes = emptyIfNull(dsoTypes);
+        System.out.println("getFacets::::");
 
         if (log.isTraceEnabled()) {
             log.trace("Searching with scope: " + StringUtils.trimToEmpty(dsoScope)
@@ -141,6 +142,9 @@ public class DiscoveryRestController implements InitializingBean {
                                                       configuration,
                                                   List<SearchFilter> searchFilters,
                                                   Pageable page) throws Exception {
+
+
+        System.out.println("getSearchObjects::::");
 
 
         dsoTypes = emptyIfNull(dsoTypes);

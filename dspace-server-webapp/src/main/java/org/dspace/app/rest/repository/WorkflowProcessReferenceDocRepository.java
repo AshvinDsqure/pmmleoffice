@@ -176,12 +176,10 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
         try {
             System.out.println("getgetPendingNoteSingbDocs");
             Context context = obtainContext();
-
             List<WorkflowProcessReferenceDocRest>rest=new ArrayList<>();
             WorkFlowProcessMasterValue docdraftty = getMastervalueData(context, "Draft Type", "Note");
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             long total = workflowProcessReferenceDocService.getDocumentPendingSignBySignitorecount(context, docdraftty.getID(),workflowtypeid);
-
             List<WorkflowProcessReferenceDoc> witems = workflowProcessReferenceDocService.getDocumentPendingSignBySignitore(context, docdraftty.getID(),workflowtypeid,
                     Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             System.out.println("size"+total);

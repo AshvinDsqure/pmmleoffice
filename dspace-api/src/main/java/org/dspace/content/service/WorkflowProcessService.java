@@ -91,7 +91,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,Integer offset, Integer limit) throws SQLException;
     int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
     WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException;
-    int getCountByType(Context context,UUID typeid) throws SQLException;
+    int getCountByType(Context context,UUID typeid,Integer version) throws SQLException;
     List<WorkflowProcess> Filter(Context context, HashMap<String,String> perameter , Integer offset, Integer limit) throws SQLException;
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft, Integer offset, Integer limit) throws SQLException;
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft) throws SQLException;
@@ -107,6 +107,8 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context,UUID workflowtypeid, String subject) throws SQLException;
     List<WorkflowProcess> filterInwarAndOutWard(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
+    int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException;
 
     List<WorkflowProcess> searchByFilenumberOrTapaleNumber(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
 

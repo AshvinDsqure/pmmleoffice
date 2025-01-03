@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.sql.SQLException;
+import java.time.Year;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ public enum WorkFlowType {
                 }
             }
             //create workflow
+            workflowProcess.setVersion(DateUtils.getVersion());
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             //workflow add in document
             WorkflowProcess finalWorkflowProcess1 = workflowProcess;
@@ -113,8 +115,7 @@ public enum WorkFlowType {
                     workflowProcess.setWorkflowStatus(workFlowStatusOptional.get());
                 }
             }
-
-
+             workflowProcess.setVersion(DateUtils.getVersion());
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
@@ -217,7 +218,9 @@ public enum WorkFlowType {
                     workflowProcess.setWorkflowStatus(workFlowStatusOptional.get());
                 }
             }
+            workflowProcess.setVersion(DateUtils.getVersion());
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
+            workflowProcess.setVersion(DateUtils.getVersion());
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d->d!=null).filter(s->!DateUtils.isNullOrEmptyOrBlank(s.getUuid())).map(d -> {
                 try {
@@ -230,6 +233,7 @@ public enum WorkFlowType {
                 }
             }).collect(Collectors.toList()));
             //sender diry
+
             if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
                 List<WorkflowProcessSenderDiary> list = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
                     WorkflowProcessSenderDiary workflowProcessSenderDiary = this.getWorkflowProcessSenderDiaryConverter().convert(context, d);
@@ -238,6 +242,7 @@ public enum WorkFlowType {
                 }).collect(Collectors.toList());
                 workflowProcess.setWorkflowProcessSenderDiaries(list);
             }
+
             //for not doc
             this.getWorkflowProcessService().update(context, workflowProcess);
             workFlowProcessRest = getWorkFlowProcessConverter().convert(workflowProcess, this.getProjection());
@@ -261,6 +266,7 @@ public enum WorkFlowType {
                     workflowProcess.setWorkflowStatus(workFlowStatusOptional.get());
                 }
             }
+            workflowProcess.setVersion(DateUtils.getVersion());
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
             if(workFlowProcessRest.getWorkflowProcessReferenceDocRests()!=null){
@@ -367,7 +373,6 @@ public enum WorkFlowType {
     public WorkFlowProcessRest storeWorkFlowProcess(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
         return null;
     }
-
     public WorkFlowProcessRest storeWorkFlowProcessDraft(Context context, WorkFlowProcessRest workFlowProcessRest) throws Exception {
         return null;
     }

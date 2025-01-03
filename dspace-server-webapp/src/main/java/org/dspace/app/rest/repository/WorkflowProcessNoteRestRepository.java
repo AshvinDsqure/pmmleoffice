@@ -178,7 +178,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            System.out.println("status id:"+statusid);
+           // System.out.println("status id:"+statusid);
             long total = workflowProcessNoteService.countDocumentByItemid(context, itemid,statusid);
             List<WorkflowProcessNote> witems = workflowProcessNoteService.getDocumentByItemid(context, itemid,statusid, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));

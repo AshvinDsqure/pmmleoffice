@@ -164,6 +164,20 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                          Patch patch) throws AuthorizeException, SQLException {
         context.turnOffAuthorisationSystem();
+        String isversion=request.getParameter("isversion");
+        if(isversion!=null&&isversion.equalsIgnoreCase("true")){
+            System.out.println("in version update");
+            try {
+                Item i = itemService.find(context, id);
+                if (i != null) {
+                    i.setVersion(DateUtils.getVersion());
+                    itemService.update(context, i);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            System.out.println("in version update done!");
+        }
         patchDSpaceObject(apiCategory, model, id, patch);
     }
 

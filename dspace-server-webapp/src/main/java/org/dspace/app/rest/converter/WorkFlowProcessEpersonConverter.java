@@ -76,6 +76,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
         workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
         workflowProcessDefinitionEpersonRest.setIssignnote(obj.getIssignnote());
+        workflowProcessDefinitionEpersonRest.setIsdraftreview(obj.getIsdraftreview());
 
         workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
         return workflowProcessDefinitionEpersonRest;
@@ -114,6 +115,7 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
         workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
         workflowProcessDefinitionEpersonRest.setIssignnote(obj.getIssignnote());
+        workflowProcessDefinitionEpersonRest.setIsdraftreview(obj.getIsdraftreview());
         return workflowProcessDefinitionEpersonRest;
     }
 
@@ -151,11 +153,14 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(rest.getRemark()!=null){
             workflowProcessEperson.setRemark(rest.getRemark());
         }
+        if(rest.getIndex()!=null){
+            workflowProcessEperson.setIndex(rest.getIndex());
+        }
         workflowProcessEperson.setIssequence(rest.getIssequence());
         workflowProcessEperson.setSequence(rest.getSequence());
         workflowProcessEperson.setIsrefer(rest.getIsrefer());
-        workflowProcessEperson.setIndex(rest.getIndex());
         workflowProcessEperson.setIssignnote(rest.getIssignnote());
+        workflowProcessEperson.setIsdraftreview(rest.getIsdraftreview());
         return workflowProcessEperson;
     }
     public WorkflowProcessEperson convert(Context context, EPerson rest) {

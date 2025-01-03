@@ -86,7 +86,7 @@ public class WorkFlowProcessHistoryConverter extends DSpaceObjectConverter<WorkF
         }
         if(obj.getSentto()!= null){
             try {
-                System.out.println("ep id"+obj.getSentto().getID());
+                //System.out.println("ep id"+obj.getSentto().getID());
                 rest.setSenttoRest(workFlowProcessEpersonConverter.convertByHistory(obj.getSentto(), projection));
             }catch (Exception e){
                 e.printStackTrace();

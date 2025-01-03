@@ -165,7 +165,6 @@ public class AuthorizeServiceImpl implements AuthorizeService {
             } else {
                 actionText = Constants.actionText[action];
             }
-
             throw new AuthorizeException("Authorization denied for action "
                                              + actionText + " on " + Constants.typeText[otype] + ":"
                                              + oid + " by user " + userid, o, action);

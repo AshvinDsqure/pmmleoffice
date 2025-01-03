@@ -927,8 +927,8 @@ RestResourceController implements InitializingBean {
     public <T extends RestAddressableModel> PagedModel<DSpaceResource<T>> findAll(@PathVariable String apiCategory,
             @PathVariable String model, Pageable page, PagedResourcesAssembler assembler, HttpServletResponse response,
             @RequestParam MultiValueMap<String, Object> parameters) {
-        System.out.println("apiCategory"+apiCategory);
-        System.out.println("model"+model);
+        //System.out.println("apiCategory"+apiCategory);
+        //System.out.println("model"+model);
         String encodedParameterString=null;
         try {
             encodedParameterString=  getEncodedParameterStringFromRequestParams(parameters);

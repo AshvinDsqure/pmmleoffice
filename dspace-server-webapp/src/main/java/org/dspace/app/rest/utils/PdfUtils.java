@@ -5,14 +5,20 @@ import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.layout.font.FontProvider;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.jsoup.Jsoup;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Random;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class PdfUtils {
 
@@ -76,7 +82,7 @@ public class PdfUtils {
     public static void writeInputStreamToPDF(InputStream inputStream, String outputFilePath) throws IOException {
         // Load the PDF document from the InputStream
 
-       PDDocument document = PDDocument.load(inputStream);
+        PDDocument document = PDDocument.load(inputStream);
 
         // Write the loaded document to a file
         document.save(new File(outputFilePath));
@@ -84,25 +90,6 @@ public class PdfUtils {
         // Close the document and InputStream
         document.close();
         inputStream.close();
-    }
-
-    private static int getLastParagraphEnd(PDDocument document) throws IOException {
-        PDFTextStripper stripper = new PDFTextStripper();
-        stripper.setSortByPosition(true);
-
-        // Extract text from the entire document
-        String text = stripper.getText(document);
-
-        // Split the text into paragraphs
-        String[] paragraphs = text.split("\\r?\\n\\r?\\n");
-
-        // Get the last paragraph
-        String lastParagraph = paragraphs[paragraphs.length - 1];
-
-        // Find the end position of the last paragraph
-        int lastParagraphEnd = text.lastIndexOf(lastParagraph) + lastParagraph.length();
-
-        return lastParagraphEnd;
     }
 
     public static String htmlToText(String htmltext) {
@@ -161,4 +148,34 @@ public class PdfUtils {
             return 0;
         }
     }
+
+
+
+    public static byte[]  createZipFromInputStreams(List<InputStream> pdfInputStreams, List<String> fileNames) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
+
+            for (int i = 0; i < pdfInputStreams.size(); i++) {
+                InputStream pdfInput = pdfInputStreams.get(i);
+                String fileName = fileNames.get(i);
+
+                ZipEntry zipEntry = new ZipEntry(fileName);
+                zipOut.putNextEntry(zipEntry);
+
+                byte[] bytes = new byte[1024];
+                int length;
+                while ((length = pdfInput.read(bytes)) >= 0) {
+                    zipOut.write(bytes, 0, length);
+                }
+                zipOut.closeEntry();
+                pdfInput.close();  // Close each InputStream after reading
+            }
+
+            zipOut.finish();
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
+
+
+
 }

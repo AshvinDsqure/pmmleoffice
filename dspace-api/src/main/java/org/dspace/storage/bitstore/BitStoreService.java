@@ -43,6 +43,8 @@ public interface BitStoreService {
      *                             asset with ID exists in the store
      */
     public InputStream get(Bitstream bitstream) throws IOException;
+    public String getFilePath(Bitstream bitstream) throws IOException;
+
 
     /**
      * Store a stream of bits.

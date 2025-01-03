@@ -117,6 +117,11 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private  Boolean issignnote=false;
 
     @JsonProperty
+    private Boolean isinternal = false;
+
+
+
+    @JsonProperty
     private String comment;
     private String margeddocuuid;
     @JsonProperty
@@ -139,6 +144,9 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     @NotEmpty(message = "Input WorkflowProcessEpersonRest list cannot be empty.")
     private List<WorkflowProcessEpersonRest> workflowProcessEpersonRests = new ArrayList<>();
+
+    private List<WorkflowProcessSenderDiaryEpersonRest> workflowProcessSenderDiaryEpersonRests = new ArrayList<>();
+
     @JsonProperty
     @JsonDeserialize(converter = MyDateConverter.class)
     private Date InitDate = new Date();
@@ -540,5 +548,21 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setSapResponse(SAPResponse sapResponse) {
         this.sapResponse = sapResponse;
+    }
+
+    public List<WorkflowProcessSenderDiaryEpersonRest> getWorkflowProcessSenderDiaryEpersonRests() {
+        return workflowProcessSenderDiaryEpersonRests;
+    }
+
+    public void setWorkflowProcessSenderDiaryEpersonRests(List<WorkflowProcessSenderDiaryEpersonRest> workflowProcessSenderDiaryEpersonRests) {
+        this.workflowProcessSenderDiaryEpersonRests = workflowProcessSenderDiaryEpersonRests;
+    }
+
+    public Boolean getIsinternal() {
+        return isinternal;
+    }
+
+    public void setIsinternal(Boolean isinternal) {
+        this.isinternal = isinternal;
     }
 }

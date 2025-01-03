@@ -602,4 +602,16 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     public List<EPerson> getByDepartment(Context context, UUID idd) throws SQLException {
         return ePersonDAO.getByDepartment(context,idd);
     }
+
+    @Override
+    public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException {
+        return ePersonDAO.getEPersonByOffice(context,officeid);
+    }
+
+    @Override
+    public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department, UUID officeid) throws SQLException {
+        return ePersonDAO.getEpersonByDepartmentAndOffice(context,department,officeid);
+    }
+
+
 }

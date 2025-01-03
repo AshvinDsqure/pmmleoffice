@@ -55,6 +55,7 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     private String filenumber;
 
     private String filetype;
+    private Integer index;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest workFlowProcessReferenceDocType;
@@ -79,6 +80,14 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     private String itemname;
 
     private String password;
+
+    public Integer getIndex() {
+        return index;
+    }
+
+    public void setIndex(Integer index) {
+        this.index = index;
+    }
 
     private EPersonRest documentsignatorRest;
 

@@ -79,6 +79,11 @@ public class DSBitStoreService extends BaseBitStoreService {
         }
     }
 
+    @Override
+    public String getFilePath(Bitstream bitstream) throws IOException {
+        return getFile(bitstream).getAbsolutePath();
+    }
+
     /**
      * Store a stream of bits.
      *

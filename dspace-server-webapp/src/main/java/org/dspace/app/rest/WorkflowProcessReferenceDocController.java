@@ -230,46 +230,48 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         workflowProcessReferenceDoc.setBitstream(bitstream);
                         workflowProcessReferenceDoc.setPage(FileUtils.getPageCountInPDF(pdfFileInputStream1));
                     }
-                    if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("p12")) {
-                        P12file = file.getInputStream();
-                        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-                        long currentTimeMillis = System.currentTimeMillis();
-                        // Create a date object with the current time
-                        Date now = new Date(currentTimeMillis);
-                        // Create a date format to include milliseconds
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS");
-                        // Format the date into a string
-                        String formattedDate = sdf.format(now);
-                        temppkcs12 = new File(TEMP_DIRECTORY, formattedDate + "_" + file.getOriginalFilename());
-                        if (!temppkcs12.exists()) {
-                            try {
-                                temppkcs12.createNewFile();
-                                System.out.println("File creted ::" + temppkcs12.getAbsolutePath());
-                            } catch (IOException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        } else {
-                            System.out.println("File name like  ::" + temppkcs12.getAbsolutePath());
-                        }
+//                    if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("p12")) {
+//                        P12file = file.getInputStream();
+//                        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+//                        long currentTimeMillis = System.currentTimeMillis();
+//                        // Create a date object with the current time
+//                        Date now = new Date(currentTimeMillis);
+//                        // Create a date format to include milliseconds
+//                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS");
+//                        // Format the date into a string
+//                        String formattedDate = sdf.format(now);
+//                        temppkcs12 = new File(TEMP_DIRECTORY, formattedDate + "_" + file.getOriginalFilename());
+//                        if (!temppkcs12.exists()) {
+//                            try {
+//                                temppkcs12.createNewFile();
+//                                System.out.println("File creted ::" + temppkcs12.getAbsolutePath());
+//                            } catch (IOException e) {
+//                                // TODO Auto-generated catch block
+//                                e.printStackTrace();
+//                            }
+//                        } else {
+//                            System.out.println("File name like  ::" + temppkcs12.getAbsolutePath());
+//                        }
+//
+//                        String filename = file.getOriginalFilename();
+//                        file.transferTo(new File(temppkcs12.getAbsolutePath()));
+//                        FileInputStream p12fileinputstream = new FileInputStream(new File(temppkcs12.getAbsolutePath()));
+//                        if (workflowProcessReferenceDocRest.getPassword() != null && !workflowProcessReferenceDocRest.getPassword().isEmpty() && p12fileinputstream != null) {
+//                            if (DigitalSingPDF.checkDigital(temppkcs12.getAbsolutePath(), workflowProcessReferenceDocRest.getPassword())) {
+//                                System.out.println("verifive Success fully Digital Credential");
+//                                bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, P12file, "", filename);
+//                                System.out.println(":::::bitstream:only p12 :::::" + bitstream.getName());
+//                                workflowProcessReferenceDoc.setBitstream(bitstream);
+//                            } else {
+//                                res.sendError(406, "Mismatched Certificate and Key!");
+//                                throw new InvalidDataException("Mismatched Certificate and Key!");
+//                            }
+//                        } else {
+//                            System.out.println("not found p12 and password!");
+//                        }
+//                    }
 
-                        String filename = file.getOriginalFilename();
-                        file.transferTo(new File(temppkcs12.getAbsolutePath()));
-                        FileInputStream p12fileinputstream = new FileInputStream(new File(temppkcs12.getAbsolutePath()));
-                        if (workflowProcessReferenceDocRest.getPassword() != null && !workflowProcessReferenceDocRest.getPassword().isEmpty() && p12fileinputstream != null) {
-                            if (DigitalSingPDF.checkDigital(temppkcs12.getAbsolutePath(), workflowProcessReferenceDocRest.getPassword())) {
-                                System.out.println("verifive Success fully Digital Credential");
-                                bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, P12file, "", filename);
-                                System.out.println(":::::bitstream:only p12 :::::" + bitstream.getName());
-                                workflowProcessReferenceDoc.setBitstream(bitstream);
-                            } else {
-                                res.sendError(406, "Mismatched Certificate and Key!");
-                                throw new InvalidDataException("Mismatched Certificate and Key!");
-                            }
-                        } else {
-                            System.out.println("not found p12 and password!");
-                        }
-                    } else if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("pdf")) {
+                    else if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("pdf")) {
                         fileInputStream = file.getInputStream();
                         fileInputStream1 = file.getInputStream();
                         bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
@@ -285,36 +287,42 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 log.error("Something went wrong when trying to read the inputstream from the given file in the request",
                         e);
                 throw new UnprocessableEntityException("The InputStream from the file couldn't be read", e);
-            } catch (InvalidDataException e) {
-                res.sendError(406, "Mismatched Certificate and Key");
-                return null;
             }
 
             if (workflowProcessReferenceDocRest.getWorkFlowProcessRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest().getUuid() != null) {
+                System.out.println("save in workflow");
                 WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkFlowProcessRest().getUuid()));
-                Item item = workflowProcess.getItem();
-                if (item != null) {
-                    workflowProcess.getWorkflowProcessReferenceDocs().forEach(wd -> {
-                        try {
-                            workflowProcessService.storeWorkFlowMataDataTOBitsream(context, wd, item);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        } catch (AuthorizeException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc, item);
-                }
                 workflowProcessReferenceDoc.setWorkflowProcess(workflowProcess);
                 workflowProcessService.update(context, workflowProcess);
+                System.out.println("save in workflow done::");
             }
-            if (workflowProcessReferenceDocRest.getDocumentsignatorRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest().getId() != null) {
-                System.out.println("::::::::::::Document Signator::Update::::::::::::::::");
-                WorkFlowProcessDraftDetails workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.getbyDocumentsignator(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkFlowProcessRest().getId()));
-                workFlowProcessDraftDetails.setDocumentsignator(ePersonConverter.convert(context, workflowProcessReferenceDocRest.getDocumentsignatorRest()));
-                workFlowProcessDraftDetailsService.update(context, workFlowProcessDraftDetails);
-                System.out.println("::::::::::::Document Signator::Update:::Done!:::::::::::::");
-            }
+
+//            if (workflowProcessReferenceDocRest.getWorkFlowProcessRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest().getUuid() != null) {
+//                WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkFlowProcessRest().getUuid()));
+//                Item item = workflowProcess.getItem();
+//                if (item != null) {
+//                    workflowProcess.getWorkflowProcessReferenceDocs().forEach(wd -> {
+//                        try {
+//                            workflowProcessService.storeWorkFlowMataDataTOBitsream(context, wd, item);
+//                        } catch (SQLException e) {
+//                            throw new RuntimeException(e);
+//                        } catch (AuthorizeException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    });
+//                    workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc, item);
+//                }
+//                workflowProcessReferenceDoc.setWorkflowProcess(workflowProcess);
+//                workflowProcessService.update(context, workflowProcess);
+//            }
+
+//            if (workflowProcessReferenceDocRest.getDocumentsignatorRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest() != null && workflowProcessReferenceDocRest.getWorkFlowProcessRest().getId() != null) {
+//                System.out.println("::::::::::::Document Signator::Update::::::::::::::::");
+//                WorkFlowProcessDraftDetails workFlowProcessDraftDetails = workFlowProcessDraftDetailsService.getbyDocumentsignator(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkFlowProcessRest().getId()));
+//                workFlowProcessDraftDetails.setDocumentsignator(ePersonConverter.convert(context, workflowProcessReferenceDocRest.getDocumentsignatorRest()));
+//                workFlowProcessDraftDetailsService.update(context, workFlowProcessDraftDetails);
+//                System.out.println("::::::::::::Document Signator::Update:::Done!:::::::::::::");
+//            }
             if (workflowProcessReferenceDocRest.getItemname() != null) {
                 workflowProcessReferenceDoc.setItemname(workflowProcessReferenceDocRest.getItemname());
             }
@@ -383,7 +391,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                             Item item = workflowProcess.getItem();
                             if (item != null) {
                                 System.out.println("::::::::::::: update bitstream");
-                                workflowProcessService.storeWorkFlowMataDataTOBitsream(context, d, item);
+                                //workflowProcessService.storeWorkFlowMataDataTOBitsream(context, d, item);
                             }
                         }
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDocf, utils.obtainProjection());
@@ -428,7 +436,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                             Item item = workflowProcessReferenceDoc.getWorkflowProcess().getItem();
                             if (item != null) {
                                 System.out.println("when new version create update bitstream");
-                                workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDocf, item);
+                                //workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDocf, item);
                             }
                             storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
                         }
@@ -609,13 +617,126 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 }
             }
             //Reply Tapal
+//            if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Reply Tapal")) {
+//                System.out.println("Reply Tapal in");
+//                if (workflowProcessReferenceDocRest.getUuid() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getId() != null) {
+//                    workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+//                    WorkflowProcessReferenceDocVersion version = workflowProcessReferenceDocVersionService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getUuid()));
+//                    if (version != null) {
+//                        System.out.println("Reply Tapal in version update!");
+//                        if (workflowProcessReferenceDocRest.getEditortext() != null) {
+//                            version.setEditortext(workflowProcessReferenceDocRest.getEditortext());
+//                        }
+//                        if (workflowProcessReferenceDocRest.getBitstreamRest() != null) {
+//                            version.setBitstream(bitstream);
+//                        }
+//                        version.setCreationdatetime(new Date());
+//                        storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc, version.getVersionnumber());
+//                        workflowProcessReferenceDocVersionService.update(context, version);
+//                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+//                        context.commit();
+//                        return rest;
+//                    }
+//                }
+//                if (workflowProcessReferenceDocRest.getUuid() != null) {
+//                    if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
+//                        System.out.println("in create new version of Reply Tapal ");
+//                        workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+//                        storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+//                        if (workflowProcessReferenceDoc.getWorkflowProcess() != null) {
+//                            System.out.println("in store histitory create new version ");
+//                            //storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
+//                        }
+//                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+//                        context.commit();
+//                        return rest;
+//                    }
+//                } else {
+//                    System.out.println("Reply Tapal in else ");
+//                    workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+//                    storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+//                    workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
+//                    WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+//                    if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null && workflowProcessReferenceDoc.getWorkflowprocessnote().getID() != null) {
+//                        rest.setWorkflowProcessNoteRest(workflowProcessNoteConverter.convert(workflowProcessNoteService.find(context, workflowProcessReferenceDoc.getWorkflowprocessnote().getID()), utils.obtainProjection()));
+//                    }
+//                    context.commit();
+//                    return rest;
+//                }
+//            }
+
+
+            //Reply Tapal 1
             if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Reply Tapal")) {
                 System.out.println("Reply Tapal in");
                 if (workflowProcessReferenceDocRest.getUuid() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getId() != null) {
                     workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
                     WorkflowProcessReferenceDocVersion version = workflowProcessReferenceDocVersionService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getUuid()));
                     if (version != null) {
-                        System.out.println("Reply Tapal in version update!");
+                        System.out.println(":::::::Reply Tapal in version update!::::::::::");
+                        if (workflowProcessReferenceDocRest.getEditortext() != null) {
+                            version.setEditortext(workflowProcessReferenceDocRest.getEditortext());
+                            workflowProcessReferenceDoc.setEditortext(workflowProcessReferenceDocRest.getEditortext());
+                        }
+                        if (workflowProcessReferenceDocRest.getBitstreamRest() != null) {
+                            version.setBitstream(bitstream);
+                        }
+                        version.setCreationdatetime(new Date());
+                        // storeWorkFlowHistoryVersionUpdate(context, workflowProcessReferenceDoc, version.getVersionnumber());
+                        workflowProcessReferenceDocVersionService.update(context, version);
+                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                        if (workflowProcessReferenceDocRest.getEditortext() != null) {
+                            System.out.println("doc update>>>>>");
+                            workflowProcessReferenceDoc.setEditortext(workflowProcessReferenceDocRest.getEditortext());
+                        }
+                        workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
+                        context.commit();
+                        return rest;
+                    }
+                }
+                if (workflowProcessReferenceDocRest.getUuid() != null) {
+                    if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
+                        System.out.println(":::::in create new version of Reply Tapal.:::::  ");
+                        workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+                        storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                        if (workflowProcessReferenceDoc.getWorkflowProcess() != null) {
+                         //  System.out.println("in store histitory create new version ");
+                            // storeWorkFlowHistoryforDocument(context, workflowProcessReferenceDoc);
+                        }
+                        WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                        context.commit();
+                        return rest;
+                    }
+                } else {
+                    System.out.println("Reply Tapal Create Fress! ");
+                    // System.out.println("::::::::::::::::::::create Note :::pdf:::::::::::::::::");
+//                    InputStream inputStream = createFinalNoteComment(context, workflowProcessReferenceDoc, getTempDirPath());
+//                    Bitstream bitstream1 = getByInputStream(context, inputStream, getTempDirPath());
+//                    workflowProcessReferenceDoc.setBitstream(bitstream1);
+                    //   System.out.println("::::::::::::::::::::create Note :::pdf::::::::::done::::::");
+                    workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+                    storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
+                   // workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
+                    WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                    if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null && workflowProcessReferenceDoc.getWorkflowprocessnote().getID() != null) {
+                        rest.setWorkflowProcessNoteRest(workflowProcessNoteConverter.convert(workflowProcessNoteService.find(context, workflowProcessReferenceDoc.getWorkflowprocessnote().getID()), utils.obtainProjection()));
+                    }
+                    context.commit();
+                    return rest;
+                }
+            }
+
+
+
+
+            //Note
+            if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Note")) {
+                System.out.println("Note Doc");
+                if (workflowProcessReferenceDocRest.getUuid() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getId() != null) {
+                    workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
+                    WorkflowProcessReferenceDocVersion version = workflowProcessReferenceDocVersionService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getUuid()));
+                    if (version != null) {
+                        System.out.println("Note Doc in version update!");
                         if (workflowProcessReferenceDocRest.getEditortext() != null) {
                             version.setEditortext(workflowProcessReferenceDocRest.getEditortext());
                         }
@@ -632,7 +753,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 }
                 if (workflowProcessReferenceDocRest.getUuid() != null) {
                     if (workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() == null) {
-                        System.out.println("in create new version of Reply Tapal ");
+                        System.out.println("in create new version of Note Doc ");
                         workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
                         storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
                         if (workflowProcessReferenceDoc.getWorkflowProcess() != null) {
@@ -644,7 +765,11 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         return rest;
                     }
                 } else {
-                    System.out.println("Reply Tapal in else ");
+                    System.out.println("Note Docin create ");
+
+                    if(workflowProcessReferenceDocRest.getEditortext()!=null){
+
+                    }
                     workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
                     storeVersion(context, workflowProcessReferenceDoc, bitstream, workflowProcessReferenceDocRest);
                     workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
@@ -767,7 +892,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
     public synchronized WorkflowProcessReferenceDocRest  store(HttpServletRequest request,String docid,String item){
         WorkflowProcessReferenceDocRest rest = null;
         System.out.println("in doc add corspondenseAdd");
-
         try {
             Context context = ContextUtil.obtainContext(request);
             WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(docid));
@@ -842,257 +966,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         workflowProcessReferenceDoc.setWorkflowProcessReferenceDocVersion(versionsetss);
         workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
     }
-
-    public WorkflowProcessReferenceDoc createFinalNote(Context context, WorkflowProcess workflowProcess) throws
-            Exception {
-        boolean isTextEditorFlow = false;
-
-        InputStream input2 = null;
-        DocToPdfConverter docToPdfConverter = null;
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        System.out.println("start.......createFinalNote");
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
-        long notecount = 0;
-        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
-            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess.getItem().getID(), statusid);
-
-        }
-        notecount = notecount + 1;
-        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
-        if (!tempFile1html.exists()) {
-            try {
-                tempFile1html.createNewFile();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        //Items
-        sb.append("<p><center> <b>Note # " + notecount + "</b></center></p>");
-        for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workflowProcess.getWorkflowProcessReferenceDocs()) {
-            if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("Notesheet")) {
-                System.out.println("in notsheet pdf");
-                List<WorkflowProcessReferenceDocVersion> versions = workflowProcessReferenceDocVersionService.getDocVersionBydocumentID(context, workflowProcessReferenceDoc.getID(), 0, 20);
-                Optional<WorkflowProcessReferenceDocVersion> vvv = versions.stream().filter(d -> d.getIsactive()).findFirst();
-                WorkflowProcessReferenceDocVersion version = null;
-                if (versions != null) {
-                    for (WorkflowProcessReferenceDocVersion v : versions) {
-                        if (v.getIsactive()) {
-                            System.out.println("Active version" + v.getVersionnumber());
-                            version = v;
-                        }
-                    }
-                    InputStream out = null;
-                    if (version.getBitstream() != null && version.getBitstream().getName() != null) {
-                        // out = bitstreamService.retrieve(context, version.getBitstream());
-                        if (out != null) {
-                            MargedDocUtils.DocOneWrite(notecount);
-                            MargedDocUtils.DocTwoWrite(out);
-                            //DocToPdfConverter.copyInInputStreamToDocx(out);
-                        }
-                    }
-                    if (version.getEditortext() != null && !version.getEditortext().isEmpty()) {
-                        if (version != null) {
-                            if (version.getEditortext() != null && version.getBitstream() == null) {
-                                isTextEditorFlow = true;
-                                sb.append("<div>" + version.getEditortext() + "</div>");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        //manager
-        if (workflowProcess.getWorkflowProcessNote() != null && workflowProcess.getWorkflowProcessNote().getSubmitter() != null) {
-            EPerson creator = workflowProcess.getWorkflowProcessNote().getSubmitter();
-            String Designation1 = workFlowProcessMasterValueService.find(context, creator.getDesignation().getID()).getPrimaryvalue();
-            List<String> aa = new ArrayList<>();
-            aa.add(workflowProcess.getWorkflowProcessNote().getSubmitter().getFullName());
-            if (Designation1 != null) {
-                aa.add(Designation1);
-                sb.append("<br><br><br><div style=\"width:100%;    text-align: right;\">\n" + "<span>" + workflowProcess.getWorkflowProcessNote().getSubmitter().getFullName() + "<br>" + Designation1);
-                // aa.add(DateFormate(workflowProcess.getWorkflowProcessNote().getInitDate()));
-                //sb.append("<br>" + DateFormate(workflowProcess.getWorkflowProcessNote().getInitDate()) + "</span></div>");
-            }
-            // map.put("creator", aa);
-        }
-        Map<String, String> referencedocumentmap = null;
-        sb.append("<br><br><div style=\"width:100%;\"> ");
-        sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Reference Documents</b></p> ");
-        //Reference Documents dinamix
-        List<Map<String, String>> listreferenceReference = new ArrayList<>();
-        for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workflowProcess.getWorkflowProcessReferenceDocs()) {
-            referencedocumentmap = new HashMap<String, String>();
-            if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("Reference Document")) {
-                // InputStream out = null;
-                if (workflowProcessReferenceDoc.getBitstream() != null) {
-                    // String baseurl = configurationService.ge tProperty("dspace.server.url");
-                    referencedocumentmap.put("name", FileUtils.getNameWithoutExtension(workflowProcessReferenceDoc.getBitstream().getName()));
-                    //  referencedocumentmap.put("link", baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content");
-                    //sb.append("<span style=\"text-align: left;\"><a href=" + baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content>");
-                    if (!isTextEditorFlow) {
-                        // stroremetadateinmap(workflowProcessReferenceDoc.getBitstream(), referencedocumentmap);
-                        listreferenceReference.add(referencedocumentmap);
-                    } else {
-                        // stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
-                    }
-                }
-            }
-
-        }
-
-        sb.append("</div>");
-        // map.put("Reference Documents", listreferenceReference);
-        sb.append("<div style=\"width:23%;float:right;\"> <p><b>Reference Noting</b></p> ");
-        Map<String, String> referencenottingmap = null;
-        List<Map<String, String>> listreferencenotting = new ArrayList<>();
-        for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workflowProcess.getWorkflowProcessReferenceDocs()) {
-            referencenottingmap = new HashMap<String, String>();
-            if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("Reference Noting")) {
-                if (workflowProcessReferenceDoc.getBitstream() != null) {
-                    //   String baseurl = configurationService.getProperty("dspace.server.url");
-                    //  referencenottingmap.put("name1", FileUtils.getNameWithoutExtension(workflowProcessReferenceDoc.getBitstream().getName()));
-                    //    referencenottingmap.put("link", baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content");
-                    //  sb.append("<span style=\"text-align: left;\"><a href=" + baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content>");
-                    if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null && workflowProcessReferenceDoc.getWorkflowprocessnote().getID() != null) {
-                        WorkflowProcessNote note = workflowProcessNoteService.find(context, workflowProcessReferenceDoc.getWorkflowprocessnote().getID());
-                        if (note != null) {
-                            StringBuffer notecreateor = new StringBuffer("Note Creator: ");
-                            if (workflowProcessReferenceDoc.getBitstream().getName() != null) {
-                                sb.append(FileUtils.getNameWithoutExtension(workflowProcessReferenceDoc.getBitstream().getName()) + "</a>");
-                            } else {
-                                sb.append("-</a>");
-                            }
-                            if (note.getSubject() != null) {
-                                referencenottingmap.put("subject", note.getSubject());
-                                sb.append("<br>" + note.getSubject() + "<br>");
-                            } else {
-                                sb.append("<br>-<br>");
-                            }
-                            if (note.getSubmitter() != null && note.getSubmitter().getFullName() != null) {
-                                sb.append("Note Creator: " + note.getSubmitter().getFullName());
-                                notecreateor.append(note.getSubmitter().getFullName() + " ");
-                            } else {
-                                sb.append("Note Creator:<br>-");
-                            }
-                            if (note.getSubmitter() != null && note.getSubmitter().getDesignation() != null && note.getSubmitter().getDesignation().getID() != null) {
-                                String Designation1 = workFlowProcessMasterValueService.find(context, note.getSubmitter().getDesignation().getID()).getPrimaryvalue();
-                                if (Designation1 != null) {
-                                    sb.append(" | " + Designation1);
-                                    notecreateor.append("|" + Designation1);
-                                } else {
-                                    sb.append(" | -");
-                                }
-                            }
-                            if (note.getInitDate() != null) {
-                                //   sb.append(" " + DateFormate(note.getInitDate()));
-                                //    notecreateor.append(" " + DateFormate(note.getInitDate()));
-                            } else {
-                                sb.append(" - ");
-                            }
-                            referencenottingmap.put("notecreateor", notecreateor.toString());
-
-                        }
-                        if (workflowProcessReferenceDoc.getItemname() != null) {
-                            sb.append("<br>" + workflowProcessReferenceDoc.getItemname());
-                            referencenottingmap.put("filename", workflowProcessReferenceDoc.getItemname());
-                        }
-                        sb.append("</span><br><br>");
-                    }
-                }
-                listreferencenotting.add(referencenottingmap);
-            }
-        }
-        sb.append("</div></div><br>");
-        // map.put("Reference Noting", listreferencenotting);
-        // pending file
-        List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
-        // map.put("comment", comments);
-        sb.append("<h3 style=\"width:100% ;text-align: left; float:left;\"> Comments [" + comments.size() + "]</h3>");
-        int i = 1;
-        for (WorkFlowProcessComment comment : comments) {
-            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
-            //coment count
-            sb.append("<p><b>Comment # " + i + "</b></p>");
-
-            //comment text
-            if (comment.getComment() != null) {
-                sb.append("<span>" + comment.getComment() + "</span>");
-            }
-            if (comment.getWorkflowProcessReferenceDoc() != null && comment.getWorkflowProcessReferenceDoc().size() != 0) {
-                sb.append("<br><br>");
-                sb.append("<span><b>Reference Documents.</b></span> <br>");
-                for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : comment.getWorkflowProcessReferenceDoc()) {
-                    if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("Comment")) {
-                        if (workflowProcessReferenceDoc.getBitstream() != null) {
-                            //        String baseurl = configurationService.getProperty("dspace.server.url");
-                            //  sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content>");
-                            //     stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
-                        }
-                    }
-                }
-            }
-            sb.append("</div>");
-            //Comment by
-            if (comment.getComment() != null) {
-                sb.append("<div style=\"    float: right;  width:23%\"><b>Comment By</b><br><span>");
-            }
-            //MAnager
-            if (comment.getSubmitter() != null) {
-                if (comment.getSubmitter().getFullName() != null) {
-                    sb.append("<br>" + comment.getSubmitter().getFullName());
-                }
-                if (comment.getSubmitter().getDesignation() != null) {
-                    String Designation = workFlowProcessMasterValueService.find(context, comment.getSubmitter().getDesignation().getID()).getPrimaryvalue();
-                    sb.append("<br>" + Designation);
-                }
-            }
-            //
-            if (comment.getWorkFlowProcessHistory() != null && comment.getWorkFlowProcessHistory().toString() != null) {
-                //      sb.append("<br>" + DateFormate(comment.getWorkFlowProcessHistory().getActionDate()));
-            }
-            sb.append("</div>");
-            i++;
-        }
-        sb.append("</body></html>");
-
-        if (isTextEditorFlow) {
-            System.out.println("::::::::::IN isTextEditorFlow :::::::::");
-            FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-            System.out.println("HTML:::" + sb.toString());
-            int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
-            System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
-            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
-            margedoc.setSubject(workflowProcess.getSubject());
-            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(tempFile1html.getName()));
-            margedoc.setInitdate(new Date());
-            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
-            if (workFlowProcessMaster != null) {
-                WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
-                if (workFlowProcessMasterValue != null) {
-                    margedoc.setDrafttype(workFlowProcessMasterValue);
-                }
-            }
-            margedoc.setWorkflowProcess(workflowProcess);
-            FileInputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFile1html.getName());
-            margedoc.setBitstream(bitstream);
-            if (workflowProcess.getWorkflowProcessNote() != null) {
-                margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-                for (WorkflowProcessReferenceDoc d : workflowProcess.getWorkflowProcessReferenceDocs()) {
-                    if (d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet"))
-                        d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-                    workflowProcessReferenceDocService.update(context, d);
-                }
-            }
-            margedoc = workflowProcessReferenceDocService.create(context, margedoc);
-            return margedoc;
-        }
-        return null;
-    }
-
     @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}, value = "/outward")
     //@PreAuthorize("hasPermission(#uuid, 'BUNDLE', 'ADD') && hasPermission(#uuid, 'BUNDLE', 'WRITE')")
@@ -1138,6 +1011,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
 //                    storeWorkFlowHistoryforDocument(context, finalworkflowProcessReferenceDoc);
 //                }
                 // workflowProcessService.storeWorkFlowMataDataTOBitsream(context, finalworkflowProcessReferenceDoc);
+
                 rest = workflowProcessReferenceDocConverter.convert(finalworkflowProcessReferenceDoc, utils.obtainProjection());
                 if (workflowProcessReferenceDoc.getWorkflowprocessnote() != null) {
                     rest.setWorkflowProcessNoteRest(workflowProcessNoteConverter.convert(workflowProcessReferenceDoc.getWorkflowprocessnote(), utils.obtainProjection()));
@@ -1328,161 +1202,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
 
     public static boolean isNullOrEmptyOrBlank(String str) {
         return str == null || str.trim().isEmpty();
-    }
-
-    public Boolean checkSingData(Context context, WorkflowProcessReferenceDoc doc, InputStream P12file) {
-        //CloseableHttpClient httpClient = HttpClients.createDefault();
-        DigitalSignRequet digitalSignRequet = new DigitalSignRequet();
-        InputStream pkcs12File = null;
-        InputStream certFile = null;
-        InputStream fileInputa = null;
-        try {
-            String certType = configurationService.getProperty("digital.sign.certtype");
-            String password = doc.getDescription();
-            String showSignature = configurationService.getProperty("digital.sign.showsignature");
-            String reason = configurationService.getProperty("digital.sign.reason");
-            String location = configurationService.getProperty("digital.sign.location");
-            String name = context.getCurrentUser().getFullName();
-            String pageNumber = configurationService.getProperty("digital.sign.pagenumber");
-            File dummyfile = new File(configurationService.getProperty("digital.sign.dummy"));
-            fileInputa = new FileInputStream(dummyfile);
-            if (fileInputa != null) {
-                digitalSignRequet.setFileInput(fileInputa);
-            }
-            if (doc.getBitstream() != null && doc.getBitstream().getName() != null) {
-                System.out.println("in name");
-                digitalSignRequet.setCertFileName(doc.getBitstream().getName());
-                digitalSignRequet.setP12FileName(doc.getBitstream().getName());
-            }
-            pkcs12File = P12file;
-            certFile = P12file;
-            System.out.println("bitstreamid :" + doc.getBitstream().getID());
-            System.out.println("certFile :" + certFile);
-            System.out.println("pdf :" + fileInputa);
-            System.out.println("p12File :" + pkcs12File);
-            System.out.println("password :" + password);
-            System.out.println("certType :" + certType);
-            System.out.println("location :" + location);
-            System.out.println("pageNumber :" + pageNumber);
-            System.out.println("reason :" + reason);
-            System.out.println("name :" + name);
-            System.out.println("p12.getName() :" + doc.getBitstream().getName());
-            System.out.println("cert.getName() :" + doc.getBitstream().getName());
-            if (!isNullOrEmptyOrBlank(certType)) {
-                digitalSignRequet.setCertType(certType);
-            }
-            if (!isNullOrEmptyOrBlank(password)) {
-                digitalSignRequet.setPassword(password);
-            }
-            if (!isNullOrEmptyOrBlank(showSignature)) {
-                digitalSignRequet.setShowSignature(showSignature);
-            }
-            if (!isNullOrEmptyOrBlank(reason)) {
-                digitalSignRequet.setReason(reason);
-            }
-            if (!isNullOrEmptyOrBlank(location)) {
-                digitalSignRequet.setLocation(location);
-            }
-            if (!isNullOrEmptyOrBlank(name)) {
-                digitalSignRequet.setName(name);
-            }
-            if (!isNullOrEmptyOrBlank(pageNumber)) {
-                digitalSignRequet.setPageNumber(pageNumber);
-            }
-            if (pkcs12File != null) {
-                digitalSignRequet.setP12File(pkcs12File);
-            }
-            if (certFile != null) {
-                digitalSignRequet.setCertFile(certFile);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Boolean isSign = false;
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File tempsingpdf = new File(TEMP_DIRECTORY, "signdoc" + ".pdf");
-        if (!tempsingpdf.exists()) {
-            try {
-                tempsingpdf.createNewFile();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        HttpClient httpClient = HttpClients.createDefault();
-        try {
-            String url = configurationService.getProperty("digital.sign.url");
-            HttpPost httpPost = new HttpPost(url);
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            // Add parameters as form data
-            builder.addTextBody("certType", digitalSignRequet.getCertType(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("showSignature", digitalSignRequet.getShowSignature(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("location", digitalSignRequet.getLocation(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("reason", digitalSignRequet.getReason(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("pageNumber", digitalSignRequet.getPageNumber(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("name", digitalSignRequet.getName(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("password", digitalSignRequet.getPassword(), ContentType.TEXT_PLAIN);
-            // Add a binary file
-            builder.addBinaryBody("fileInput", digitalSignRequet.getFileInput(), ContentType.APPLICATION_OCTET_STREAM, digitalSignRequet.getFileInputName());
-            builder.addBinaryBody("p12File", digitalSignRequet.getP12File(), ContentType.APPLICATION_OCTET_STREAM, digitalSignRequet.getP12FileName());
-            builder.addBinaryBody("certFile", digitalSignRequet.getCertFile(), ContentType.APPLICATION_OCTET_STREAM, digitalSignRequet.getCertFileName());
-            // Build the multipart entity
-            httpPost.setEntity(builder.build());
-            // Execute the request
-            try {
-                // Execute the request and get the response
-                HttpResponse response = httpClient.execute(httpPost);
-                System.out.println("Response :::::::::::::" + response);
-                // Check the response status code and content
-                int statusCode = response.getStatusLine().getStatusCode();
-                if (statusCode == 200) {
-                    HttpEntity entity = response.getEntity();
-                    HttpStatus httpStatus = HttpStatus.valueOf(statusCode);
-                    HttpHeaders headers = new HttpHeaders();
-                    for (org.apache.http.Header header : response.getAllHeaders()) {
-                        headers.add(header.getName(), header.getValue());
-                    }
-                    byte[] responseBody = EntityUtils.toByteArray(entity);
-                    byte[] s = responseBody;
-                    try (FileOutputStream fos = new FileOutputStream(new File(tempsingpdf.getAbsolutePath()))) {
-                        fos.write(responseBody);
-                        fos.close();
-                        fos.flush();
-                    }
-                    System.out.println("file path" + tempsingpdf.getAbsolutePath());
-//                    FileInputStream pdfFileInputStream = new FileInputStream(new File(tempsingpdf.getAbsolutePath()));
-//                    Bitstream bitstreampdfsing = bundleRestRepository.processBitstreamCreationWithoutBundle1(context, pdfFileInputStream, "", tempsingpdf.getName(), bitstream);
-//                    if (bitstreampdfsing != null) {
-//                        Map<String, String> map = new HashMap<>();
-//                        map.put("bitstreampid", bitstreampdfsing.getID().toString());
-//                        System.out.println("Sing Doc Paths::" + tempsingpdf.getAbsolutePath());
-//                        context.commit();
-//                        isSign=true;
-//                        return isSign;
-//                    }
-                    isSign = true;
-                    return isSign;
-                } else {
-                    System.out.println("errot with " + statusCode);
-                    HttpEntity entity = response.getEntity();
-                    byte[] responseBody = EntityUtils.toByteArray(entity);
-                    isSign = false;
-                    return isSign;
-
-                }
-            } catch (IOException e) {
-                System.out.println("error" + e.getMessage());
-                isSign = false;
-                e.printStackTrace();
-                return isSign;
-
-            }
-        } catch (Exception e) {
-            isSign = false;
-            System.out.println("error" + e.getMessage());
-            e.printStackTrace();
-        }
-        return isSign;
     }
 
     public File getTempDirPath() {
