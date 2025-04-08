@@ -984,12 +984,9 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
     private DiscoverResult retrieveCollectionsWithSubmit(Context context, DiscoverQuery discoverQuery,
         String entityType, Community community, String q)
         throws SQLException, SearchServiceException {
-
         StringBuilder query = new StringBuilder();
         EPerson currentUser = context.getCurrentUser();
         if (!authorizeService.isAdmin(context)) {
-
-            System.out.println("in non admin   ");
             String userId = "";
             if (currentUser != null) {
                 userId = currentUser.getID().toString();
@@ -1015,8 +1012,6 @@ public class CollectionServiceImpl extends DSpaceObjectServiceImpl<Collection> i
             buildQuery.append("(").append(escapedQuery).append(" OR ").append(escapedQuery).append("*").append(")");
             discoverQuery.setQuery(buildQuery.toString());
         }
-
-        System.out.println("discoverQuery:::"+discoverQuery.getQuery());
         DiscoverResult resp = searchService.search(context, discoverQuery);
         return resp;
     }

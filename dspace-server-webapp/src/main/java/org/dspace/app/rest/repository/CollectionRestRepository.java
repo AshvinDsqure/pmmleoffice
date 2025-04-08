@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
+import org.dspace.app.rest.converter.CollectionConverter;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.GroupHasPendingWorkflowTasksException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
@@ -66,11 +67,14 @@ import org.dspace.xmlworkflow.storedcomponents.service.CollectionRoleService;
 import org.dspace.xmlworkflow.storedcomponents.service.PoolTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -118,6 +122,10 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
 
     @Autowired
     SearchService searchService;
+
+    @Autowired
+    CollectionConverter collectionConverter;
+
 
     public CollectionRestRepository(CollectionService dsoService) {
         super(dsoService);
@@ -194,24 +202,20 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     public Page<CollectionRest> findSubmitAuthorized(@Parameter(value = "query") String q,
                                                 Pageable pageable) throws SearchServiceException {
         try {
-
-            System.out.println(":::::::findSubmitAuthorized::::::::::::::");
-
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             List<Collection> collections = cs.findCollectionsWithSubmit(q, context, null,
                                               Math.toIntExact(pageable.getOffset()),
                                               Math.toIntExact(pageable.getPageSize()));
-
             int tot = cs.countCollectionsWithSubmit(q, context, null);
-            
-            if(context.getCurrentUser().getDepartment()!=null) {
-                List<Collection> c = collections.stream().filter(d ->context.getCurrentUser().getDepartment().getPrimaryvalue().equalsIgnoreCase(d.getName())).collect(Collectors.toList());
-                return converter.toRestPage(c, pageable, tot, utils.obtainProjection());
-            }
+            List<CollectionRest>workflowsRes = collections.stream().map(d -> {
+                return collectionConverter.convertByname(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(workflowsRes, pageable, tot);
 
-            return converter.toRestPage(collections, pageable, tot, utils.obtainProjection());
+//            return converter.toRestPage(collections, pageable, tot, utils.obtainProjection());
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -220,8 +224,6 @@ public class CollectionRestRepository extends DSpaceObjectRestRepository<Collect
     @SearchRestMethod(name = "findAdminAuthorized")
     public Page<CollectionRest> findAdminAuthorized (
         Pageable pageable, @Parameter(value = "query") String query) {
-
-        System.out.println(":::::::findAdminAuthorized::::::::::::::");
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();

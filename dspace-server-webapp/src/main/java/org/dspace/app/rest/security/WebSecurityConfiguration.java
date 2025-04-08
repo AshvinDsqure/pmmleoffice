@@ -93,6 +93,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 // Allow POST by anyone on the login endpoint
                 .antMatchers(HttpMethod.POST,"/api/authn/login").permitAll()
+                // Allow PATCH requests to specific ePerson endpoint
+                .antMatchers(HttpMethod.PATCH, "/api/eperson/epersons/**").permitAll()
                 // Everyone can call GET on the status endpoint (used to check your authentication status)
                 .antMatchers(HttpMethod.GET, "/api/authn/status").permitAll()
                 .antMatchers(HttpMethod.GET, actuatorBasePath + "/info").hasAnyAuthority(ADMIN_GRANT)

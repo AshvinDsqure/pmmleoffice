@@ -90,5 +90,8 @@ public class WorkflowProcessSenderDiaryEpersonServiceImpl extends DSpaceObjectSe
                 offset)).orElse(new ArrayList<>());
     }
 
-
+    @Override
+    public List<WorkflowProcessSenderDiaryEperson> getALLData(Context context, int limit) throws SQLException {
+        return WorkflowProcessSenderDiaryEpersonDAO.getALLData(context,limit);
+    }
 }

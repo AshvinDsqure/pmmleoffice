@@ -73,6 +73,7 @@ public interface EPersonService extends DSpaceObjectService<EPerson>, DSpaceObje
  public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException;
 
  public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department,UUID officeid) throws SQLException;
+ public List<EPerson> getall(Context context) throws SQLException;
 
     /**
      * Find the eperson by their netid.
@@ -282,5 +283,9 @@ public interface EPersonService extends DSpaceObjectService<EPerson>, DSpaceObje
      *                      access error or other errors.
      */
     EPerson findByProfileItem(Context context, Item profile) throws SQLException;
-    public List<EPerson> wildcardSearchByEmail(Context context, String email) throws SQLException;
+   public EPerson findByEmployeeID(Context context,String employeeid) throws SQLException;
+
+   public List<EPerson> wildcardSearchByEmail(Context context, String email) throws SQLException;
+    public List<EPerson> getAllNotNull(Context context,int limit) throws SQLException;
+
 }

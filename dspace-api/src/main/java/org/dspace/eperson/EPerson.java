@@ -57,6 +57,9 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
     @Column(name = "self_registered")
     private boolean selfRegistered = false;
 
+    @Column(name = "ismap")
+    private boolean ismap = false;
+
     @Column(name = "password", length = 128)
     private String password;
 
@@ -86,6 +89,11 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "designation_id")
     private WorkFlowProcessMasterValue designation;
+
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "eperson", cascade = {CascadeType.ALL})
+    public List<EpersonToEpersonMapping> epersonToEpersonMappings = new ArrayList<>();
+
 
     /**
      * The e-mail field (for sorting)
@@ -493,5 +501,21 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     public void setDesignation(WorkFlowProcessMasterValue designation) {
         this.designation = designation;
+    }
+
+    public List<EpersonToEpersonMapping> getEpersonToEpersonMappings() {
+        return epersonToEpersonMappings;
+    }
+
+    public void setEpersonToEpersonMappings(List<EpersonToEpersonMapping> epersonToEpersonMappings) {
+        this.epersonToEpersonMappings = epersonToEpersonMappings;
+    }
+
+    public boolean isIsmap() {
+        return ismap;
+    }
+
+    public void setIsmap(boolean ismap) {
+        this.ismap = ismap;
     }
 }

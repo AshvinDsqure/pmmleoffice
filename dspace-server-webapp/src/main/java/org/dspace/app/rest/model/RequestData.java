@@ -19,7 +19,9 @@ public class RequestData {
     public String bitstreampid;
     public String reason;
     public String location;
-
+    public String errorMsg;
+    public String status;
+    public String errorCode;
     public CertificateFilter certFilter;
     public PKCSSignRequest pKCSSignRequest;
 
@@ -136,5 +138,29 @@ public class RequestData {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 }

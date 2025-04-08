@@ -51,6 +51,10 @@ public class WorkflowProcessSenderDiaryEpersonRest extends DSpaceObjectRest {
 
     private WorkFlowProcessRest workFlowProcessRest = null;
 
+    @JsonProperty
+    private EpersonToEpersonMappingRest epersonToEpersonMappingRest = null;
+
+
     @Override
     public String getCategory() {
         return CATEGORY;
@@ -105,5 +109,13 @@ public class WorkflowProcessSenderDiaryEpersonRest extends DSpaceObjectRest {
 
     public void setWorkFlowProcessRest(WorkFlowProcessRest workFlowProcessRest) {
         this.workFlowProcessRest = workFlowProcessRest;
+    }
+
+    public EpersonToEpersonMappingRest getEpersonToEpersonMappingRest() {
+        return epersonToEpersonMappingRest;
+    }
+
+    public void setEpersonToEpersonMappingRest(EpersonToEpersonMappingRest epersonToEpersonMappingRest) {
+        this.epersonToEpersonMappingRest = epersonToEpersonMappingRest;
     }
 }

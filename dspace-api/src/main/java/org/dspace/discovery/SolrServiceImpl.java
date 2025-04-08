@@ -758,7 +758,6 @@ public class SolrServiceImpl implements SearchService, IndexingService {
             if (solrSearchCore.getSolr() == null) {
                 return new DiscoverResult();
             }
-
             return retrieveResult(context, discoveryQuery);
 
         } catch (Exception e) {

@@ -171,6 +171,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
     @Autowired
     EPersonConverter ePersonConverter;
+    @Autowired
+    EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
 
     @Autowired
     SapService sapService;
@@ -256,7 +258,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             List<String> olduser = null;
             List<WorkflowProcessEperson> olduserlistuuid = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> !d.getIssequence()).collect(Collectors.toList());
-            List<WorkflowProcessEperson> olduserlistuuidissequenstrue = workFlowProcess.getWorkflowProcessEpeople().stream().collect(Collectors.toList());
+            WorkflowProcessEperson initit = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getIndex()==0).findFirst().get();
             if (olduserlistuuid != null && olduserlistuuid.size() != 0) {
                 olduser = olduserlistuuid.stream().filter(d -> d.getePerson() != null).filter(d -> d.getePerson().getID() != null).filter(d -> !d.getIssequence()).map(d -> d.getePerson().getID().toString()).collect(Collectors.toList());
             }
@@ -284,10 +286,14 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                         //System.out.println("update done!");
 
                     } else {
-                        System.out.println("ADD NEW USER IN WORKFLOWEPERSON LIST");
-                        System.out.println("New user index  : " + workflowProcessEperson.getIndex());
-                        workFlowProcess.setnewUser(workflowProcessEperson);
-                        workflowProcessService.create(context, workFlowProcess);
+                        if(workflowProcessEperson.getePerson().getID().toString().equalsIgnoreCase(initit.getePerson().getID().toString())){
+                            System.out.println("user not added ");
+                        }else {
+                            System.out.println("ADD NEW USER IN WORKFLOWEPERSON LIST");
+                            System.out.println("New user index  : " + workflowProcessEperson.getIndex());
+                            workFlowProcess.setnewUser(workflowProcessEperson);
+                            workflowProcessService.create(context, workFlowProcess);
+                        }
                     }
                 }
             }
@@ -646,36 +652,56 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
-            if(workFlowProcess!=null){
-                workFlowProcess.setRemark("Received.");
+            workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            int index=workFlowProcess.getWorkflowProcessEpeople().size();
+            WorkflowProcessEperson initit = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getIndex()==0).findFirst().get();
+
+            //action is call back but work as forword
+            WorkFlowAction action = WorkFlowAction.CALLBACK;
+            //user not select any next user then flow go initiator auto
+            if(initit.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())){
+                System.out.println("::::::::::::::::::::::Initiator  set::::::::::::::::::::::::");
+                action.setInitiator(true);
+            }else {
+                //This code current user add in workflow and forwad
+                WorkflowProcessEpersonRest rest=new WorkflowProcessEpersonRest();
+                rest.setIndex(index);
+                Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                if (map.isPresent()) {
+                    EpersonToEpersonMappingRest rests=epersonToEpersonMappingConverter.convert(map.get(),utils.obtainProjection());
+                    rest.setEpersonToEpersonMappingRest(rests);
+                }
+                rest.setePersonRest(ePersonConverter.convert(context.getCurrentUser(),utils.obtainProjection()));
+                rest.setIssequence(false);
+                Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
+                rest.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(),utils.obtainProjection()));
+                List<WorkflowProcessEpersonRest>list=workFlowProcessRest.getWorkflowProcessEpersonRests();
+                list.add(rest);
+                workFlowProcessRest.setWorkflowProcessEpersonRests(list);
+                WorkflowProcessEperson workflowProcessEperson = workFlowProcessEpersonConverter.convert(context, rest);
+                workflowProcessEperson.setWorkflowProcess(workFlowProcess);
+                workFlowProcess.setnewUser(workflowProcessEperson);
+                workflowProcessService.create(context, workFlowProcess);
             }
-            if (workFlowProcess.getWorkflowType().getPrimaryvalue().equals("Draft")) {
-                if (workFlowProcess.getID() != null) {
-                    System.out.println("in Context context = obtainContext(); context.turnOffAuthorisationSystem(); Comment Edit Mode");
-                    try {
-                        WorkFlowProcessComment workFlowProcessComment = workFlowProcessCommentService.findCommentBySubmiterandWorkflowProcessID(context, context.getCurrentUser().getID(), workFlowProcess.getID());
-                        if(workFlowProcessComment!=null) {
-                            workFlowProcessComment.setIsdraftsave(true);
-                            workFlowProcessCommentService.update(context, workFlowProcessComment);
-                        }
-                    }catch (Exception e){
-                        System.out.println("error in  "+e.getMessage());
-                    }
+
+            //one flow completed after next time forward initiator to next user
+            if (workFlowProcess.getWorkflowProcessEpeople() != null) {
+                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
+                if (workflowPro.isPresent() && workflowPro.get().getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                    System.out.println("::::::::::::::::::::::::::::setInitiatorForward::::::::true::::::::::::::::::::");
+                    action.setInitiatorForward(true);
+                } else {
+                    action.setInitiatorForward(false);
                 }
             }
-            workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
-            WorkFlowAction CALLBACK = WorkFlowAction.CALLBACK;
-            CALLBACK.perfomeAction(context, workFlowProcess, workFlowProcessRest);
-            Optional<WorkflowProcessEperson> e = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d ->d.getIndex()==0).findFirst();
-            if (e.isPresent()) {
-                System.out.println("set ISsequnse true ");
-                WorkflowProcessEperson ee = e.get();
-                ee.setIssequence(true);
-                workflowProcessEpersonService.update(context, ee);
-            }
+            WorkFlowProcessRest workFlowProcessResta = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            action.perfomeAction(context, workFlowProcess, workFlowProcessResta);
             context.commit();
-            CALLBACK.setComment(null);
-            CALLBACK.setWorkflowProcessReferenceDocs(null);
+            System.out.println("call back commit done:::::");
+            action.setComment(null);
+            action.setInitiator(false);
+            action.setInitiatorForward(false);
+            action.setWorkflowProcessReferenceDocs(null);
             log.info("in callback Action stop!");
             return workFlowProcessRest;
         }
@@ -2247,6 +2273,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         Map<String, Object> map = new HashMap<String, Object>();
         InputStream input2 = null;
         DocToPdfConverter docToPdfConverter = null;
+        List<Bitstream>bitstreams=null;
+
 
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
        // System.out.println("start.......createFinalNote");
@@ -2300,10 +2328,28 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             //comment text
             if (comment.getComment() != null) {
                 sb.append("<p>" + comment.getComment() + "</p>");
+                if(comment.getWorkflowProcessReferenceDoc()!=null) {
+                    bitstreams=new ArrayList<>();
+                    bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
+                            .filter(d->d.getDrafttype()!=null&&d.getDrafttype().getPrimaryvalue()!=null&&!d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+                            .filter(d -> d.getBitstream() != null)
+                            .map(d -> d.getBitstream()).collect(Collectors.toList());
+                }
             }
             sb.append("<br><br>");
             sb.append("<br><br><div style=\"width:100%;\"> ");
             sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Attachment :</b></p> ");
+            if (bitstreams.size()!= 0) {
+                for (Bitstream bitstream : bitstreams) {
+                    if (bitstream != null) {
+                        System.out.println("in Attachment");
+                        String baseurl = configurationService.getProperty("dspace.server.url");
+                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+                        sb.append(bitstream.getName() + "</a></span>");
+                        // stroremetadate(bitstream, sb);
+                    }
+                }
+            }
             sb.append("</div>");
             //start normal sign with HTML Cordinate
             sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_"+i+"_Name:</B> </p>");
@@ -2339,6 +2385,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
+
+
             //System.out.println("HTML:::" + sb.toString());
            //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             int ii= jbpmServer.htmltopdf(sb.toString(),files);

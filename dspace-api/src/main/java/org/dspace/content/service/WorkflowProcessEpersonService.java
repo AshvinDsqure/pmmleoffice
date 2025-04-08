@@ -63,5 +63,5 @@ public interface WorkflowProcessEpersonService extends DSpaceObjectService<Workf
      */
     public List<WorkflowProcessEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public void sendEmail(Context context, String recipientEmail, String recipientName, String subject) throws IOException, MessagingException, SQLException, AuthorizeException;
-
+    List<WorkflowProcessEperson> getALLData(Context context,int limit) throws SQLException;
 }

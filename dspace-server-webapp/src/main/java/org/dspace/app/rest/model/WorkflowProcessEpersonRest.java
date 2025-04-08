@@ -49,6 +49,9 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest userType = null;
 
     @JsonProperty
+    private EpersonToEpersonMappingRest epersonToEpersonMappingRest = null;
+
+    @JsonProperty
     private List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = null;
 
     @JsonProperty
@@ -315,5 +318,14 @@ public class WorkflowProcessEpersonRest extends DSpaceObjectRest {
 
     public void setIsdraftreview(Boolean isdraftreview) {
         this.isdraftreview = isdraftreview;
+    }
+
+
+    public EpersonToEpersonMappingRest getEpersonToEpersonMappingRest() {
+        return epersonToEpersonMappingRest;
+    }
+
+    public void setEpersonToEpersonMappingRest(EpersonToEpersonMappingRest epersonToEpersonMappingRest) {
+        this.epersonToEpersonMappingRest = epersonToEpersonMappingRest;
     }
 }

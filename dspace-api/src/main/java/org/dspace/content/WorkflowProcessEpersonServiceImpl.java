@@ -133,4 +133,9 @@ public class WorkflowProcessEpersonServiceImpl extends DSpaceObjectServiceImpl<W
             email.send();
         }
     }
+
+    @Override
+    public List<WorkflowProcessEperson> getALLData(Context context, int limit) throws SQLException {
+        return workflowProcessEpersonDAO.getALLData(context,limit);
+    }
 }

@@ -6,6 +6,7 @@ public class UsersDTO {
    private String departmentname;
    private String officename;
    private String designation;
+   private String epersontoepersonmapping;
     private Integer deskno;
 
 
@@ -57,5 +58,11 @@ public class UsersDTO {
         this.deskno = deskno;
     }
 
+    public String getEpersontoepersonmapping() {
+        return epersontoepersonmapping;
+    }
 
+    public void setEpersontoepersonmapping(String epersontoepersonmapping) {
+        this.epersontoepersonmapping = epersontoepersonmapping;
+    }
 }

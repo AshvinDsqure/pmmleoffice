@@ -58,5 +58,6 @@ public interface WorkflowProcessSenderDiaryEpersonService extends DSpaceObjectSe
      * @throws SQLException if database error
      */
     public List<WorkflowProcessSenderDiaryEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException;
+    List<WorkflowProcessSenderDiaryEperson> getALLData(Context context, int limit) throws SQLException;
 
 }

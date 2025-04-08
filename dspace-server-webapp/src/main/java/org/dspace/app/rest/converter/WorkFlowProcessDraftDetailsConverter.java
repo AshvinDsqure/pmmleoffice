@@ -34,6 +34,11 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
     EPersonConverter ePersonConverter;
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
+
+    @Autowired
+    EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
+
     @Autowired
     ItemConverter itemConverter;
 
@@ -116,6 +121,9 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
             if (obj.getSapdocumenttype() != null) {
                 rest.setSapdocumenttypeRest(workFlowProcessMasterValueConverter.convert(obj.getSapdocumenttype(), projection));
             }
+            if(obj.getEpersontoepersonmapping()!=null){
+                rest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+            }
             return rest;
         }catch (Exception e){
             System.out.println("error:::"+e.getMessage());
@@ -178,6 +186,10 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
         }
         if(rest.getSapdocumenttypeRest()!=null){
             obj.setSapdocumenttype(workFlowProcessMasterValueConverter.convert(context, rest.getSapdocumenttypeRest()));
+        }
+
+        if(rest.getEpersonToEpersonMappingRest()!=null&&rest.getEpersonToEpersonMappingRest().getId()!=null&&!rest.getEpersonToEpersonMappingRest().getId().isEmpty()){
+            obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersonToEpersonMappingRest()));
         }
         obj.setDraftdate(new Date());
         return obj;

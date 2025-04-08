@@ -7,6 +7,8 @@
  */
 package org.dspace.eperson.factory;
 
+import org.dspace.content.EpersonToEpersonMapping;
+import org.dspace.content.service.*;
 import org.dspace.eperson.service.AccountService;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.eperson.service.GroupService;
@@ -36,9 +38,48 @@ public class EPersonServiceFactoryImpl extends EPersonServiceFactory {
     @Autowired(required = true)
     private SupervisorService supervisorService;
 
+    @Autowired(required = true)
+    private EpersonMappingService epersonMappingService;
+  @Autowired(required = true)
+    private EpersonToEpersonMappingService epersonToEpersonMappingService;
+
+   @Autowired(required = true)
+    private WorkflowProcessEpersonService workflowProcessEpersonService;
+
+    @Autowired(required = true)
+    private WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
+ @Autowired(required = true)
+    private WorkflowProcessSenderDiaryEpersonService workflowProcessSenderDiaryEpersonService;
+
+
     @Override
     public EPersonService getEPersonService() {
         return epersonService;
+    }
+
+    @Override
+    public EpersonMappingService getEpersonMappingService() {
+        return epersonMappingService;
+    }
+
+    @Override
+    public EpersonToEpersonMappingService epersonToEpersonMappingService() {
+        return epersonToEpersonMappingService;
+    }
+
+    @Override
+    public WorkflowProcessEpersonService workflowProcessEpersonService() {
+        return workflowProcessEpersonService;
+    }
+
+    @Override
+    public WorkflowProcessSenderDiaryEpersonService workflowProcessSenderDiaryEpersonService() {
+        return workflowProcessSenderDiaryEpersonService;
+    }
+
+    @Override
+    public WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService() {
+        return workFlowProcessDraftDetailsService;
     }
 
     @Override

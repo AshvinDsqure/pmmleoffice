@@ -255,19 +255,17 @@ public class JbpmServerImpl {
                     return 1;
                 } else {
                     System.out.println("Error: Response body is null.");
+                    throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
                 }
             } else {
                 System.out.println("Error: Received response status " + response.getStatusCode());
+                throw new RuntimeException("Error: Received response status for HTML TO PDF "+response.getStatusCode());
             }
-
-            System.out.println(":::::::::HTML TO PDF DONE!");
-            return 0;
-
         } catch (Exception e) {
             System.err.println("Error during HTML to PDF conversion: " + e.getMessage());
             e.printStackTrace();
+            throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
         }
-        return 0;
     }
 
 

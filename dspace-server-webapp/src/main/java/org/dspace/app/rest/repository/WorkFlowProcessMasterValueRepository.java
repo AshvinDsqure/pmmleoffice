@@ -20,6 +20,7 @@ import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.EPersonRest;
 import org.dspace.app.rest.model.WorkFlowProcessMasterRest;
 import org.dspace.app.rest.model.WorkFlowProcessMasterValueRest;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.WorkFlowProcessMaster;
 import org.dspace.content.WorkFlowProcessMasterValue;
@@ -75,7 +76,10 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         WorkFlowProcessMasterValue workFlowProcessMasterValue = null;
         try {
             workFlowProcessMasterValueRest = mapper.readValue(req.getInputStream(), WorkFlowProcessMasterValueRest.class);
-            if (workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID() == null && workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername() != null) {
+            if (workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID() == null && workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername() != null&&DateUtils.isNullOrEmptyOrBlank(workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername())) {
+               throw new RuntimeException("MasterName Can't black.");
+            }
+                if (workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID() == null && workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername() != null&&!DateUtils.isNullOrEmptyOrBlank(workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername())) {
                 WorkFlowProcessMaster workFlowProcessMaster = new WorkFlowProcessMaster();
                 workFlowProcessMaster.setMastername(workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getMastername());
                 WorkFlowProcessMaster ms = masterService.create(context, workFlowProcessMaster);
@@ -108,6 +112,8 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
                                                  JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkFlowProcessMasterValueRest workFlowProcessMasterValueRest = new Gson().fromJson(jsonNode.toString(), WorkFlowProcessMasterValueRest.class);
 
+        WorkFlowProcessMasterValueRest workFlowProcessMasterValueRestre =null;
+
         WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.find(context, id);
         if (workFlowProcessMasterValue == null) {
             System.out.println("WorkFlowProcessMasterRest id ::: is Null  WorkFlowProcessMasterRest tye null" + id);
@@ -115,8 +121,9 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         }
         workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
         workFlowProcessMasterValueService.update(context, workFlowProcessMasterValue);
+        workFlowProcessMasterValueRestre =converter.toRest(workFlowProcessMasterValue, utils.obtainProjection());
         context.commit();
-        return converter.toRest(workFlowProcessMasterValue, utils.obtainProjection());
+        return workFlowProcessMasterValueRestre;
     }
 
 
@@ -163,48 +170,48 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             throw new RuntimeException(e.getMessage(), e);
         }
     }
-    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
-    @SearchRestMethod(name = "findByType")
-    public Page<WorkFlowProcessMasterRest> findByStartDateAndEndDate(
-            @Parameter(value = "type", required = true) String type,
-            Pageable pageable) {
-        try {
-            String workflowstatus=type;
-            Context context = obtainContext();
-            List<WorkFlowProcessMasterValue> workFlowProcessMasterValueRests=null;
-            int total = workFlowProcessMasterValueService.countfindByType(context, type);
-            WorkFlowProcessMaster master = masterService.findByName(context, type);
-            if (master != null) {
-                type = master.getID().toString();
+        @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+        @SearchRestMethod(name = "findByType")
+        public Page<WorkFlowProcessMasterRest> findByStartDateAndEndDate(
+                @Parameter(value = "type", required = true) String type,
+                Pageable pageable) {
+            try {
+                String workflowstatus=type;
+                Context context = obtainContext();
+                List<WorkFlowProcessMasterValue> workFlowProcessMasterValueRests=null;
+                int total = workFlowProcessMasterValueService.countfindByType(context, type);
+                WorkFlowProcessMaster master = masterService.findByName(context, type);
+                if (master != null) {
+                    type = master.getID().toString();
+                }
+               workFlowProcessMasterValueRests = workFlowProcessMasterValueService.findByType(context, type, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+                if(workflowstatus.equalsIgnoreCase(WorkFlowStatus.MASTER.getAction())){
+                    List<WorkFlowProcessMasterValueRest> transformedList = workFlowProcessMasterValueRests.stream()
+                            .filter(wei -> !wei.getPrimaryvalue().equals(WorkFlowStatus.REFER.getAction()))
+                            .map(f -> {
+                        return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
+                    }).collect(Collectors.toList());
+                    return new PageImpl(transformedList, pageable, total);
+                }else if(workflowstatus.equalsIgnoreCase("Priority")){
+                    List<String> customOrder = Arrays.asList("Most Immediate", "High", "Medium", "Low");
+                    List<WorkFlowProcessMasterValueRest> transformedList = null;
+                    transformedList = workFlowProcessMasterValueRests.stream()
+                            .sorted(Comparator.comparingInt(obj -> customOrder.indexOf(obj.getPrimaryvalue())))
+                            .map(f -> {
+                        return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
+                    }).collect(Collectors.toList());
+                    return new PageImpl(transformedList, pageable, total);
+                }else {
+                    List<WorkFlowProcessMasterValueRest> transformedList = null;
+                    transformedList = workFlowProcessMasterValueRests.stream().map(f -> {
+                        return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
+                    }).collect(Collectors.toList());
+                    return new PageImpl(transformedList, pageable, total);
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.getMessage(), e);
             }
-           workFlowProcessMasterValueRests = workFlowProcessMasterValueService.findByType(context, type, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
-            if(workflowstatus.equalsIgnoreCase(WorkFlowStatus.MASTER.getAction())){
-                List<WorkFlowProcessMasterValueRest> transformedList = workFlowProcessMasterValueRests.stream()
-                        .filter(wei -> !wei.getPrimaryvalue().equals(WorkFlowStatus.REFER.getAction()))
-                        .map(f -> {
-                    return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
-                }).collect(Collectors.toList());
-                return new PageImpl(transformedList, pageable, total);
-            }else if(workflowstatus.equalsIgnoreCase("Priority")){
-                List<String> customOrder = Arrays.asList("Most Immediate", "High", "Medium", "Low");
-                List<WorkFlowProcessMasterValueRest> transformedList = null;
-                transformedList = workFlowProcessMasterValueRests.stream()
-                        .sorted(Comparator.comparingInt(obj -> customOrder.indexOf(obj.getPrimaryvalue())))
-                        .map(f -> {
-                    return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
-                }).collect(Collectors.toList());
-                return new PageImpl(transformedList, pageable, total);
-            }else {
-                List<WorkFlowProcessMasterValueRest> transformedList = null;
-                transformedList = workFlowProcessMasterValueRests.stream().map(f -> {
-                    return workFlowProcessMasterValueConverter.convert(f, utils.obtainProjection());
-                }).collect(Collectors.toList());
-                return new PageImpl(transformedList, pageable, total);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
         }
-    }
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchByDepartment")

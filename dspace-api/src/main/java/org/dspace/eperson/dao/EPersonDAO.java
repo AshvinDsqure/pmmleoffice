@@ -53,6 +53,11 @@ public interface EPersonDAO extends DSpaceObjectDAO<EPerson>, DSpaceObjectLegacy
     int countRows(Context context) throws SQLException;
     public List<EPerson> wildcardSearchByEmail(Context context, String email) throws SQLException;
     public List<EPerson> getByDepartment(Context context, UUID id) throws SQLException;
+
+    public EPerson findByEmployeeID(Context context,String employeeid) throws SQLException;
+
     public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException;
     public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department,UUID officeid) throws SQLException;
+    public List<EPerson> getAllNotNull(Context context,int limit) throws SQLException;
+
 }

@@ -15,6 +15,11 @@ import org.dspace.content.dao.WorkflowProcessDAO;
 import org.dspace.content.dao.WorkflowProcessDefinitionDAO;
 import org.dspace.content.dao.WorkflowProcessEpersonDAO;
 import org.dspace.core.AbstractHibernateDSODAO;
+import org.dspace.core.Context;
+
+import javax.persistence.Query;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Hibernate implementation of the Database Access Object interface class for the Item object.
@@ -27,5 +32,20 @@ public class WorkflowProcessEpersonDAOImpl extends AbstractHibernateDSODAO<Workf
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(WorkflowProcessDefinitionDAOImpl.class);
     protected WorkflowProcessEpersonDAOImpl() {
         super();
+    }
+
+
+    @Override
+    public List<WorkflowProcessEperson> getALLData(Context context,int limit) throws SQLException {
+        try {
+            Query query = createQuery(context, "" +
+                    "SELECT DISTINCT ep FROM WorkflowProcessEperson as ep where ep.ePerson.id is not null and ep.epersontoepersonmapping is null");
+            query.setMaxResults(limit);
+            return query.getResultList();
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+
+        }
     }
 }

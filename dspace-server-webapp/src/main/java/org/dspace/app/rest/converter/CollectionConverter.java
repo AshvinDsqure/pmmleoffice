@@ -8,9 +8,15 @@
 package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.CollectionRest;
+import org.dspace.app.rest.projection.Projection;
 import org.dspace.content.Collection;
+import org.dspace.core.Context;
 import org.dspace.discovery.IndexableObject;
 import org.springframework.stereotype.Component;
+
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This is the converter from/to the Collection in the DSpace API data model and
@@ -36,4 +42,13 @@ public class CollectionConverter extends DSpaceObjectConverter<Collection, Colle
     public boolean supportsModel(IndexableObject idxo) {
         return idxo.getIndexedObject() instanceof Collection;
     }
+
+
+    public CollectionRest convertByname(Collection collection, Projection projection) {
+        CollectionRest resource = new CollectionRest();
+        resource.setName(collection.getName());
+        resource.setUuid(collection.getID().toString());
+        return resource;
+    }
+
 }

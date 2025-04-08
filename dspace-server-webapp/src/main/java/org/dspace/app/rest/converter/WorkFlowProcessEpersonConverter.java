@@ -39,6 +39,10 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
     EPersonService ePersonService;
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
+    @Autowired
+    EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
+
     @Autowired
     ModelMapper modelMapper;
 
@@ -65,6 +69,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         }
         if(obj.getRemark()!=null){
             workflowProcessDefinitionEpersonRest.setRemark(obj.getRemark());
+        }
+        if(obj.getEpersontoepersonmapping()!=null){
+            workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
         }
 
         workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
@@ -105,7 +112,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(obj.getRemark()!=null){
             workflowProcessDefinitionEpersonRest.setRemark(obj.getRemark());
         }
-
+        if(obj.getEpersontoepersonmapping()!=null){
+            workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+        }
         workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
@@ -156,6 +165,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(rest.getIndex()!=null){
             workflowProcessEperson.setIndex(rest.getIndex());
         }
+        if(rest.getEpersonToEpersonMappingRest()!=null){
+            workflowProcessEperson.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersonToEpersonMappingRest()));
+        }
         workflowProcessEperson.setIssequence(rest.getIssequence());
         workflowProcessEperson.setSequence(rest.getSequence());
         workflowProcessEperson.setIsrefer(rest.getIsrefer());
@@ -172,5 +184,4 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
            workflowProcessEperson.setOffice(rest.getOffice());
         return workflowProcessEperson;
     }
-
 }

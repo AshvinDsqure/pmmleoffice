@@ -7,6 +7,11 @@
  */
 package org.dspace.eperson.factory;
 
+import org.dspace.content.EpersonMapping;
+import org.dspace.content.EpersonToEpersonMapping;
+import org.dspace.content.WorkflowProcessEperson;
+import org.dspace.content.WorkflowProcessSenderDiaryEperson;
+import org.dspace.content.service.*;
 import org.dspace.eperson.service.AccountService;
 import org.dspace.eperson.service.EPersonService;
 import org.dspace.eperson.service.GroupService;
@@ -24,6 +29,14 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 public abstract class EPersonServiceFactory {
 
     public abstract EPersonService getEPersonService();
+
+    public abstract EpersonMappingService getEpersonMappingService();
+    public abstract EpersonToEpersonMappingService epersonToEpersonMappingService();
+
+    public abstract WorkflowProcessEpersonService workflowProcessEpersonService();
+    public abstract WorkflowProcessSenderDiaryEpersonService workflowProcessSenderDiaryEpersonService();
+
+    public abstract WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService();
 
     public abstract GroupService getGroupService();
 

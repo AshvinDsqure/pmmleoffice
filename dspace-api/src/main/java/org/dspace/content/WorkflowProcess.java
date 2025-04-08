@@ -136,7 +136,16 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "isacknowledgement")
     private Boolean isacknowledgement = false;
 
+    @Column(name = "ispredefineuser")
+    private Boolean ispredefineuser = false;
 
+    public Boolean getIspredefineuser() {
+        return ispredefineuser;
+    }
+
+    public void setIspredefineuser(Boolean ispredefineuser) {
+        this.ispredefineuser = ispredefineuser;
+    }
 
 //    @Column(name = "assignduedate", columnDefinition = "timestamp with time zone")
 //    @Temporal(TemporalType.TIMESTAMP)

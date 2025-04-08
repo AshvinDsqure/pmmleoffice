@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.dspace.app.rest.model.DepartmentDTO;
 import org.dspace.app.rest.model.ExcelDTO;
+import org.dspace.eperson.EPerson;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,18 +38,28 @@ public class ExcelHelper {
             "Upload date",
             "Uploaded by",
     };
+
     static String[] HEADERsDepertment = {
             "Sr No",
             "Department Name",
             "No of Process WorkFlow"
     };
+
+    static String[] HEADERsDepertmente = {
+            "Sr No",
+            "User Name",
+            "Email",
+            "Employee ID",
+            "Department Name"
+
+    };
     static String SHEET = "items";
     static String SHEETName = "NO_OF_PROCESS";
 
+    static String SHEETNamee = "USER-LIST";
 
     public static ByteArrayInputStream tutorialsToExcel(List<ExcelDTO> tutorials) {
-
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet(SHEET);
             Row headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERs.length; col++) {
@@ -62,27 +73,19 @@ public class ExcelHelper {
                 row.createCell(0).setCellValue(i);
                 row.createCell(1).setCellValue(item.getCaseDetail());
                 row.createCell(2).setCellValue(item.getHierarchy());
-                System.out.println("item.getUploaddate():::::::::::::::::"+item.getUploaddate());
                 row.createCell(3).setCellValue(DateFormateddmmyyyy(item.getUploaddate()));
                 row.createCell(4).setCellValue(item.getUploadedby());
                 i++;
             }
-            /*FileOutputStream out1 = new FileOutputStream( new File("D:\\item.xlsx"));
-            workbook.write(out1);
-            out1.flush();
-            out1.close();*/
             workbook.write(out);
-            out.close();
-            workbook.close();
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            throw new RuntimeException("fail to import data to Excel file: " + e.getMessage());
+            throw new RuntimeException("Failed to export data to Excel file: " + e.getMessage(), e);
         }
     }
 
     public static ByteArrayInputStream tutorialsToExceldEPARTMENT(List<DepartmentDTO> tutorials) {
-
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet(SHEETName);
             Row headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERsDepertment.length; col++) {
@@ -95,33 +98,51 @@ public class ExcelHelper {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(i);
                 row.createCell(1).setCellValue(item.getName());
-                row.createCell(2).setCellValue(""+item.getCount());
+                row.createCell(2).setCellValue(String.valueOf(item.getCount()));
                 i++;
             }
-            /*FileOutputStream out1 = new FileOutputStream( new File("D:\\item.xlsx"));
-            workbook.write(out1);
-            out1.flush();
-            out1.close();*/
             workbook.write(out);
-            out.close();
-            workbook.close();
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            throw new RuntimeException("fail to import data to Excel file: " + e.getMessage());
+            throw new RuntimeException("Failed to export data to Excel file: " + e.getMessage(), e);
         }
     }
-
+    public static ByteArrayInputStream tutorialsToExceldEpersion(List<EPerson> tutorials) {
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet(SHEETNamee);
+            Row headerRow = sheet.createRow(0);
+            for (int col = 0; col < HEADERsDepertmente.length; col++) {
+                Cell cell = headerRow.createCell(col);
+                cell.setCellValue(HEADERsDepertmente[col]);
+            }
+            int rowIdx = 1;
+            int i = 1;
+            for (EPerson item : tutorials) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(i);
+                row.createCell(1).setCellValue(item.getFullName()!=null?item.getFullName():"-");
+                row.createCell(2).setCellValue(item.getEmail()!=null?item.getEmail():"-");
+                row.createCell(2).setCellValue(item.getEmployeeid()!=null?item.getEmployeeid():"-");
+                row.createCell(2).setCellValue(item.getDepartment()!=null&&item.getDepartment().getPrimaryvalue()!=null ?item.getDepartment().getPrimaryvalue():"-");
+                i++;
+            }
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export data to Excel file: " + e.getMessage(), e);
+        }
+    }
 
     public static String DateFormateddmmyyyy(String dates) {
         try {
             Instant instant = Instant.parse(dates);
             ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, java.time.ZoneId.of("UTC"));
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss");
-            String formattedDateTime = zonedDateTime.format(formatter);
-            return formattedDateTime;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+            return zonedDateTime.format(formatter);
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 }

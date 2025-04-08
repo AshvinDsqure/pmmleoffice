@@ -2,7 +2,7 @@
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
- * <p>
+ *
  * http://www.dspace.org/license/
  */
 package org.dspace.app.rest;
@@ -54,7 +54,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
@@ -102,6 +107,13 @@ public class WorkflowProcessFilterController {
 
     @Autowired
     EPersonService ePersonService;
+
+
+    @Autowired
+    EpersonMappingService epersonMappingService;
+
+    @Autowired
+    EpersonToEpersonMappingService epersonToEpersonMappingService;
 
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
@@ -295,6 +307,108 @@ public class WorkflowProcessFilterController {
         return null;
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = "/filterDepartmentWiseCount")
+    public Page<DepartmentDTO> filterDepartmentWiseCount(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest, Pageable pageable) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
+            HashMap<String, String> map = new HashMap<>();
+            if (rest.getPriorityRest() != null && rest.getPriorityRest().getUuid() != null) {
+                map.put("priority", rest.getPriorityRest().getUuid());
+            }
+            if (rest.getWorkflowStatusRest() != null && rest.getWorkflowStatusRest().getUuid() != null) {
+                map.put("status", rest.getWorkflowStatusRest().getUuid());
+            }
+            if (rest.getWorkflowTypeRest() != null && rest.getWorkflowTypeRest().getUuid() != null) {
+                map.put("type", rest.getWorkflowTypeRest().getUuid());
+               WorkFlowProcessMasterValue wm= workFlowProcessMasterValueService.find(context,UUID.fromString(rest.getWorkflowTypeRest().getUuid()));
+               if(wm!=null) {
+                   if (wm.getPrimaryvalue().equalsIgnoreCase("Draft")) {
+                       map.put("draft", "draft");
+                   } else {
+                       map.put("tapal", "tapal");
+                   }
+               }
+            }
+            if (rest.getePersonRest() != null && rest.getePersonRest().getUuid() != null) {
+                map.put("user", rest.getePersonRest().getUuid());
+            }
+            //text
+            if (rest.getSubject() != null) {
+                map.put("subject", rest.getSubject());
+            }
+            System.out.println(map);
+            int count = 100;
+            List<Object[]> list = workflowProcessService.filterDepartmentWiseCount(context, map,rest.getStartdate(),rest.getEnddate(), Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            System.out.println("List----"+list.size());
+            List<DepartmentDTO> rests = list.stream().filter(d->d[0]!=null&&d[1]!=null).map(d -> {
+                DepartmentDTO dd=new DepartmentDTO();
+                dd.setName(d[0].toString());
+                dd.setCount(Long.parseLong(d[1].toString()));
+                return dd;
+            }).collect(Collectors.toList());
+            return new PageImpl(rests, pageable, count);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/downloadfilterDepartmentWiseCount")
+    public ResponseEntity<Resource> downloadItem(HttpServletRequest request, @RequestBody WorkFlowProcessFilterRest rest) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            HashMap<String, String> map = new HashMap<>();
+            String name="_";
+            if (rest.getPriorityRest() != null && rest.getPriorityRest().getUuid() != null) {
+                map.put("priority", rest.getPriorityRest().getUuid());
+            }
+            if (rest.getWorkflowStatusRest() != null && rest.getWorkflowStatusRest().getUuid() != null) {
+                map.put("status", rest.getWorkflowStatusRest().getUuid());
+            }
+            if (rest.getWorkflowTypeRest() != null && rest.getWorkflowTypeRest().getUuid() != null) {
+                map.put("type", rest.getWorkflowTypeRest().getUuid());
+                WorkFlowProcessMasterValue wm= workFlowProcessMasterValueService.find(context,UUID.fromString(rest.getWorkflowTypeRest().getUuid()));
+                if(wm!=null) {
+                    if (wm.getPrimaryvalue().equalsIgnoreCase("Draft")) {
+                        map.put("draft", "draft");
+                        name="EFile";
+                    } else {
+                        map.put("tapal", "tapal");
+                        name="Tapal";
+                    }
+                }
+            }
+            if (rest.getePersonRest() != null && rest.getePersonRest().getUuid() != null) {
+                map.put("user", rest.getePersonRest().getUuid());
+            }
+            //text
+            if (rest.getSubject() != null) {
+                map.put("subject", rest.getSubject());
+            }
+            System.out.println(map);
+
+            String filename = "DepartmentWiseTotal_"+name+"count.xlsx";
+            List<Object[]> list = workflowProcessService.filterDepartmentWiseCountDownload(context, map,rest.getStartdate(),rest.getEnddate());
+            System.out.println("List----"+list.size());
+            List<DepartmentDTO> rests = list.stream().filter(d->d[0]!=null&&d[1]!=null).map(d -> {
+                DepartmentDTO dd=new DepartmentDTO();
+                dd.setName(d[0].toString());
+                dd.setCount(Long.parseLong(d[1].toString()));
+                return dd;
+            }).collect(Collectors.toList());
+            ByteArrayInputStream in = ExcelHelper.tutorialsToExceldEPARTMENT(rests);
+            InputStreamResource file = new InputStreamResource(in);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(file);
+        } catch (SQLException e) {
+            System.out.println("error :"+e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/getFilterPerameter")
     public HashMap<String, String> getFilterdate(HttpServletRequest request) {
         try {
@@ -384,6 +498,11 @@ public class WorkflowProcessFilterController {
             UUID mostimedeatlyid = null;
             UUID inwardid = null;
             UUID draftid = null;
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
             WorkFlowProcessMaster PriorityMaster = workFlowProcessMasterService.findByName(context, "Priority");
             if (PriorityMaster != null) {
                 Lowid = workFlowProcessMasterValueService.findByName(context, "Low", PriorityMaster).getID();
@@ -404,70 +523,70 @@ public class WorkflowProcessFilterController {
             //:::::::::::::::::::inward Map:::::::::::::::::::::::::
             HashMap<String, Integer> mapInward = new HashMap<>();
             //inbox
-            mapInward.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid,tInProgressid));
-            mapInward.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid,tInProgressid));
-            mapInward.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid,tInProgressid));
-            mapInward.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid,tInProgressid));
-            mapInward.put("inbox_Suspend", workflowProcessService.countByTypeAndStatus(context, inwardid, tSuspendid, userid));
-            mapInward.put("inbox_InProgress", workflowProcessService.countByTypeAndStatus(context, inwardid, tInProgressid, userid));
+            mapInward.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapInward.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapInward.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapInward.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapInward.put("inbox_Suspend", workflowProcessService.countByTypeAndStatus(context, inwardid, tSuspendid, userid,epersonToEpersonMappingid));
+            mapInward.put("inbox_InProgress", workflowProcessService.countByTypeAndStatus(context, inwardid, tInProgressid, userid,epersonToEpersonMappingid));
 
             //draft
-            mapInward.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid,createdid));
-            mapInward.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid,createdid));
-            mapInward.put("draft_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid,createdid));
-            mapInward.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid,createdid));
+            mapInward.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("draft_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid,createdid,epersonToEpersonMappingid));
            //close
-            mapInward.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Mediumid, userid,tCloseid));
-            mapInward.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Lowid, userid,tCloseid));
-            mapInward.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Highid, userid,tCloseid));
-            mapInward.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, mostimedeatlyid, userid,tCloseid));
+            mapInward.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Mediumid, userid,tCloseid,epersonToEpersonMappingid));
+            mapInward.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Lowid, userid,tCloseid,epersonToEpersonMappingid));
+            mapInward.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Highid, userid,tCloseid,epersonToEpersonMappingid));
+            mapInward.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, mostimedeatlyid, userid,tCloseid,epersonToEpersonMappingid));
 
             //sentto
-            mapInward.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Mediumid, userid,createdid));
-            mapInward.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Lowid, userid,createdid));
-            mapInward.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Highid, userid,createdid));
-            mapInward.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, mostimedeatlyid, userid,createdid));
+            mapInward.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Mediumid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Lowid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Highid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, mostimedeatlyid, userid,createdid,epersonToEpersonMappingid));
 
-            mapInward.put("sent_InProgress", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tInProgressid, userid,createdid));
-            mapInward.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tparkedid, userid,createdid));
+            mapInward.put("sent_InProgress", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tInProgressid, userid,createdid,epersonToEpersonMappingid));
+            mapInward.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tparkedid, userid,createdid,epersonToEpersonMappingid));
 
             //::::::::::::::::::Draft Map::::::::::::::::::::::::::::::::::::::
             HashMap<String, Integer> mapDraft = new HashMap<>();
             //inbox
-            mapDraft.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,tInProgressid));
-            mapDraft.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,tInProgressid));
-            mapDraft.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,tInProgressid));
-            mapDraft.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,tInProgressid));
-            mapDraft.put("inbox_InProgress", workflowProcessService.countByTypeAndStatus(context, draftid, tInProgressid, userid));
-            mapDraft.put("inbox_Parked", workflowProcessService.countByTypeAndStatus(context, draftid, tparkedid, userid));
+            mapDraft.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapDraft.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapDraft.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapDraft.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,tInProgressid,epersonToEpersonMappingid));
+            mapDraft.put("inbox_InProgress", workflowProcessService.countByTypeAndStatus(context, draftid, tInProgressid, userid,epersonToEpersonMappingid));
+            mapDraft.put("inbox_Parked", workflowProcessService.countByTypeAndStatus(context, draftid, tparkedid, userid,epersonToEpersonMappingid));
 
             //Draft
-            mapDraft.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,draftnote));
-            mapDraft.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,draftnote));
-            mapDraft.put("draft_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,draftnote));
-            mapDraft.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,draftnote));
+            mapDraft.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,draftnote,epersonToEpersonMappingid));
+            mapDraft.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,draftnote,epersonToEpersonMappingid));
+            mapDraft.put("draft_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,draftnote,epersonToEpersonMappingid));
+            mapDraft.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,draftnote,epersonToEpersonMappingid));
             //created
-            mapDraft.put("created_Medium", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Mediumid, userid,createdid));
-            mapDraft.put("created_Low", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Lowid, userid,createdid));
-            mapDraft.put("created_High", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Highid, userid,createdid));
-            mapDraft.put("created_MostImmediate", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, mostimedeatlyid, userid,createdid));
+            mapDraft.put("created_Medium", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Mediumid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("created_Low", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Lowid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("created_High", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Highid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("created_MostImmediate", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, mostimedeatlyid, userid,createdid,epersonToEpersonMappingid));
             //park
-            mapDraft.put("park_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,tparkedid));
-            mapDraft.put("park_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,tparkedid));
-            mapDraft.put("park_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,tparkedid));
-            mapDraft.put("park_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,tparkedid));
+            mapDraft.put("park_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid,tparkedid,epersonToEpersonMappingid));
+            mapDraft.put("park_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid,tparkedid,epersonToEpersonMappingid));
+            mapDraft.put("park_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid,tparkedid,epersonToEpersonMappingid));
+            mapDraft.put("park_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid,tparkedid,epersonToEpersonMappingid));
             //close
-            mapDraft.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Mediumid, userid,tCloseid));
-            mapDraft.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Lowid, userid,tCloseid));
-            mapDraft.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Highid, userid,tCloseid));
-            mapDraft.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, draftid, mostimedeatlyid, userid,tCloseid));
+            mapDraft.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Mediumid, userid,tCloseid,epersonToEpersonMappingid));
+            mapDraft.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Lowid, userid,tCloseid,epersonToEpersonMappingid));
+            mapDraft.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Highid, userid,tCloseid,epersonToEpersonMappingid));
+            mapDraft.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, draftid, mostimedeatlyid, userid,tCloseid,epersonToEpersonMappingid));
             //sent
-            mapDraft.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Mediumid, userid,createdid));
-            mapDraft.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Lowid, userid,createdid));
-            mapDraft.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Highid, userid,createdid));
-            mapDraft.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, mostimedeatlyid, userid,createdid));
-            mapDraft.put("sent_InProgress", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tInProgressid, userid,createdid));
-            mapDraft.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tparkedid, userid,createdid));
+            mapDraft.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Mediumid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Lowid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Highid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, mostimedeatlyid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("sent_InProgress", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tInProgressid, userid,createdid,epersonToEpersonMappingid));
+            mapDraft.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tparkedid, userid,createdid,epersonToEpersonMappingid));
 
             HashMap<String, HashMap<String, Integer>> maps = new HashMap<>();
             maps.put(WorkFlowType.INWARD.getAction(), mapInward);
@@ -603,83 +722,158 @@ public class WorkflowProcessFilterController {
             //System.out.println("in getDepartmentByOffice ");
             Context context = ContextUtil.obtainContext(request);
             List<UserDepartmentDTO> rest=new ArrayList<>();
-            List<Object[]> witems = ePersonService.getEPersonByOffice(context, UUID.fromString(officeid));
-           if(witems!=null) {
+
+            UUID office=UUID.fromString(officeid);
+
+           List<EpersonMapping>witems=  epersonMappingService.findByOffice(context,office);
+            if(witems!=null) {
               rest = witems.stream()
-                       .filter(row -> row[0] != null && row[1] != null)
+                       .filter(row -> row.getDepartment()!=null)
                        .map(d -> {
                            UserDepartmentDTO contryDTO = new UserDepartmentDTO();
-                           contryDTO.setUuid(d[0].toString());
-                           contryDTO.setDepartmentname(d[1].toString());
+                           contryDTO.setUuid(d.getDepartment().getID().toString());
+                           contryDTO.setDepartmentname(d.getDepartment().getPrimaryvalue());
                            return contryDTO;
                        }).collect(Collectors.toList());
            }
-            return rest;
+            List<UserDepartmentDTO> uniqueList = rest.stream()
+                    .filter(distinctByKey(UserDepartmentDTO::getUuid))
+                    .sorted(Comparator.comparing(UserDepartmentDTO::getDepartmentname))
+                    .collect(Collectors.toList());
+
+            return uniqueList;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/getEpersonByDepartmentAndOffice")
-    public List<UsersDTO> getEpersonByDepartmentAndOffice(HttpServletRequest request
-            ,@Parameter(value = "officeid", required = true) String officeid
-            ,@Parameter(value = "departmentid", required = true) String departmentid
-             ,@Parameter(value = "isdisable", required = true) Boolean isdisable) {
-        List<UsersDTO> usersList = new ArrayList<>();
+
+    @RequestMapping(method = RequestMethod.GET, value = "/isEpersionToEpersionMappingInWorkflow")
+    public boolean isEpersionToEpersionMappingInWorkflow(HttpServletRequest request,
+                                                                         @Parameter(value = "epersiontoepersionmapping", required = true) String epersiontoepersionmapping) {
+        try {
+            //System.out.println("in getDepartmentByOffice ");
+            Context context = ContextUtil.obtainContext(request);
+            UUID epersiontoepersionmappings=UUID.fromString(epersiontoepersionmapping);
+            return epersonToEpersonMappingService.existsByEpersonToEpersonMappingId(context,epersiontoepersionmappings);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    @RequestMapping(method = RequestMethod.GET, value = "/getfindDesignationAndDepartmentAndOffice")
+    public List<UserDesignationDTO> getfindDesignationAndDepartmentAndOffice(HttpServletRequest request,@Parameter(value = "officeid", required = true) String officeid,
+                                                                            @Parameter(value = "department", required = true) String department) {
+        try {
+            //System.out.println("in getDepartmentByOffice ");
+            Context context = ContextUtil.obtainContext(request);
+            List<UserDesignationDTO> rest=new ArrayList<>();
+
+            UUID office=UUID.fromString(officeid);
+            UUID departments=UUID.fromString(department);
+            List<EpersonMapping>witems=  epersonMappingService.findOfficeAndDepartment(context,office,departments);
+            if(witems!=null) {
+                rest = witems.stream()
+                        .filter(row -> row.getDesignation()!=null)
+                        .map(d -> {
+                            UserDesignationDTO contryDTO = new UserDesignationDTO();
+                            contryDTO.setUuid(d.getDesignation().getID().toString());
+                            contryDTO.setDesignation(d.getDesignation().getPrimaryvalue());
+                            return contryDTO;
+                        }).collect(Collectors.toList());
+            }
+
+            List<UserDesignationDTO> uniqueList = rest.stream()
+                    .filter(distinctByKey(UserDesignationDTO::getUuid))
+                    .sorted(Comparator.comparing(UserDesignationDTO::getDesignation))
+                    .collect(Collectors.toList());
+
+            return uniqueList;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getEpersonByDepartmentAndOfficeAndDesignation")
+    public List<UsersDTO> getEpersonByDepartmentAndOfficeAndDesignation(HttpServletRequest request
+            ,@Parameter(value = "officeid", required = false) String officeid
+            ,@Parameter(value = "departmentid", required = false) String departmentid
+            ,@Parameter(value = "designation", required = false) String designation
+            ,@Parameter(value = "isdisable", required = false) Boolean isdisable) {
+         List<UsersDTO> usersList = new ArrayList<>();
+        List<UsersDTO> uniqueList=null;
         try {
             // Obtain context
             Context context = ContextUtil.obtainContext(request);
-
-            // Fetch EPerson data
-            List<EPerson> epersons = ePersonService.getEpersonByDepartmentAndOffice(
-                    context, UUID.fromString(departmentid), UUID.fromString(officeid)
-            );
-
-            // Filter based on `isdisable` flag
+            UUID office=UUID.fromString(officeid);
+            UUID departments=UUID.fromString(departmentid);
+            UUID designationids=UUID.fromString(designation);
+            List<EpersonToEpersonMapping>witems=  epersonToEpersonMappingService.findByofficeandDepartmentanddesignation(context,office,departments,designationids);
+            System.out.println("in size "+witems.size());
             if (isdisable) {
-                UUID currentUserId = context.getCurrentUser().getID();
-                epersons = epersons.stream()
-                        .filter(d -> d != null && !d.getID().equals(currentUserId))
-                        .collect(Collectors.toList());
+                if (witems != null) {
+                    System.out.println("in isdisable true");
+                    usersList = witems.stream()
+                            .filter(row -> row.getEperson() != null)
+                            .filter(row -> !row.getEperson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString()))
+                            .filter(d->d.getID()!=null)
+                            .map(d -> {
+                                UsersDTO userdto = new UsersDTO();
+                                userdto.setUuid(d.getEperson().getID().toString());
+                                userdto.setDesignation(d.getEpersonmapping().getDesignation().getPrimaryvalue());
+                                userdto.setOfficename(d.getEpersonmapping().getOffice().getPrimaryvalue());
+                                userdto.setDepartmentname(d.getEpersonmapping().getDepartment().getPrimaryvalue());
+                                userdto.setFullname(d.getEperson().getFullName());
+                                userdto.setEpersontoepersonmapping(d.getID().toString());
+                                if(d.getEpersonmapping().getTablenumber()!=null) {
+                                    userdto.setDeskno(d.getEpersonmapping().getTablenumber());
+                                }
+                                return userdto;
+                            }).collect(Collectors.toList());
+
+                }
+            }else{
+                System.out.println(" in elese current user also get");
+                if (witems != null) {
+                    usersList = witems.stream()
+                            .filter(row -> row.getEperson() != null)
+                            .filter(d->d.getID()!=null)
+                            .map(d -> {
+                                UsersDTO userdto = new UsersDTO();
+                                userdto.setUuid(d.getEperson().getID().toString());
+                                userdto.setDesignation(d.getEpersonmapping().getDesignation().getPrimaryvalue());
+                                userdto.setOfficename(d.getEpersonmapping().getOffice().getPrimaryvalue());
+                                userdto.setDepartmentname(d.getEpersonmapping().getDepartment().getPrimaryvalue());
+                                userdto.setFullname(d.getEperson().getFullName());
+                                userdto.setEpersontoepersonmapping(d.getID().toString());
+                                if(d.getEpersonmapping().getTablenumber()!=null) {
+                                    userdto.setDeskno(d.getEpersonmapping().getTablenumber());
+                                }
+                                return userdto;
+                            }).collect(Collectors.toList());
+                }
             }
-
-            // Map EPerson to UsersDTO
-            usersList = epersons.stream()
-                    .filter(d -> d != null && d.getFullName() != null)
-                    .map(d -> mapToUsersDTO(context, d))
-                    .collect(Collectors.toList());
-
         } catch (Exception e) {
             // Log the error for debugging
             System.err.println("Error processing request: " + e.getMessage());
             e.printStackTrace();
         }
 
-        return usersList;
-    }
-    private UsersDTO mapToUsersDTO(Context context, EPerson eperson) {
-        UsersDTO usersDTO = new UsersDTO();
-        try {
-            usersDTO.setUuid(eperson.getID().toString());
-            usersDTO.setFullname(generateFullName(context, eperson));
-            if (eperson.getTablenumber() != null) {
-                usersDTO.setDeskno(eperson.getTablenumber());
-            }
-            if(eperson.getDesignation()!=null&&eperson.getDesignation().getPrimaryvalue()!=null){
-                usersDTO.setDesignation(eperson.getDesignation().getPrimaryvalue());
-            }
-            if(eperson.getDepartment()!=null&&eperson.getDepartment().getPrimaryvalue()!=null){
-                usersDTO.setDepartmentname(eperson.getDepartment().getPrimaryvalue());
-            }
-            if(eperson.getOffice()!=null&&eperson.getOffice().getPrimaryvalue()!=null){
-                usersDTO.setOfficename(eperson.getOffice().getPrimaryvalue());
-            }
-        } catch (Exception e) {
-            // Log mapping errors
-            System.err.println("Error mapping EPerson to UsersDTO: " + e.getMessage());
+        if(usersList!=null) {
+            uniqueList = usersList.stream()
+                    .filter(distinctByKey(UsersDTO::getUuid))
+                    .sorted(Comparator.comparing(UsersDTO::getFullname))
+                    .collect(Collectors.toList());
         }
-        return usersDTO;
+        return uniqueList;
     }
     private String generateFullName(Context context, EPerson eperson) {
         String fullName = eperson.getFullName();

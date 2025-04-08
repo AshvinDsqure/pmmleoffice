@@ -7,7 +7,12 @@
  */
 package org.dspace.content.dao;
 
+import org.dspace.content.WorkflowProcessEperson;
 import org.dspace.content.WorkflowProcessSenderDiaryEperson;
+import org.dspace.core.Context;
+
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Database Access Object interface class for the Item object.
@@ -18,5 +23,6 @@ import org.dspace.content.WorkflowProcessSenderDiaryEperson;
  */
 public interface WorkflowProcessSenderDiaryEpersonDAO extends DSpaceObjectLegacySupportDAO<WorkflowProcessSenderDiaryEperson> {
 
+    List<WorkflowProcessSenderDiaryEperson> getALLData(Context context, int limit) throws SQLException;
 
 }

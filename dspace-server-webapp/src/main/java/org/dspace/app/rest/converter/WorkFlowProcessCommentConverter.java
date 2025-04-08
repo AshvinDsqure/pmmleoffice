@@ -88,6 +88,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(obj.getActionDate()!=null){
             rest.setActionDate(obj.getActionDate());
         }
+        if(obj.getMargeddocuuid()!=null){
+            rest.setMargeddocuuid(obj.getMargeddocuuid());
+        }
         rest.setIsdraftsave(obj.getIsdraftsave());
         rest.setUuid(obj.getID().toString());
         return rest;
@@ -123,6 +126,47 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getNoteRest()!=null){
             System.out.println("in note doc");
             obj.setNote(workflowProcessReferenceDocConverter.convertByService(context,rest.getNoteRest()));
+        }
+        if(rest.getMargeddocuuid()!=null){
+            obj.setMargeddocuuid(rest.getMargeddocuuid());
+        }
+        obj.setSubmitter(context.getCurrentUser());
+        obj.setIsdraftsave(rest.getIsdraftsave());
+        return obj;
+    }
+    public WorkFlowProcessComment convertupdate(Context context,WorkFlowProcessComment obj, WorkFlowProcessCommentRest rest) throws Exception {
+        if(rest.getComment()!=null){
+            String htmlcomment = "<div>" + rest.getComment()+ "</div>";
+            // System.out.println("::::::html::::::::::" + htmlcomment);
+            //System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
+            obj.setComment(htmlcomment);
+        }
+        if (rest.getWorkFlowProcessHistoryRest() != null) {
+            obj.setWorkFlowProcessHistory(workFlowProcessHistoryService.find(context,UUID.fromString(rest.getWorkFlowProcessHistoryRest().getId())));
+        }
+        if (rest.getWorkflowProcessReferenceDocRest() != null) {
+            obj.setWorkflowProcessReferenceDoc(rest.getWorkflowProcessReferenceDocRest().stream().map(we -> {
+                try {
+                    WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(context,we);
+                    return workflowProcessReferenceDoc;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList()));
+        }
+
+        if(rest.getWorkflowProcessRest()!=null){
+            obj.setWorkFlowProcess(workFlowProcessConverter.convertByService(context,rest.getWorkflowProcessRest()));
+        }
+        if(rest.getActionDate()!=null){
+            obj.setActionDate(rest.getActionDate());
+        }
+        if(rest.getNoteRest()!=null){
+            System.out.println("in note doc");
+            obj.setNote(workflowProcessReferenceDocConverter.convertByService(context,rest.getNoteRest()));
+        }
+        if(rest.getMargeddocuuid()!=null){
+            obj.setMargeddocuuid(rest.getMargeddocuuid());
         }
         obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
@@ -160,6 +204,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getNoteRest()!=null){
             System.out.println("in note doc");
             obj.setNote(workflowProcessReferenceDocConverter.convertByService(context,rest.getNoteRest()));
+        }
+        if(rest.getMargeddocuuid()!=null){
+            obj.setMargeddocuuid(rest.getMargeddocuuid());
         }
 
         obj.setIsdraftsave(rest.getIsdraftsave());

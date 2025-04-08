@@ -13,7 +13,9 @@ import java.util.Date;
 public class DateUtils {
 
     public static void main(String[] args) throws ParseException {
-        Date d=new Date();
+
+        System.out.println(""+getyyyyMMdd("2025-02-21"));
+      //  Date d=new Date();
        // System.out.println(DateFormateMMDDYYYY(new Date()));
         //System.out.println(getCurrentDDMMYY());
         //System.out.println(getShortName("Computer Application"));
@@ -21,8 +23,8 @@ public class DateUtils {
 
         //String s=getFolderTmp("UnSign");
        // System.out.println("s"+s);
-        int currentYear = Year.now().getValue();
-        System.out.println("cyear:::::::::"+currentYear);
+        //int currentYear = Year.now().getValue();
+        //System.out.println("cyear:::::::::"+currentYear);
 
        // String s="2024-12-23 00:00:00.0";
 
@@ -37,6 +39,21 @@ public class DateUtils {
 
 
        // System.out.println("test::"+strDateToString("2023-06-17 16:09:41.481"))
+    }
+
+    public static Date getyyyyMMdd(String dateString){
+        try {
+            LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            // Format the date to dd-MM-yy
+            String formattedDate = date.format(DateTimeFormatter.ofPattern("dd-MM-yy"));
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy");
+            // Convert string to Date
+            Date dates = sdf.parse(formattedDate);
+            System.out.println("Date::::::"+dates);
+            return dates;
+        }catch (Exception e){
+            return null;
+        }
     }
     public static boolean isNullOrEmptyOrBlank(String str) {
             return str == null || str.trim().isEmpty();
@@ -237,6 +254,21 @@ public class DateUtils {
        // System.out.println("::::::::currentYear:::::::::::"+currentYear);
         if(currentYear==2025){
             return 1;
+        }
+        if(currentYear==2026){
+            return 2;
+        }
+        if(currentYear==2027){
+            return 3;
+        }
+        if(currentYear==2028){
+            return 4;
+        }
+        if(currentYear==2029){
+            return 5;
+        }
+        if(currentYear==2030){
+            return 6;
         }
         return  0;
     }

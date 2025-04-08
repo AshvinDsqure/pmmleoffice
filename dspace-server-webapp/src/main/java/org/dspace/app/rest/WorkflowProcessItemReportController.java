@@ -88,6 +88,7 @@ import org.dspace.content.Collection;
 import org.dspace.content.service.*;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.service.EPersonService;
 import org.dspace.services.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -166,6 +167,11 @@ public class WorkflowProcessItemReportController {
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
 
+
+    @Autowired
+    EpersonToEpersonMappingService epersonToEpersonMappingService;
+
+
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
 
@@ -195,6 +201,9 @@ public class WorkflowProcessItemReportController {
     ItemConverter itemConverter;
     @Autowired
     DigitalSign digitalSign;
+
+    @Autowired
+    EPersonService ePersonService;
 
 
     /**
@@ -311,9 +320,9 @@ public class WorkflowProcessItemReportController {
             sb.append("F/PCMC/");
             WorkFlowProcessMasterValue department;
             if (currentuser != null) {
-                department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
-                if (department.getPrimaryvalue() != null) {
-                    sb.append(department.getSecondaryvalue());
+               Optional<EpersonToEpersonMapping> map= currentuser.getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                if (map.isPresent()) {
+                    sb.append(map.get().getEpersonmapping().getDepartment().getSecondaryvalue());
                 }
             }
             sb.append("/" + DateUtils.getFinancialYear());
@@ -418,6 +427,85 @@ public class WorkflowProcessItemReportController {
                     .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                     .body(file);
         } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/downloadfilterDepartmentWiseCount")
+    public ResponseEntity<Resource> downloadfilterDepartmentWiseCount(HttpServletRequest request,
+                                                 @Parameter(value = "startdate", required = true) String startdate,
+                                                 @Parameter(value = "enddate", required = true) String enddate,
+                                                 @Parameter(value = "type", required = true) String type,
+                                                 @Parameter(value = "priority", required = true) String priority,
+                                                 @Parameter(value = "status", required = true) String status) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            HashMap<String, String> map = new HashMap<>();
+            String name="_";
+            if (priority != null&&!priority.isEmpty()) {
+                map.put("priority", priority);
+            }
+            if (status != null&&!status.isEmpty()) {
+                map.put("status", status);
+            }
+            if (type!=null&&!type.isEmpty()) {
+                map.put("type", type);
+                WorkFlowProcessMasterValue wm= workFlowProcessMasterValueService.find(context,UUID.fromString(type));
+                if(wm!=null) {
+                    if (wm.getPrimaryvalue().equalsIgnoreCase("Draft")) {
+                        map.put("draft", "draft");
+                        name="EFile";
+                    } else {
+                        map.put("tapal", "tapal");
+                        name="Tapal";
+                    }
+                }
+            }
+            System.out.println(map);
+
+            String filename = "DepartmentWiseTotal_"+name+"count.xlsx";
+            List<Object[]> list = workflowProcessService.filterDepartmentWiseCountDownload(context, map,startdate,enddate);
+            System.out.println("List----"+list.size());
+            List<DepartmentDTO> rests = list.stream().filter(d->d[0]!=null&&d[1]!=null).map(d -> {
+                DepartmentDTO dd=new DepartmentDTO();
+                dd.setName(d[0].toString());
+                dd.setCount(Long.parseLong(d[1].toString()));
+                return dd;
+            }).collect(Collectors.toList());
+            ByteArrayInputStream in = ExcelHelper.tutorialsToExceldEPARTMENT(rests);
+            InputStreamResource file = new InputStreamResource(in);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(file);
+        } catch (SQLException e) {
+            System.out.println("error :"+e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+
+    @RequestMapping(method = RequestMethod.GET, value = "/userlist")
+    public ResponseEntity<Resource> userlist(HttpServletRequest request) {
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            HashMap<String, String> map = new HashMap<>();
+
+
+            String filename = "userlist.xlsx";
+            List<EPerson> list = ePersonService.getall(context);
+
+            ByteArrayInputStream in = ExcelHelper.tutorialsToExceldEpersion(list);
+            InputStreamResource file = new InputStreamResource(in);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(file);
+        } catch (SQLException e) {
+            System.out.println("error :"+e.getMessage());
             throw new RuntimeException(e.getMessage(), e);
         }
     }

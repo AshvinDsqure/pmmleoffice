@@ -31,5 +31,6 @@ public interface WorkFlowProcessDraftDetailsService extends DSpaceObjectService<
     public List<WorkFlowProcessDraftDetails> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public int countRows(Context context) throws SQLException;
     WorkFlowProcessDraftDetails getbyDocumentsignator(Context context, UUID workflowprocessid) throws SQLException;
+    List<WorkFlowProcessDraftDetails> getbyDocumentsignator(Context context,int limit) throws SQLException;
 
 }

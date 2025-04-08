@@ -61,6 +61,12 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsebyallusers")
     private WorkFlowProcessMasterValue responsebyallusers = null;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "epersontoepersonmapping")
+    private EpersonToEpersonMapping epersontoepersonmapping;
+
+
     @JsonProperty
     @Column(name = "sequence")
     private Integer sequence;
@@ -304,5 +310,14 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
 
     public void setIsdraftreview(Boolean isdraftreview) {
         this.isdraftreview = isdraftreview;
+    }
+
+
+    public EpersonToEpersonMapping getEpersontoepersonmapping() {
+        return epersontoepersonmapping;
+    }
+
+    public void setEpersontoepersonmapping(EpersonToEpersonMapping epersontoepersonmapping) {
+        this.epersontoepersonmapping = epersontoepersonmapping;
     }
 }

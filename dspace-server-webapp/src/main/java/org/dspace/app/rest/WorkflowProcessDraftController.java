@@ -152,6 +152,9 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
     @Autowired
     private WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
+    @Autowired
+    private EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @ExceptionHandler(MissingParameterException.class)
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD})
@@ -195,6 +198,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest.get());
             //perfome and stor to db
             workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
             if (workFlowProcessRest1 != null && workFlowProcessRest1.getWorkFlowProcessCommentRest() != null) {
 //comment add new flow
@@ -528,6 +532,13 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
             if (workFlowUserTypOptional.isPresent()) {
                 workflowProcessEpersonSubmitor.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(), utils.obtainProjection()));
+            }
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                EpersonToEpersonMappingRest rest=epersonToEpersonMappingConverter.convert(map.get(),utils.obtainProjection());
+                workflowProcessEpersonSubmitor.setEpersonToEpersonMappingRest(rest);
+            }else{
+                throw new RuntimeException("Eperson To EpersonMapping not FOUND.");
             }
             workflowProcessEpersonSubmitor.setePersonRest(ePersonRest);
             return workflowProcessEpersonSubmitor;

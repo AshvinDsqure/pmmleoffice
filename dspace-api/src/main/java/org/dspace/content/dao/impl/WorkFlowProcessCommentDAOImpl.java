@@ -53,7 +53,6 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
         query.setParameter("isdraftsave", true);
         return (WorkFlowProcessComment) query.getSingleResult();
     }
-
     @Override
     public WorkFlowProcessComment findCommentBySubmiterandWorkflowProcessID(Context context, UUID submiter, UUID workflowprocessid) throws SQLException {
         Query query = createQuery(context, "SELECT c FROM WorkFlowProcessComment as c join c.workFlowProcess  as wp  join c.submitter as sub  WHERE wp.id=:workflowprocessid and sub.id=:submiter");

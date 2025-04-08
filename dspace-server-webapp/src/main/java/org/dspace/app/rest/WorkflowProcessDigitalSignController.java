@@ -178,9 +178,12 @@ public class WorkflowProcessDigitalSignController {
             ListTokenRequest listTokenRequest = new ListTokenRequest();
             listTokenRequest.setTokenStatus(Token_Status.CONNECTED);
             listTokenRequest.setTokenType(Token_Type.HARDWARE); // Token_Type.ALL for windows certificate
-             data = bridge.encListToken(listTokenRequest);
+            data = bridge.encListToken(listTokenRequest);
             req.setEncryptedRequest(data.getEncryptedData());
             req.setEncryptionKeyId(data.getEncryptionKeyID());
+            req.setStatus(data.getStatus());
+            req.setErrorCode(data.getErrorCode());
+            req.setErrorMsg(data.getErrorMsg());
             return req;
         }catch (Exception e){
             e.printStackTrace();
@@ -219,6 +222,9 @@ public class WorkflowProcessDigitalSignController {
             Request data = bridge.encListCertificate(listCertRequest);
             req.setEncryptedRequest(data.getEncryptedData());
             req.setEncryptionKeyId(data.getEncryptionKeyID());
+            req.setErrorMsg(data.getErrorMsg());
+            req.setStatus(data.getStatus());
+            req.setErrorCode(data.getErrorCode());
             return req;
         } catch (Exception e) {
             e.printStackTrace();
@@ -247,111 +253,125 @@ public class WorkflowProcessDigitalSignController {
     public RequestData pdfSignRequest(@RequestBody EmudraRequestData request,HttpServletRequest requests) throws Exception {
         Context context = ContextUtil.obtainContext(requests);
         context.turnOffAuthorisationSystem();
-        this.isdraftnotesin=false;
-        InputStream fileInputa = null;
-        System.out.println("::::::pdfSign::::");
-        RequestData rest = request.getRequstedData();
-        final String TEMP_DIRECTORY=getFolderTmp("UnSign");
         RequestData req = new RequestData();
-        String emBridgeLicense = configurationService.getProperty("em.bridge.license");
-        String emBridgeLogs = configurationService.getProperty("em.bridge.logs");
-        emBridge bridge = new emBridge(emBridgeLicense, emBridgeLogs);
-        // Initiate emBridge Object
-        List<emBridgeSignerInput> inputs = new ArrayList<>();
-        // Get All pdf files from provided folder
-        Iterator<Path> paths=null;
-        String s = null;
-        System.out.println("doc id" + rest.getDocumentuuid());
-        WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(rest.getDocumentuuid()));
-       WorkflowProcess workflowProcess= workflowProcessReferenceDoc.getWorkflowProcess();
-        if (workflowProcessReferenceDoc != null) {
-            WorkflowProcessReferenceDocVersion workflowProcessReferenceDocVersion = workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().stream().filter(i -> i.getIsactive()).findFirst().get();
-            if (workflowProcessReferenceDocVersion != null && workflowProcessReferenceDocVersion.getEditortext() != null) {
-                Random random = new Random();
-                // Generate a random 4-digit number
-                int randomNumber = random.nextInt(9000) + 1000;
-                File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + randomNumber + ".pdf");
-                if (!tempFile1html.exists()) {
-                    try {
-                        tempFile1html.createNewFile();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+        try {
+            this.isdraftnotesin = false;
+            InputStream fileInputa = null;
+            System.out.println("::::::pdfSign::::");
+            RequestData rest = request.getRequstedData();
+            final String TEMP_DIRECTORY = getFolderTmp("UnSign");
+
+            String emBridgeLicense = configurationService.getProperty("em.bridge.license");
+            String emBridgeLogs = configurationService.getProperty("em.bridge.logs");
+            emBridge bridge = new emBridge(emBridgeLicense, emBridgeLogs);
+            // Initiate emBridge Object
+            List<emBridgeSignerInput> inputs = new ArrayList<>();
+            // Get All pdf files from provided folder
+            Iterator<Path> paths = null;
+            String s = null;
+            System.out.println("doc id" + rest.getDocumentuuid());
+            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(rest.getDocumentuuid()));
+            WorkflowProcess workflowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
+
+
+
+            if (workflowProcessReferenceDoc != null) {
+                WorkflowProcessReferenceDocVersion workflowProcessReferenceDocVersion = workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().stream().filter(i -> i.getIsactive()).findFirst().get();
+                if (workflowProcessReferenceDocVersion != null && workflowProcessReferenceDocVersion.getEditortext() != null) {
+                    Random random = new Random();
+                    // Generate a random 4-digit number
+                    int randomNumber = random.nextInt(9000) + 1000;
+                    File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + randomNumber + ".pdf");
+                    if (!tempFile1html.exists()) {
+                        try {
+                            tempFile1html.createNewFile();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
                     }
+                    System.out.println("TEMP_DIRECTORY1::" + TEMP_DIRECTORY);
+                    fileInputa = createFinalDraftDoc(context, workflowProcessReferenceDocVersion, tempFile1html, workflowProcess);
+                    paths = Files
+                            .newDirectoryStream(Paths.get(TEMP_DIRECTORY), path -> path.toString().endsWith(".pdf")).iterator();
+
                 }
-                System.out.println("TEMP_DIRECTORY1::"+TEMP_DIRECTORY);
-                fileInputa = createFinalDraftDoc(context, workflowProcessReferenceDocVersion, tempFile1html,workflowProcess);
-                paths = Files
-                        .newDirectoryStream(Paths.get(TEMP_DIRECTORY), path -> path.toString().endsWith(".pdf")).iterator();
-
             }
-        }
-        // Read all pdf files and create base64
-        while (paths.hasNext()) {
-            Path path = paths.next();
-            File pdf = path.toFile();
-            InputStream pdfFile = new FileInputStream(pdf);
-            byte[] pdfBytes = new byte[(int) pdf.length()];
-            pdfFile.read(pdfBytes, 0, pdfBytes.length);
-            pdfFile.close();
-            String pdfStr = Base64.encodeBase64String(pdfBytes);
-            //System.out.println("pdfstr::"+pdfStr);
+            // Read all pdf files and create base64
+            while (paths.hasNext()) {
+                Path path = paths.next();
+                File pdf = path.toFile();
+                InputStream pdfFile = new FileInputStream(pdf);
+                byte[] pdfBytes = new byte[(int) pdf.length()];
+                pdfFile.read(pdfBytes, 0, pdfBytes.length);
+                pdfFile.close();
+                String pdfStr = Base64.encodeBase64String(pdfBytes);
+                //System.out.println("pdfstr::"+pdfStr);
 
-            //single pdf sign
-            System.out.println("Coordinates.BottomRight::::;;"+Coordinates.BottomMiddle);
-          //  emBridgeSignerInput input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution",context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.BottomRight, "", false);
+                //single pdf sign
+                System.out.println("Coordinates.BottomRight::::;;" + Coordinates.BottomMiddle);
+                //  emBridgeSignerInput input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution",context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.BottomRight, "", false);
 //            String Cordinate=PDFTextSearch.getCordinate(path.toAbsolutePath().toString(),"Signature_1");
 //            System.out.println("cordinate ::::"+Cordinate);
 //            String c="1-"+Cordinate;
 //
-            int pageno= PDFTextSearch.getPageNumberByText(1,path.toAbsolutePath().toString());
-            System.out.println("page number :::"+pageno);
-            String Cordinate=PDFTextSearch.getCordinate(path.toAbsolutePath().toString(),"Signature_",pageno);
-            int p=pageno+1;
-            String c=p+"-"+Cordinate;
-            System.out.println("cordinate ::::"+c);
+                int pageno = PDFTextSearch.getPageNumberByText(1, path.toAbsolutePath().toString());
+                System.out.println("page number :::" + pageno);
+                String Cordinate="408,410,574,456";
+                if(pageno<0) {
+                    pageno = 0;
+                }
+                else{
+                    Cordinate = PDFTextSearch.getCordinate(path.toAbsolutePath().toString(), "Signature_", pageno);
+                }
+                int p = pageno + 1;
 
+                String c = p + "-" + Cordinate;
+                String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
+                String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
+                emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
+                        c, "Name : " + context.getCurrentUser().getFullName() + "\nLocation:" + location + ".\nReason:" + reason + "", false);
 
+                //cosign-multiple sign
+                //emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true, "1-377,300,547,370;1-121,300,291,370", "Name:Solomon\nReason:Testing", false);
 
-            String location=(request.getRequstedData().getLocation()!=null?request.getRequstedData().getLocation():"-");
-            String reason=(request.getRequstedData().getReason()!=null?request.getRequstedData().getReason():"-");
-            emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
-                    c, "Name : "+context.getCurrentUser().getFullName()+"\nLocation:"+location+".\nReason:"+reason+"", false);
-
-            //cosign-multiple sign
-            //emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true, "1-377,300,547,370;1-121,300,291,370", "Name:Solomon\nReason:Testing", false);
-
-            // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(),
-            // "Bangalore", "Distribution", "eMudhra Limited",true, Coordinates.BottomRight,
-            // "1,2,3");
-            // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(), "",
-            // "","eMudhra Limited", true, "1-425,100,545,160;2-225,725,345,785","",false);
-            inputs.add(emSignerInputforMultipleSignature4);
+                // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(),
+                // "Bangalore", "Distribution", "eMudhra Limited",true, Coordinates.BottomRight,
+                // "1,2,3");
+                // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(), "",
+                // "","eMudhra Limited", true, "1-425,100,545,160;2-225,725,345,785","",false);
+                inputs.add(emSignerInputforMultipleSignature4);
+            }
+            // Initiate PKCSBulkPdfHashSignRequest Object
+            PKCSBulkPdfHashSignRequest pKCSBulkPdfHashSignRequest = new PKCSBulkPdfHashSignRequest();
+            // Add data to PKCSBulkPdfHashSignRequest's Object
+            pKCSBulkPdfHashSignRequest.setBulkInput(inputs);
+            pKCSBulkPdfHashSignRequest.setTempFolder(TEMP_DIRECTORY);
+            if (rest.getKeyStoreDisplayName() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyStoreDisplayName(rest.getKeyStoreDisplayName()); // token name
+            }
+            if (rest.getKeyStorePassphrase() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyStorePassphrase(rest.getKeyStorePassphrase());// token's password
+            }
+            if (rest.getKeyId() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyId(rest.getKeyId());// certificates id
+            }
+            Request bulkPKCSSignRequest = bridge.encPKCSBulkSign(pKCSBulkPdfHashSignRequest);
+            String r1 = bulkPKCSSignRequest.getEncryptedData();
+            String r2 = bulkPKCSSignRequest.getEncryptionKeyID();
+            req.setEncryptedRequest(r1);
+            req.setEncryptionKeyId(r2);
+            req.setErrorMsg(bulkPKCSSignRequest.getErrorMsg());
+            req.setStatus(bulkPKCSSignRequest.getStatus());
+            req.setErrorCode(bulkPKCSSignRequest.getErrorCode());
+            req.setTempfilepath(bulkPKCSSignRequest.getTempFilePath());
+            req.setTempfolder(TEMP_DIRECTORY);
+            this.isdraftnotesin = true;
+            return req;
+        }catch (Exception e){
+            e.printStackTrace();
+            throw  new RuntimeException(e.getMessage());
         }
-        // Initiate PKCSBulkPdfHashSignRequest Object
-        PKCSBulkPdfHashSignRequest pKCSBulkPdfHashSignRequest = new PKCSBulkPdfHashSignRequest();
-        // Add data to PKCSBulkPdfHashSignRequest's Object
-        pKCSBulkPdfHashSignRequest.setBulkInput(inputs);
-        pKCSBulkPdfHashSignRequest.setTempFolder(TEMP_DIRECTORY);
-        if (rest.getKeyStoreDisplayName() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyStoreDisplayName(rest.getKeyStoreDisplayName()); // token name
-        }
-        if (rest.getKeyStorePassphrase() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyStorePassphrase(rest.getKeyStorePassphrase());// token's password
-        }
-        if (rest.getKeyId() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyId(rest.getKeyId());// certificates id
-        }
-        // Generate encrrypted request for PKCSBulkSign API Call
-        Request bulkPKCSSignRequest = bridge.encPKCSBulkSign(pKCSBulkPdfHashSignRequest);
-        String r1 = bulkPKCSSignRequest.getEncryptedData();
-        String r2 = bulkPKCSSignRequest.getEncryptionKeyID();
-        req.setEncryptedRequest(r1);
-        req.setEncryptionKeyId(r2);
-        req.setTempfilepath(bulkPKCSSignRequest.getTempFilePath());
-        req.setTempfolder(TEMP_DIRECTORY);
-        this.isdraftnotesin=true;
-        return req;
     }
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
@@ -359,146 +379,90 @@ public class WorkflowProcessDigitalSignController {
     public RequestData pdfSignRequestNote(@RequestBody EmudraRequestData request,HttpServletRequest requests) throws Exception {
         Context context = ContextUtil.obtainContext(requests);
         context.turnOffAuthorisationSystem();
-        InputStream fileInputa = null;
-        System.out.println("::::::pdfSign::::");
-        RequestData rest = request.getRequstedData();
-
-        final String TEMP_DIRECTORY=getFolderTmp("UnSign");
         RequestData req = new RequestData();
-        String emBridgeLicense = configurationService.getProperty("em.bridge.license");
-        String emBridgeLogs = configurationService.getProperty("em.bridge.logs");
-        emBridge bridge = new emBridge(emBridgeLicense, emBridgeLogs);
-        // Initiate emBridge Object
-        List<emBridgeSignerInput> inputs = new ArrayList<>();
-        // Get All pdf files from provided folder
-        Iterator<Path> paths=null;
-        String pathe = null;
-        Integer index=0;
-        System.out.println("doc id" + rest.getDocumentuuid());
-        WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(rest.getDocumentuuid()));
-        if (workflowProcessReferenceDoc != null) {
-
-              WorkflowProcess workFlowProcess=workflowProcessReferenceDoc.getWorkflowProcess();
-              if(workFlowProcess!=null){
-                  Optional<Integer> countFalseIssignnote = workFlowProcess.getWorkflowProcessEpeople().stream()
-                          .filter(d ->d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).map(d->d.getIndex()).findFirst();
-                  if(countFalseIssignnote.isPresent()){
-                    index=countFalseIssignnote.get();
-                     index=index+1;
-                      System.out.println(":::::::::::::index::::::::"+index);
-                  }
-              }
-                Random random = new Random();
-                // Generate a random 4-digit number
-                int randomNumber = random.nextInt(9000) + 1000;
-                File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + randomNumber + ".pdf");
-                if (!tempFile1html.exists()) {
-                    try {
-                        tempFile1html.createNewFile();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+        try {
+            InputStream fileInputa = null;
+            System.out.println("::::::pdfSign::::");
+            RequestData rest = request.getRequstedData();
+            final String TEMP_DIRECTORY = getFolderTmp("UnSign");
+            String emBridgeLicense = configurationService.getProperty("em.bridge.license");
+            String emBridgeLogs = configurationService.getProperty("em.bridge.logs");
+            emBridge bridge = new emBridge(emBridgeLicense, emBridgeLogs);
+            // Initiate emBridge Object
+            List<emBridgeSignerInput> inputs = new ArrayList<>();
+            // Get All pdf files from provided folder
+            Iterator<Path> paths = null;
+            String pathe = null;
+            Integer index = 0;
+            System.out.println("doc id" + rest.getDocumentuuid());
+            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(rest.getDocumentuuid()));
+            if (workflowProcessReferenceDoc != null) {
+                WorkflowProcess workFlowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
+                if (workFlowProcess != null) {
+                    Optional<Integer> countFalseIssignnote = workFlowProcess.getWorkflowProcessEpeople().stream()
+                            .filter(d -> d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).map(d -> d.getIndex()).findFirst();
+                    if (countFalseIssignnote.isPresent()) {
+                        index = countFalseIssignnote.get();
+                        index = index + 1;
+                        System.out.println(":::::::::::::index::::::::" + index);
                     }
                 }
-                System.out.println("TEMP_DIRECTORY1::"+TEMP_DIRECTORY);
-               fileInputa = bitstreamService.retrieve(context, workflowProcessReferenceDoc.getBitstream());
-               byte[] pdfBytes1= inputStreamToByteArray(fileInputa);
-                pathe= dsBitStoreService.getFilePath(workflowProcessReferenceDoc.getBitstream());
+                System.out.println("TEMP_DIRECTORY1::" + TEMP_DIRECTORY);
+                fileInputa = bitstreamService.retrieve(context, workflowProcessReferenceDoc.getBitstream());
+                byte[] pdfBytes1 = inputStreamToByteArray(fileInputa);
+                pathe = dsBitStoreService.getFilePath(workflowProcessReferenceDoc.getBitstream());
+                String pdfStr = Base64.encodeBase64String(pdfBytes1);
 
-            String pdfStr = Base64.encodeBase64String(pdfBytes1);
+                int pageno = PDFTextSearch.getPageNumberByText(1, pathe);
+                System.out.println("page number :::" + pageno);
+                String Cordinate = PDFTextSearch.getCordinate(pathe, "Signature_", pageno);
+                int p = pageno + 1;
+                String c = p + "-" + Cordinate;
+                System.out.println("cordinate ::::" + c);
 
-           int pageno= PDFTextSearch.getPageNumberByText(1,pathe);
-            System.out.println("page number :::"+pageno);
-            String Cordinate=PDFTextSearch.getCordinate(pathe,"Signature_",pageno);
-            int p=pageno+1;
-            String c=p+"-"+Cordinate;
-            System.out.println("cordinate ::::"+c);
 
-            String location=(request.getRequstedData().getLocation()!=null?request.getRequstedData().getLocation():"-");
-            String reason=(request.getRequstedData().getReason()!=null?request.getRequstedData().getReason():"-");
-            emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
-                    c, "Name:"+context.getCurrentUser().getFullName()+"\nLocation:"+location+"\nReason:"+reason+"", false);
+                String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
+                String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
+                emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
+                        c, "Name:" + context.getCurrentUser().getFullName() + "\nLocation:" + location + "\nReason:" + reason + "", false);
 
-            inputs.add(emSignerInputforMultipleSignature4);
-            System.out.println("path:>>>>>>>:"+pathe);
-
-                //PdfUtils.writeInputStreamToPDF(fileInputa,tempFile1html.getAbsolutePath());
-                //paths = Files
-                  //      .newDirectoryStream(Paths.get(TEMP_DIRECTORY), path -> path.toString().endsWith(".pdf")).iterator();
-
+                inputs.add(emSignerInputforMultipleSignature4);
+                System.out.println("path:>>>>>>>:" + pathe);
+            }
+            PKCSBulkPdfHashSignRequest pKCSBulkPdfHashSignRequest = new PKCSBulkPdfHashSignRequest();
+            pKCSBulkPdfHashSignRequest.setBulkInput(inputs);
+            pKCSBulkPdfHashSignRequest.setTempFolder(TEMP_DIRECTORY);
+            if (rest.getKeyStoreDisplayName() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyStoreDisplayName(rest.getKeyStoreDisplayName()); // token name
+            }else{
+                throw new RuntimeException("KeyStore Display Name Not FOUND!; ");
+            }
+            if (rest.getKeyStorePassphrase() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyStorePassphrase(rest.getKeyStorePassphrase());// token's password
+            }else{
+                throw new RuntimeException("Key StorePassphrase Not FOUND!; ");
+            }
+            if (rest.getKeyId() != null) {
+                pKCSBulkPdfHashSignRequest.setKeyId(rest.getKeyId());// certificates id
+            }else{
+                throw new RuntimeException("Key KeyId Not FOUND!; ");
+            }
+            Request bulkPKCSSignRequest = bridge.encPKCSBulkSign(pKCSBulkPdfHashSignRequest);
+            String r1 = bulkPKCSSignRequest.getEncryptedData();
+            String r2 = bulkPKCSSignRequest.getEncryptionKeyID();
+            req.setErrorMsg(bulkPKCSSignRequest.getErrorMsg());
+            req.setErrorCode(bulkPKCSSignRequest.getErrorCode());
+            req.setStatus(bulkPKCSSignRequest.getStatus());
+            req.setEncryptedRequest(r1);
+            req.setEncryptionKeyId(r2);
+            req.setTempfilepath(bulkPKCSSignRequest.getTempFilePath());
+            req.setTempfolder(TEMP_DIRECTORY);
+            //this.isdraftnotesin=true;
+            return req;
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(""+e.getMessage());
         }
-
-
-        // Read all pdf files and create base64
-//        while (paths.hasNext()) {
-//            Path path = paths.next();
-//            File pdf = path.toFile();
-//            InputStream pdfFile = new FileInputStream(pdf);
-//            byte[] pdfBytes = new byte[(int) pdf.length()];
-//            pdfFile.read(pdfBytes, 0, pdfBytes.length);
-//            pdfFile.close();
-
-            //System.out.println("pdfstr::"+pdfStr);
-
-            //single pdf sign
-  //          System.out.println("Coordinates.BottomRight::::;;"+Coordinates.BottomMiddle);
-//            emBridgeSignerInput input=null;
-//           if(index==1) {
-//               input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution", context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.TopRight, "", false);
-//           }
-//            if(index==2) {
-//                input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution", context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.BottomMiddle, "", false);
-//            }
-//            if(index==3) {
-//               input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution", context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.BottomRight, "", false);
-//            }_Signature_"+i+"Name_:
-
-//            int pageno= PDFTextSearch.getPageNumberByText(index,pathe);
-//            String Cordinate=PDFTextSearch.getCordinate(pathe,"Signature_"+index+"_Name:",pageno);
-//           int p=pageno+1;
-//            String c=p+"-"+Cordinate;
-//            System.out.println("cordinate ::::"+c);
-//            String location=(request.getRequstedData().getLocation()!=null?request.getRequstedData().getLocation():"-");
-//            String reason=(request.getRequstedData().getReason()!=null?request.getRequstedData().getReason():"-");
-//
-//             String page=String.valueOf(pageno);
-//            emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
-//                    c, "Name:"+context.getCurrentUser().getFullName()+"\nLocation:"+location+"\nReason:"+reason+"", false);
-
-            //cosign-multiple sign
-            //emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true, "1-377,300,547,370;1-121,300,291,370", "Name:Solomon\nReason:Testing", false);
-
-            // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(),
-            // "Bangalore", "Distribution", "eMudhra Limited",true, Coordinates.BottomRight,
-            // "1,2,3");
-            // emBridgeSignerInput input = new emBridgeSignerInput(pdfStr,pdf.getName(), "",
-            // "","eMudhra Limited", true, "1-425,100,545,160;2-225,725,345,785","",false);
-//            inputs.add(emSignerInputforMultipleSignature4);
-//        }
-        // Initiate PKCSBulkPdfHashSignRequest Object
-        PKCSBulkPdfHashSignRequest pKCSBulkPdfHashSignRequest = new PKCSBulkPdfHashSignRequest();
-        // Add data to PKCSBulkPdfHashSignRequest's Object
-        pKCSBulkPdfHashSignRequest.setBulkInput(inputs);
-        pKCSBulkPdfHashSignRequest.setTempFolder(TEMP_DIRECTORY);
-        if (rest.getKeyStoreDisplayName() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyStoreDisplayName(rest.getKeyStoreDisplayName()); // token name
-        }
-        if (rest.getKeyStorePassphrase() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyStorePassphrase(rest.getKeyStorePassphrase());// token's password
-        }
-        if (rest.getKeyId() != null) {
-            pKCSBulkPdfHashSignRequest.setKeyId(rest.getKeyId());// certificates id
-        }
-        // Generate encrrypted request for PKCSBulkSign API Call
-        Request bulkPKCSSignRequest = bridge.encPKCSBulkSign(pKCSBulkPdfHashSignRequest);
-        String r1 = bulkPKCSSignRequest.getEncryptedData();
-        String r2 = bulkPKCSSignRequest.getEncryptionKeyID();
-        req.setEncryptedRequest(r1);
-        req.setEncryptionKeyId(r2);
-        req.setTempfilepath(bulkPKCSSignRequest.getTempFilePath());
-        req.setTempfolder(TEMP_DIRECTORY);
-        //this.isdraftnotesin=true;
-        return req;
     }
 
 
@@ -532,13 +496,17 @@ public class WorkflowProcessDigitalSignController {
            if (sign != null) {
                req.setBitstreampid(sign.getID().toString());
            }
+           req.setErrorMsg(apiResponse.getErrorMsg());
+           req.setStatus(apiResponse.getStatus());
+           req.setErrorCode(apiResponse.getErrorCode());
            return req;
        }catch (Exception e){
            e.printStackTrace();
-           return null;
+          throw new RuntimeException(e.getMessage());
        }
     }
-//    public static String getFolderTmp(String foldername){
+
+    //    public static String getFolderTmp(String foldername){
 //        final String TEMP_DIRECTORY1 = System.getProperty("java.io.tmpdir");
 //        Date now = new Date(System.currentTimeMillis() + 3 * 60 * 1000);
 //        String sdf = new SimpleDateFormat("ddMMMyyyyHHmmss").format(now);
@@ -564,96 +532,98 @@ public class WorkflowProcessDigitalSignController {
 
     public  Bitstream generatePDFFile(Context context,ResponseDataPKCSBulkSign serviceResponse, RequestData request) throws Exception {
        Bitstream bitstreamsing=null;
-        String filePath = request.getTempfilepath();
-        String folderpath= request.getTempfolder();
-        System.out.println("folder "+filePath);
-        System.out.println("filePath "+folderpath);
-        WorkflowProcess workflowProcess=null;
-        String name="";
-        if(request.getDocumentuuid()!=null) {
-            WorkflowProcessReferenceDoc doc = workflowProcessReferenceDocService.find(context, UUID.fromString(request.getDocumentuuid()));
-            if (doc != null) {
-                int i =   doc.getIndex()!=null?doc.getIndex():1;
 
-                name="document"+i;
+       try {
+           String filePath = request.getTempfilepath();
+           String folderpath = request.getTempfolder();
+           System.out.println("folder " + filePath);
+           System.out.println("filePath " + folderpath);
+           WorkflowProcess workflowProcess = null;
+           String name = "";
+           if (request.getDocumentuuid() != null) {
+               WorkflowProcessReferenceDoc doc = workflowProcessReferenceDocService.find(context, UUID.fromString(request.getDocumentuuid()));
+               if (doc != null) {
+                   int i = doc.getIndex() != null ? doc.getIndex() : 1;
+                   name = "document" + i;
+               } else {
+                   name = "document";
+               }
+           }
+           File tempFile = new File(filePath);
+           SimpleDateFormat tsFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+           Date now = new Date(System.currentTimeMillis() + 3 * 60 * 1000);
+           String timeStamp = tsFormat.format(now);
+           System.out.println("time Stamp" + timeStamp);
+           String sdf = new SimpleDateFormat("ddMMMyyyyHHmmss").format(now);
+           final String TEMP_DIRECTORY1 = getFolderTmp("Sign");
+           int count = 1;
+           for (BulkSignOutput doc : serviceResponse.getBulkSignItems()) {
+               Random random = new Random();
+               // Generate a random 4-digit number
+               int randomNumber = random.nextInt(9000) + 1000;
+               byte[] signedDocBytes = Base64.decodeBase64(doc.getSignedData());
+               File file = new File(TEMP_DIRECTORY1, "sing_" + name + "_"+randomNumber+".pdf");
+               System.out.println("sing doc" + file.getAbsolutePath());
+               OutputStream os = new FileOutputStream(file);
+               os.write(signedDocBytes);
+               os.close();
+               count++;
+               FileInputStream outputfile = new FileInputStream(new File(file.getAbsolutePath()));
+               System.out.println(" sing doc file.getAbsolutePath() " + file.getAbsolutePath());
+               Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", file.getName());
+               bitstreamsing = bitstream;
 
-            }else{
-
-                name="document";
-
-            }
-        }
-        File tempFile = new File(filePath);
-        SimpleDateFormat tsFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        Date now = new Date(System.currentTimeMillis() + 3 * 60 * 1000);
-        String timeStamp = tsFormat.format(now);
-        System.out.println("time Stamp" + timeStamp);
-        String sdf = new SimpleDateFormat("ddMMMyyyyHHmmss").format(now);
-        final String TEMP_DIRECTORY1 =getFolderTmp("Sign");
-        int count = 1;
-        for (BulkSignOutput doc : serviceResponse.getBulkSignItems()) {
-            Random random = new Random();
-            // Generate a random 4-digit number
-            int randomNumber = random.nextInt(9000) + 1000;
-            byte[] signedDocBytes = Base64.decodeBase64(doc.getSignedData());
-            File file = new File(TEMP_DIRECTORY1,"sing_"+name+".pdf");
-            System.out.println("sing doc"+ file.getAbsolutePath());
-            OutputStream os = new FileOutputStream(file);
-            os.write(signedDocBytes);
-            os.close();
-            count++;
-            FileInputStream outputfile = new FileInputStream(new File(file.getAbsolutePath()));
-            System.out.println(" sing doc file.getAbsolutePath() "+ file.getAbsolutePath());
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", file.getName());
-            bitstreamsing=bitstream;
-            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(request.getDocumentuuid()));
-            workflowProcess=workflowProcessReferenceDoc.getWorkflowProcess();
-            if (workflowProcessReferenceDoc != null) {
-                Optional<WorkflowProcessReferenceDocVersion> workflowProcessReferenceDocVersion = workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().stream().filter(d->d!=null).filter(i -> i.getIsactive()).findFirst();
-               if(workflowProcessReferenceDocVersion.isPresent()) {
-                   WorkflowProcessReferenceDocVersion v = workflowProcessReferenceDocVersionService.find(context, workflowProcessReferenceDocVersion.get().getID());
-                   if (v != null) {
-                       if (bitstream != null) {
-                           v.setBitstream(bitstream);
+               WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, UUID.fromString(request.getDocumentuuid()));
+               workflowProcess = workflowProcessReferenceDoc.getWorkflowProcess();
+               if (workflowProcessReferenceDoc != null) {
+                   Optional<WorkflowProcessReferenceDocVersion> workflowProcessReferenceDocVersion = workflowProcessReferenceDoc.getWorkflowProcessReferenceDocVersion().stream().filter(d -> d != null).filter(i -> i.getIsactive()).findFirst();
+                   if (workflowProcessReferenceDocVersion.isPresent()) {
+                       WorkflowProcessReferenceDocVersion v = workflowProcessReferenceDocVersionService.find(context, workflowProcessReferenceDocVersion.get().getID());
+                       if (v != null) {
+                           if (bitstream != null) {
+                               v.setBitstream(bitstream);
+                           }
+                           v.setIssign(true);
+                           workflowProcessReferenceDocVersionService.update(context, v);
+                           if (bitstream != null) {
+                               workflowProcessReferenceDoc.setBitstream(bitstream);
+                           }
+                           System.out.println("bitstreampdfsing::" + bitstream.getID());
                        }
-                       v.setIssign(true);
-                       workflowProcessReferenceDocVersionService.update(context, v);
-                       if (bitstream != null) {
-                           workflowProcessReferenceDoc.setBitstream(bitstream);
+                   }
+                   System.out.println("bitstreampdfsing::" + bitstream.getID());
+
+                   workflowProcessReferenceDoc.setBitstream(bitstreamsing);
+                   workflowProcessReferenceDoc.setIssignature(true);
+                   workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
+               }
+               if (workflowProcess != null && workflowProcess.getWorkFlowProcessDraftDetails() != null && workflowProcess.getWorkFlowProcessDraftDetails().getIssinglatter() == false) {
+                   if (workflowProcess.getWorkflowStatus() != null && workflowProcess.getWorkflowStatus().getPrimaryvalue().equalsIgnoreCase("Close")) {
+                       if (workflowProcess.getIsinternal() && workflowProcess.getWorkflowProcessSenderDiaryEpeople() != null) {
+                           if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
+                               createTapal(context, workflowProcess);
+                           }
                        }
-                       System.out.println("bitstreampdfsing::" + bitstream.getID());
                    }
                }
-                System.out.println("bitstreampdfsing::" + bitstream.getID());
 
-                workflowProcessReferenceDoc.setBitstream(bitstreamsing);
-                workflowProcessReferenceDoc.setIssignature(true);
-                workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
-            }
-            if(workflowProcess!=null&&workflowProcess.getWorkFlowProcessDraftDetails()!=null &&workflowProcess.getWorkFlowProcessDraftDetails().getIssinglatter()==false){
-                if(workflowProcess.getWorkflowStatus()!=null&&workflowProcess.getWorkflowStatus().getPrimaryvalue().equalsIgnoreCase("Close")) {
-                    if(workflowProcess.getIsinternal()&&workflowProcess.getWorkflowProcessSenderDiaryEpeople()!=null) {
-                        if(workflowProcess.getWorkflowType()!=null&&workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
-                            createTapal(context, workflowProcess);
-                        }
-                    }
-                }
-            }
-
-            if(workflowProcess!=null&&workflowProcess.getWorkFlowProcessDraftDetails()!=null &&workflowProcess.getWorkFlowProcessDraftDetails().getIssinglatter()==false){
-                if(workflowProcess.getIsinternal()&&workflowProcess.getWorkflowProcessSenderDiaryEpeople()!=null) {
-                    if(workflowProcess.getWorkflowType()!=null&&workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
-                        createTapal(context, workflowProcess);
-                    }
-                }
-            }
-            context.commit();
-          //  file.delete();
-        }
-        tempFile.delete();
-        deleteFolderTmp(folderpath);
-       return bitstreamsing;
-
+               if (workflowProcess != null && workflowProcess.getWorkFlowProcessDraftDetails() != null && workflowProcess.getWorkFlowProcessDraftDetails().getIssinglatter() == false) {
+                   if (workflowProcess.getIsinternal() && workflowProcess.getWorkflowProcessSenderDiaryEpeople() != null) {
+                       if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
+                           createTapal(context, workflowProcess);
+                       }
+                   }
+               }
+               context.commit();
+               //  file.delete();
+           }
+           tempFile.delete();
+           deleteFolderTmp(folderpath);
+           return bitstreamsing;
+       }catch (Exception e){
+           e.printStackTrace();
+           throw  new RuntimeException(""+e.getMessage());
+       }
     }
 
 
@@ -665,7 +635,6 @@ public class WorkflowProcessDigitalSignController {
         }
         System.out.println("already deleted");
     }
-
 
 // emudra APIS code end
 
@@ -692,10 +661,10 @@ public class WorkflowProcessDigitalSignController {
         Optional<WorkflowProcessSenderDiary> list=workflowProcess.getWorkflowProcessSenderDiaries().stream().filter(d->d.getStatus()==2).findFirst();
         if(workflowProcess!=null&&workflowProcess.getWorkflowProcessSenderDiaries()!=null&&workflowProcess.getWorkflowProcessSenderDiaries().size()!=0&&list.isPresent()) {
             System.out.println("in diry::::"+workflowProcess.getWorkflowProcessSenderDiaries().size());
+            sb.append("<p><b>To.</b>");
            for (WorkflowProcessSenderDiary to:workflowProcess.getWorkflowProcessSenderDiaries()) {
                 if(to.getStatus()==2) {
                     System.out.println(" :::::::::::");
-                    sb.append("<p><b>To.</b>");
                     if(to.getSendername()!=null) {
                         sb.append("<br><b>" + to.getSendername() + ",</b>\n");
                     }
@@ -717,21 +686,20 @@ public class WorkflowProcessDigitalSignController {
             }
         }else{
             if(workflowProcess.getIsinternal()&& workflowProcess.getWorkflowProcessSenderDiaryEpeople()!=null){
+                sb.append("<p><b>To.</b>");
                 for (WorkflowProcessSenderDiaryEperson to:workflowProcess.getWorkflowProcessSenderDiaryEpeople()) {
-
-                    if(to.getUsertype()!=null&&to.getUsertype().getPrimaryvalue().equalsIgnoreCase("To")) {
-                        sb.append("<p><b>To.</b>");
-                        if (to.getePerson() != null && to.getePerson().getFullName() != null) {
-                            sb.append("<br><b>" + to.getePerson().getFullName() + ",</b>\n");
+                        if (to.getUsertype() != null && to.getUsertype().getPrimaryvalue().equalsIgnoreCase("To")) {
+                            if (to.getePerson() != null && to.getePerson().getFullName() != null) {
+                                sb.append("<br><b>" + to.getePerson().getFullName() + ",</b>\n");
+                            }
+                            if (to.getePerson().getEmail() != null) {
+                                sb.append("<br>" + to.getePerson().getEmail() + ",\n");
+                            }
+                            if (to.getePerson().getDesignation() != null && to.getePerson().getDesignation().getPrimaryvalue() != null) {
+                                sb.append("<br>" + to.getePerson().getDesignation().getPrimaryvalue() + ",\n");
+                            }
+                            sb.append("</p> <br>");
                         }
-                        if (to.getePerson().getEmail() != null) {
-                            sb.append("<br>" + to.getePerson().getEmail() + ",\n");
-                        }
-                        if (to.getePerson().getDesignation() != null&&to.getePerson().getDesignation().getPrimaryvalue()!=null) {
-                            sb.append("<br>" + to.getePerson().getDesignation().getPrimaryvalue() + ",\n");
-                        }
-                        sb.append("</p> <br>");
-                    }
                 }
             }
         }
@@ -762,7 +730,7 @@ public class WorkflowProcessDigitalSignController {
             //System.out.println("HTML:::" + sb.toString());
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             int ii= jbpmServer.htmltopdf(sb.toString(),files);
-            //System.out.println("HTML CONVERT DONE::::::::::::::: :" + replyDraft.getAbsolutePath());
+            System.out.println("HTML CONVERT DONE::::::::::::::: :" + replyDraft.getAbsolutePath());
             FileInputStream draftFile = new FileInputStream(new File(replyDraft.getAbsolutePath()));
             FileInputStream marge=getMargedDoc(context,workflowProcess,draftFile,tempFile1html);
             return marge;
@@ -956,6 +924,9 @@ public class WorkflowProcessDigitalSignController {
                         .append("      },\n")
                         .append("      \"officeRest\": {\n")
                         .append("        \"uuid\": \"").append(ep.getOffice().getID()).append("\"\n")
+                        .append("      },\n")
+                        .append("      \"epersonToEpersonMappingRest\": {\n")
+                        .append("        \"uuid\": \"").append(ep.getEpersontoepersonmapping().getID()).append("\"\n")
                         .append("      },\n")
                         .append("      \"ePersonRest\": {\n")
                         .append("        \"uuid\": \"").append(ep.getePerson().getID()).append("\"\n")

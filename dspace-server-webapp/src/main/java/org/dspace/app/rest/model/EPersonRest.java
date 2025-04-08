@@ -7,14 +7,13 @@
  */
 package org.dspace.app.rest.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import org.dspace.app.rest.RestResourceController;
-import org.dspace.content.WorkFlowProcessMasterValue;
-
-import javax.persistence.Column;
 
 
 /**
@@ -47,6 +46,10 @@ public class EPersonRest extends DSpaceObjectRest {
     private Boolean selfRegistered;
     @JsonProperty
     private  String  employeeid;
+
+    @JsonProperty
+    private  String  epersonmapping;
+
     @JsonProperty
     private  Integer  tablenumber;
     @JsonProperty
@@ -55,6 +58,7 @@ public class EPersonRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest departmentRest=null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest designationRest=null;
+
     @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
     @JsonProperty
@@ -178,5 +182,13 @@ public class EPersonRest extends DSpaceObjectRest {
 
     public void setFullname(String fullname) {
         this.fullname = fullname;
+    }
+
+    public String getEpersonmapping() {
+        return epersonmapping;
+    }
+
+    public void setEpersonmapping(String epersonmapping) {
+        this.epersonmapping = epersonmapping;
     }
 }

@@ -61,6 +61,9 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
 
     @Column(name = "isdraftsave")
     private Boolean isdraftsave = false;
+
+    @Column(name = "margeddocuuid")
+    private String margeddocuuid;
     @Override
     public int getType() {
         return 0;
@@ -132,5 +135,13 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
 
     public void setIsdraftsave(Boolean isdraftsave) {
         this.isdraftsave = isdraftsave;
+    }
+
+    public String getMargeddocuuid() {
+        return margeddocuuid;
+    }
+
+    public void setMargeddocuuid(String margeddocuuid) {
+        this.margeddocuuid = margeddocuuid;
     }
 }

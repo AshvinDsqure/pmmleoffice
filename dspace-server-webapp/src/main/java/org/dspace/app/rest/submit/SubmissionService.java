@@ -144,7 +144,11 @@ public class SubmissionService {
             }
             wsi = workspaceItemService.create(context, collection, true);
             Item i = wsi.getItem();
-            itemService.addMetadata(context, i, "dc", "title", null, null,getFileNumber(context));
+            if(getFileNumber(context)!=null) {
+                itemService.addMetadata(context, i, "dc", "title", null, null, getFileNumber(context));
+            }else{
+                throw new  RuntimeException("FILE Number not Ganarate");
+            }
             itemService.addMetadata(context, i, "dc", "department", null, null, getDepartment(context));
             itemService.addMetadata(context, i, "dc", "office", null, null,getOffice(context));
 
@@ -160,9 +164,11 @@ public class SubmissionService {
     public  String getDepartment(Context context) throws SQLException {
         WorkFlowProcessMasterValue department;
         if (context.getCurrentUser() != null) {
-            department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
-            if (department.getPrimaryvalue() != null) {
-               return department.getPrimaryvalue();
+            if (context.getCurrentUser() != null) {
+                Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                if (map.isPresent()&&map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getDepartment().getPrimaryvalue()!=null) {
+                    return  map.get().getEpersonmapping().getDepartment().getPrimaryvalue();
+                }
             }
         }
         return "-";
@@ -170,9 +176,9 @@ public class SubmissionService {
     public  String getOffice(Context context) throws SQLException {
         WorkFlowProcessMasterValue department;
         if (context.getCurrentUser() != null) {
-            department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getOffice().getID());
-            if (department.getPrimaryvalue() != null) {
-                return department.getPrimaryvalue();
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()&&map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getOffice().getPrimaryvalue()!=null) {
+                return  map.get().getEpersonmapping().getOffice().getPrimaryvalue();
             }
         }
         return "-";
@@ -186,19 +192,19 @@ public class SubmissionService {
                 sb.append("F/PCMC/");
                 WorkFlowProcessMasterValue department;
                 if (currentuser != null) {
-                    department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
-                    if (department.getPrimaryvalue() != null) {
-                        sb.append(department.getSecondaryvalue());
+                    Optional<EpersonToEpersonMapping> map= currentuser.getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                    if (map.isPresent()) {
+                        sb.append(map.get().getEpersonmapping().getDepartment().getSecondaryvalue());
                     }
                 }
                 sb.append("/" + DateUtils.getFinancialYear());
                 int count = itemService.countFileNumberByVersion(context,true,false,DateUtils.getVersion());
-                System.out.println("count:::-->"+count);
                 sb.append("/0000" + count);
                 filenumber = sb.toString();
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Error in getInwardNumber ");
+                System.out.println("Error in File number ");
+                return null;
             }
             return filenumber;
         }

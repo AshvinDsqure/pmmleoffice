@@ -223,6 +223,16 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
     }
 
     @Override
+    public EPerson findByEmployeeID(Context context, String employeeID) throws SQLException {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder(context);
+        CriteriaQuery criteriaQuery = getCriteriaQuery(criteriaBuilder, EPerson.class);
+        Root<EPerson> ePersonRoot = criteriaQuery.from(EPerson.class);
+        criteriaQuery.select(ePersonRoot);
+        criteriaQuery.where(criteriaBuilder.equal(ePersonRoot.get(EPerson_.EMPLOYEEID), employeeID.toLowerCase()));
+        return uniqueResult(context, criteriaQuery, true, EPerson.class);
+    }
+
+    @Override
     public List<Object[]> getEPersonByOffice(Context context, UUID officeid) throws SQLException {
        try {
            StringBuffer sql = new StringBuffer("select DISTINCT CAST(wv.uuid AS TEXT) AS departmentid,\n" +
@@ -251,5 +261,20 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
            return null;
 
        }
+    }
+
+    @Override
+    public List<EPerson> getAllNotNull(Context context,int limit) throws SQLException {
+        try {
+            Query query = createQuery(context, "" +
+                    "SELECT DISTINCT ep FROM EPerson as ep where ep.department.id is not null and ep.office is not null and designation.id is not null and ep.ismap=:ismap");
+     query.setMaxResults(limit);
+            query.setParameter("ismap", false);
+            return query.getResultList();
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+
+        }
     }
 }

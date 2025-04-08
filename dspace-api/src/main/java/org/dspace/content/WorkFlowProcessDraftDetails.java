@@ -44,6 +44,11 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
     @JoinColumn(name = "documentsignator_id")
     private EPerson documentsignator;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "epersontoepersonmapping")
+    private EpersonToEpersonMapping epersontoepersonmapping;
+
+
     //for reply Inward screen
     //drafttype means doc type  notesheet or document,inward,outward,comment,referel
     @OneToOne(fetch = FetchType.LAZY)
@@ -226,5 +231,13 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
 
     public void setSapdocumenttype(WorkFlowProcessMasterValue sapdocumenttype) {
         this.sapdocumenttype = sapdocumenttype;
+    }
+
+    public EpersonToEpersonMapping getEpersontoepersonmapping() {
+        return epersontoepersonmapping;
+    }
+
+    public void setEpersontoepersonmapping(EpersonToEpersonMapping epersontoepersonmapping) {
+        this.epersontoepersonmapping = epersontoepersonmapping;
     }
 }

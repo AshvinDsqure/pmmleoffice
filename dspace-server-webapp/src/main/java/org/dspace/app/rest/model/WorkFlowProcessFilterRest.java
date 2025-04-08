@@ -97,6 +97,13 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
     private String sendercountry;
     @JsonProperty
     private String senderpincode;
+
+
+    @JsonProperty
+    private String startdate;
+    @JsonProperty
+    private String enddate;
+
     @Override
     public String getCategory() {
         return "workflowprocessefilter";
@@ -329,5 +336,21 @@ public class WorkFlowProcessFilterRest extends DSpaceObjectRest {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public String getStartdate() {
+        return startdate;
+    }
+
+    public void setStartdate(String startdate) {
+        this.startdate = startdate;
+    }
+
+    public String getEnddate() {
+        return enddate;
+    }
+
+    public void setEnddate(String enddate) {
+        this.enddate = enddate;
     }
 }

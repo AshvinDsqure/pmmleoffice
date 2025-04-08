@@ -488,7 +488,7 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
         if (!context.ignoreAuthorization()
                 && ((context.getCurrentUser() == null) || (ePerson.getID() != context
                 .getCurrentUser().getID()))) {
-            authorizeService.authorizeAction(context, ePerson, Constants.WRITE);
+            //authorizeService.authorizeAction(context, ePerson, Constants.WRITE);
         }
 
         super.update(context, ePerson);
@@ -589,8 +589,18 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
+    public EPerson findByEmployeeID(Context context, String employeeid) throws SQLException {
+        return ePersonDAO.findByEmployeeID(context,employeeid);
+    }
+
+    @Override
     public List<EPerson> wildcardSearchByEmail(Context context, String email) throws SQLException {
         return ePersonDAO.wildcardSearchByEmail(context,email);
+    }
+
+    @Override
+    public List<EPerson> getAllNotNull(Context context,int limit) throws SQLException {
+        return ePersonDAO.getAllNotNull(context,limit);
     }
 
     @Override
@@ -611,6 +621,11 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     @Override
     public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department, UUID officeid) throws SQLException {
         return ePersonDAO.getEpersonByDepartmentAndOffice(context,department,officeid);
+    }
+
+    @Override
+    public List<EPerson> getall(Context context) throws SQLException {
+        return  ePersonDAO.findAll(context,EPerson.class);
     }
 
 

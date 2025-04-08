@@ -54,7 +54,6 @@ import static java.util.stream.Collectors.toList;
  * @author Andrea Bollini (andrea.bollini at 4science.it)
  */
 
-
 @Component(WorkFlowProcessRest.CATEGORY + "." + WorkFlowProcessRest.NAME)
 public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<WorkflowProcess, WorkFlowProcessRest> {
 
@@ -127,8 +126,15 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
 
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
@@ -245,8 +251,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             //
             Context context = obtainContext(); context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -265,9 +276,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             System.out.println("in getDraftByWorkFlowTypeID");
             Context context = obtainContext(); context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.DRAFTNOTE.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countfindNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid);
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countfindNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
             System.out.println("getDraftByWorkFlowTypeID size "+count);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             System.out.println("getDraftByWorkFlowTypeID size 2"+workflowProcesses.size());
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
@@ -289,8 +305,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countfindCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countfindCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
+
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findCompletedFlow(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -311,8 +333,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             context.turnOffAuthorisationSystem();
             context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -336,12 +363,17 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
              UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
              UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
              UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-             int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
+             UUID epersonToEpersonMappingid = null;
+             Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+             if (map.isPresent()) {
+                 epersonToEpersonMappingid=map.get().getID();
+             }
+             int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose,epersonToEpersonMappingid);
              List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
                      context.getCurrentUser().getID(),
                      statusid,
                      workflowtypeid,
-                     statusidclose,
+                     statusidclose,epersonToEpersonMappingid,
                      Math.toIntExact(pageable.getOffset()),
                      Math.toIntExact(pageable.getPageSize()));
              workflowsRes = workflowProcesses.stream().map(d -> {
@@ -365,12 +397,18 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose);
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose,epersonToEpersonMappingid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
                     context.getCurrentUser().getID(),
                     statusid,
                     workflowtypeid,
-                    statusidclose,
+                    statusidclose,epersonToEpersonMappingid,
                     Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
@@ -394,8 +432,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -417,8 +460,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -487,8 +535,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusparked = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
             //you get file work flow the change workflow type just
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -511,8 +565,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             UUID statusparked = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
             //you get file work flow the change workflow type just
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -531,8 +590,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countgetHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByNotOwnerAndNotDraft(context, context.getCurrentUser().getID(), statusid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -555,8 +620,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             context.turnOffAuthorisationSystem();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -577,8 +648,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -594,10 +670,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     public Page<WorkFlowProcessRest> searchByFilenumberOrTapaleNumber(
             @Parameter(value = "tapalnumber",required = false)String tapalnumber,
             @Parameter(value = "filenumber",required = false)String filenumber,
+            @Parameter(value = "statusuuid",required = false)String statusuuid,
+            @Parameter(value = "subject",required = false)String subject,
+            @Parameter(value = "workflowtype",required = false)String workflowtype,
             Pageable pageable) {
         try {
             Context context = obtainContext(); context.turnOffAuthorisationSystem();
-            System.out.println("::::::::::::::::::::start filterbyInwardAndOutWard :::::::::::::::::::");
+            System.out.println("::::::::::::::::::::start searchByFilenumberOrTapaleNumber :::::::::::::::::::");
             HashMap<String, String> map = new HashMap<>();
             if (!isNullOrEmptyOrBlank(filenumber)) {
                 map.put("filenumber", filenumber);
@@ -605,18 +684,31 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (!isNullOrEmptyOrBlank(tapalnumber)) {
                 map.put("tapalnumber", tapalnumber);
             }
-            System.out.println("map :"+map);
-            Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
-            if(workFlowUserTypOptional.isPresent()){
-                map.put("initiator",workFlowUserTypOptional.get().getID().toString());
+            if (!isNullOrEmptyOrBlank(statusuuid)) {
+                map.put("statusuuid", statusuuid);
             }
+            if (!isNullOrEmptyOrBlank(subject)) {
+                map.put("subject", subject);
+            }
+            if (!isNullOrEmptyOrBlank(workflowtype)) {
+                map.put("workflowtype", workflowtype);
+               WorkFlowProcessMasterValue type=workFlowProcessMasterValueService.find(context,UUID.fromString(workflowtype));
+               if(type!=null){
+                   map.put("workflowtypename",type.getPrimaryvalue());
+               }
+            }
+
+            System.out.println("map :"+map);
+
             if(!map.isEmpty()) {
                 int count = 10;// workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
                 List<WorkflowProcess> list = workflowProcessService.searchByFilenumberOrTapaleNumber(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
                 List<WorkFlowProcessRest> rests = list.stream().map(d -> {
                     return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
                 }).collect(Collectors.toList());
-                System.out.println("::::::::::::::::::::stop filterbyInwardAndOutWard :::::::::::::::::::");
+
+                System.out.println("list:::::"+list.size());
+                System.out.println("::::::::::::::::::::stop searchByFilenumberOrTapaleNumber :::::::::::::::::::");
                 return new PageImpl(rests, pageable, count);
             }
         } catch (Exception e) {
@@ -772,8 +864,13 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -801,8 +898,14 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-            int count = workflowProcessService.getCountWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            int count = workflowProcessService.getCountWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());

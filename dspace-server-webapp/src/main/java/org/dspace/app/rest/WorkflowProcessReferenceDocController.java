@@ -863,7 +863,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 if (workflowProcessReferenceDoc.getDrafttype() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null) {
                     System.out.println("IN Other document " + workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue());
                 }
-                System.out.println("IN Other document Other");
                 workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
               //  workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
                 context.commit();

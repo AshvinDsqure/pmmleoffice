@@ -113,44 +113,44 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid, offset, limit);
+    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid, offset, limit);
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid, offset, limit);
-
-    }
-
-    @Override
-    public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findCompletedFlow(context,eperson,statusid,workflowtypeid,offset,limit);
-    }
-
-    @Override
-    public int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.countfindCompletedFlow(context,eperson,statusid,workflowtypeid);
-    }
-
-    @Override
-    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
-        return workflowProcessDAO.countfindNotCompletedByUser(context, eperson, statusid, draftid);
-    }
-
-    @Override
-    public int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
-        return workflowProcessDAO.countfindNotCompletedByUserDraft(context, eperson, statusid, draftid);
+    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid, offset, limit);
 
     }
 
     @Override
-    public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid, offset, limit);
+    public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findCompletedFlow(context,eperson,statusid,workflowtypeid,epersontoepersonmapid,offset,limit);
+    }
+
+    @Override
+    public int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countfindCompletedFlow(context,eperson,statusid,workflowtypeid,epersontoepersonmapid);
+    }
+
+    @Override
+    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countfindNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid);
+    }
+
+    @Override
+    public int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countfindNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid);
+
+    }
+
+    @Override
+    public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid,Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid,epersontoepersonmapid, offset, limit);
     }
     @Override
-    public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context, eperson, statusid);
+    public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context, eperson, statusid,epersontoepersonmapid);
     }
     @Override
     public int countfilterInwarAndOutWard(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
@@ -159,13 +159,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid, offset, limit);
+    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid, offset, limit);
     }
 
     @Override
-    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid);
+    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countgetHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid);
     }
 
     @Override
@@ -243,13 +243,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft, offset, limit);
+    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid, offset, limit);
     }
 
     @Override
-    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
-        return workflowProcessDAO.countfindDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft);
+    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countfindDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid);
     }
 
     @Override
@@ -279,40 +279,35 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndStatus(context, typeid, statusid, epersonid);
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatus(context, typeid, statusid, epersonid,epersontoepersonmapid);
+    }
+
+
+    @Override
+    public int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid, UUID draftstatus,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndStatusandNotDraft(context, typeid, statusid, epersonid,draftstatus,epersontoepersonmapid);
     }
 
     @Override
-    public int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndStatusNotwoner(context, typeid, statusid, epersonid);
-
+    public int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityNotDraft(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid);
     }
 
     @Override
-    public int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid, UUID draftstatus) throws SQLException {
-        return workflowProcessDAO.countByTypeAndStatusandNotDraft(context, typeid, statusid, epersonid,draftstatus);
-    }
-
-    @Override
-    public int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriorityNotDraft(context,typeid,priorityid,epersonid,statusid);
-    }
-
-    @Override
-    public int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriorityCreted(context,typeid,priorityid,epersonid,statusid);
+    public int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityCreted(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid);
 
     }
 
     @Override
-    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriorityClose(context,typeid,priorityid,epersonid,statusid);
+    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityClose(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid);
     }
 
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid,statusid);
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriority(context, typeid, priorityid, epersonid,statusid,epersontoepersonmapid);
     }
 
     @Override
@@ -380,39 +375,40 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,offset,limit);
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,epersontoepersonmapid,offset,limit);
     }
 
     @Override
-    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.getCountWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid);
+    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.getCountWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,epersontoepersonmapid);
     }
 
     @Override
     public List<WorkflowProcess> searchByFilenumberOrTapaleNumber(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
         MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "title", null);
-        return workflowProcessDAO.searchByFileNumberOrTapalNumber(context,metadataFields, perameter, offset, limit);
+        MetadataField metadataFieldssubject = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "subject", null);
+        return workflowProcessDAO.searchByFileNumberOrTapalNumber(context,metadataFields,metadataFieldssubject, perameter, offset, limit);
     }
 
     @Override
-    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,offset,limit);
+    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,offset,limit);
     }
 
     @Override
-    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid) throws SQLException {
-        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid,statuscloseid);
+    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid);
     }
 
     @Override
-    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,offset,limit);
+    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,epersontoepersonmapid,offset,limit);
     }
 
     @Override
-    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.countCloseTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid);
+    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countCloseTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,epersontoepersonmapid);
     }
 
     @Override
@@ -436,13 +432,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,offset,limit);
+    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid,offset,limit);
     }
 
     @Override
-    public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid) throws SQLException {
-        return workflowProcessDAO.countparkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid);
+    public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countparkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid);
     }
 
     @Override
@@ -467,6 +463,16 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             System.out.println("in error CallSap"+e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<Object[]> filterDepartmentWiseCount(Context context, HashMap<String, String> parameter, String startdate, String endDate, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.filterDepartmentWiseCount(context,parameter,startdate,endDate,offset,limit);
+    }
+
+    @Override
+    public List<Object[]> filterDepartmentWiseCountDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.filterDepartmentWiseCountDownload(context,parameter,startdate,endDate);
     }
 
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {

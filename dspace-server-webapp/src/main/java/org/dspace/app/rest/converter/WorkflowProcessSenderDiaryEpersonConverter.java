@@ -39,6 +39,9 @@ public class WorkflowProcessSenderDiaryEpersonConverter extends DSpaceObjectConv
     EPersonService ePersonService;
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
+    @Autowired
+    EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
     @Autowired
     ModelMapper modelMapper;
 
@@ -60,7 +63,9 @@ public class WorkflowProcessSenderDiaryEpersonConverter extends DSpaceObjectConv
         if(obj.getIndex()!=null){
             workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         }
-
+        if(obj.getEpersontoepersonmapping()!=null){
+            workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+        }
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         return workflowProcessDefinitionEpersonRest;
     }
@@ -81,6 +86,10 @@ public class WorkflowProcessSenderDiaryEpersonConverter extends DSpaceObjectConv
         }
         if(obj.getIndex()!=null){
             workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
+        }
+
+        if(obj.getEpersontoepersonmapping()!=null){
+            workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
         }
       workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
       return workflowProcessDefinitionEpersonRest;
@@ -111,6 +120,9 @@ public class WorkflowProcessSenderDiaryEpersonConverter extends DSpaceObjectConv
         if(rest.getIndex()!=null){
             obj.setIndex(rest.getIndex());
         }
+        if(rest.getEpersonToEpersonMappingRest()!=null){
+            obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersonToEpersonMappingRest()));
+        }
      return obj;
     }
     public WorkflowProcessSenderDiaryEperson convert(Context context,WorkflowProcessSenderDiaryEperson obj, WorkflowProcessSenderDiaryEpersonRest rest) throws SQLException {
@@ -125,6 +137,10 @@ public class WorkflowProcessSenderDiaryEpersonConverter extends DSpaceObjectConv
         if (rest.getUserType() != null) {
             obj.setUsertype(workFlowProcessMasterValueConverter.convert(context, rest.getUserType()));
         }
+        if(rest.getEpersonToEpersonMappingRest()!=null){
+            obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersonToEpersonMappingRest()));
+        }
+
         if(rest.getIndex()!=null){
             obj.setIndex(rest.getIndex());
         }

@@ -9,22 +9,17 @@ package org.dspace.app.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.itextpdf.text.DocumentException;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.*;
 import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
-import org.dspace.app.rest.exception.JBPMServerExpetion;
-import org.dspace.app.rest.exception.MissingParameterException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
-import org.dspace.app.rest.repository.LinkRestRepository;
-import org.dspace.app.rest.repository.WorkflowProcessSenderDiaryRepository;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.app.rest.utils.FileUtils;
@@ -39,22 +34,19 @@ import org.dspace.eperson.EPerson;
 import org.dspace.eperson.service.EPersonService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,6 +108,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
     @Autowired
     WorkFlowProcessMasterService workFlowProcessMasterService;
+
+    @Autowired
+    private EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
     @Autowired
     protected Utils utils;
     @Autowired
@@ -181,16 +176,12 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             }
 
             if (file != null) {
-
                 System.out.println("IN FILE SAVE");
-
                 WorkflowProcessReferenceDoc doc = new WorkflowProcessReferenceDoc();
                 fileInputStream = file.getInputStream();
                 InputStream pdfFileInputStream1 = file.getInputStream();
                 bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
-
                 System.out.println("bitstream:only pdf:" + bitstream.getName());
-
                 doc.setBitstream(bitstream);
                 doc.setPage(FileUtils.getPageCountInPDF(pdfFileInputStream1));
                 WorkFlowProcessInwardDetails workFlowProcessInwardDetails = workFlowProcessInwardDetailsConverter.convert(context, workFlowProcessRest.getWorkFlowProcessInwardDetailsRest());
@@ -216,11 +207,13 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 context.commit();
                 System.out.println("OUT FILE SAVE DONE...");
             }
+
             WorkFlowType workFlowType = WorkFlowType.INWARD;
             workFlowType.setWorkFlowStatus(WorkFlowStatus.INPROGRESS);
             WorkFlowAction create = WorkFlowAction.CREATE;
             workFlowType.setWorkFlowAction(create);
             workFlowType.setProjection(utils.obtainProjection());
+
             List<WorkflowProcessEpersonRest> templist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() != 0).collect(Collectors.toList());
             List<WorkflowProcessReferenceDocRest> tempdoclist = workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d -> d != null).filter(dd -> dd.getUuid() != null).map(d -> {
                 try {
@@ -247,20 +240,21 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 tempdoclist.add(workflowProcessReferenceDocRest);
             }
             System.out.println("::::::::::::::::DOCUMENT LIST SIZE" + tempdoclist.size());
-            int i = 0;
-            int cccount = 1;
-            for (WorkflowProcessEpersonRest nextEpersonrest : templist) {
+
+            if(workFlowProcessRest.getIspredefineuser()){
+
                 Context context1 = ContextUtil.obtainContext(request);
-                workFlowProcessRest.setWorkflowProcessEpersonRests(null);
-                workFlowProcessRest.setWorkflowProcessReferenceDocRests(null);
-                List<WorkflowProcessEpersonRest> initeatorandnextuserlist = new ArrayList<>();
-                initeatorandnextuserlist.add(0, initiatorEpersion.get());
-                nextEpersonrest.setIndex(1);
-                initeatorandnextuserlist.add(1, nextEpersonrest);
-                //  initeatorandnextuserlist.add(1, nextEpersonrest);
-                workFlowProcessRest.setWorkflowProcessEpersonRests(initeatorandnextuserlist);
+                System.out.println(":::::::::::::IN PREDIFINE WORKFLOW:::::::::::::::::::::::::");
+
+                Optional<WorkflowProcessEpersonRest> workflowProcessEpersonRest = Optional.ofNullable((getSubmitor(context)));
+                if (!workflowProcessEpersonRest.isPresent()) {
+                    return ResponseEntity.badRequest().body("no user found");
+                }
+                workFlowProcessRest.getWorkflowProcessEpersonRests().add(workflowProcessEpersonRest.get());
+
                 if (workFlowProcessRest.getWorkFlowProcessDraftDetailsRest() != null) {
                     workFlowProcessDraftDetailsRest = workFlowProcessRest.getWorkFlowProcessDraftDetailsRest();
+                    workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsRest);
                 }
                 if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null) {
                     WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
@@ -269,87 +263,135 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                         workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
                     }
                 }
-                if (i > 0) {
-                    System.out.println(":::::::::::::IN MULTIPLE USER FROW CREATE  ::::::::::::::::::::::::::");
-                    WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
-                    WorkFlowProcessMasterValue usertype = workFlowProcessMasterValueConverter.convert(context1, nextEpersonrest.getUserType());
-                    if (usertype != null && usertype.getPrimaryvalue() != null && usertype.getPrimaryvalue().equalsIgnoreCase("cc")) {
-                        Map<String, String> d = getCCUserTapalnumber(cccount);
-                        String inwardnumber = d.get("inwardnumber");
-                        if (inwardnumber != null) {
-                            System.out.println(":::::::::::::cc user inward number.:::::::::" + inwardnumber);
-                            workFlowProcessInwardDetailsRest.setInwardNumber(inwardnumber);
-                            cccount++;
-                        }
-                    } else {
-                        workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
-                    }
-                    workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
-                    //when multiple flow we nned to create doc
-                    List<WorkflowProcessReferenceDocRest> doclist = tempdoclist.stream().filter(d -> d != null).filter(d -> d.getUuid() != null).map(d -> {
-                        try {
-                            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(d, context1);
-                            workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context1, workflowProcessReferenceDoc);
-                            System.out.println("document create success " + workflowProcessReferenceDoc.getID());
-                            return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
-                        } catch (SQLException | AuthorizeException e) {
-                            throw new RuntimeException(e);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).collect(Collectors.toList());
-                    //sender
-                    List<WorkflowProcessSenderDiaryRest> tmpWorkflowProcessSenderDiaryRests = workflowProcessSenderDiaries.stream().filter(d -> d != null).filter(d -> d.getUuid() != null).map(d -> {
-                        try {
-                            WorkflowProcessSenderDiary workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(context, d);
-                            return workflowProcessSenderDiaryConverter.convert(workflowProcessSenderDiary, utils.obtainProjection());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).collect(Collectors.toList());
-                    workFlowProcessRest.setWorkflowProcessSenderDiaryRests(tmpWorkflowProcessSenderDiaryRests);
-                    workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsRest);
-                    workFlowProcessRest.setWorkflowProcessReferenceDocRests(doclist);
-                    workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-                    WorkflowProcess w = workFlowProcessConverter.convertByService(context1, workFlowProcessRestTemp);
-                    WorkflowProcess complateWorkflowProcess = w;
-                    if (workFlowProcessRest.getIsacknowledgement()) {
-                        AcknowledgementDTO acknowledgement = getAcknowledgementDTO(w);
-                        if (!acknowledgement.getRecipientemail().equalsIgnoreCase("-")) {
-                            sentAcknowledgementEmail(context1, null, acknowledgement);
-                        }
-                    }
-                    context1.commit();
-                    if (complateWorkflowProcess.getItem() != null) {
-                        Context context12 = ContextUtil.obtainContext(request);
-                        WorkFlowProcessRest workFlowProcessRest2 = complete(context12, complateWorkflowProcess.getID());
-                        if (workFlowProcessRest2 != null) {
-                            workFlowProcessRestTemp = workFlowProcessRest2;
-                            context12.commit();
-                        }
-                    }
-                } else {
-                    System.out.println(":::::::::::::IN SINGLE USER FROW CREATE  ::::::::::::::::::::::::::");
-                    workFlowProcessRest.setWorkflowProcessReferenceDocRests(tempdoclist);
-                    workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
-                    WorkflowProcess w = workFlowProcessConverter.convertByService(context1, workFlowProcessRestTemp);
-                    WorkflowProcess complateWorkflowProcess = w;
-                    if (workFlowProcessRest.getIsacknowledgement()) {
-                        AcknowledgementDTO acknowledgement = getAcknowledgementDTO(w);
-                        sentAcknowledgementEmail(context1, null, acknowledgement);
-                    }
-                    context1.commit();
-                    if (complateWorkflowProcess.getItem() != null) {
-                        //System.out.println("In Putin File");
-                        Context context12 = ContextUtil.obtainContext(request);
-                        WorkFlowProcessRest workFlowProcessRest2 = complete(context12, complateWorkflowProcess.getID());
-                        if (workFlowProcessRest2 != null) {
-                            workFlowProcessRestTemp = workFlowProcessRest2;
-                            context12.commit();
-                        }
+                workFlowProcessRest.setWorkflowProcessReferenceDocRests(tempdoclist);
+                workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                WorkflowProcess w = workFlowProcessConverter.convertByService(context1, workFlowProcessRestTemp);
+                WorkflowProcess complateWorkflowProcess = w;
+                if (workFlowProcessRest.getIsacknowledgement()) {
+                    AcknowledgementDTO acknowledgement = getAcknowledgementDTO(w);
+                    sentAcknowledgementEmail(context1, null, acknowledgement);
+                }
+                context1.commit();
+                if (complateWorkflowProcess.getItem() != null) {
+                    //System.out.println("In Putin File");
+                    Context context12 = ContextUtil.obtainContext(request);
+                    WorkFlowProcessRest workFlowProcessRest2 = complete(context12, complateWorkflowProcess.getID());
+                    if (workFlowProcessRest2 != null) {
+                        workFlowProcessRestTemp = workFlowProcessRest2;
+                        context12.commit();
                     }
                 }
-                i++;
+            }else {
+                int i = 0;
+                int cccount = 1;
+                for (WorkflowProcessEpersonRest nextEpersonrest : templist) {
+                    Context context1 = ContextUtil.obtainContext(request);
+                    workFlowProcessRest.setWorkflowProcessEpersonRests(null);
+                    workFlowProcessRest.setWorkflowProcessReferenceDocRests(null);
+                    List<WorkflowProcessEpersonRest> initeatorandnextuserlist = new ArrayList<>();
+                    initeatorandnextuserlist.add(0, initiatorEpersion.get());
+                    nextEpersonrest.setIndex(1);
+                    nextEpersonrest.setSequence(1);
+                    initeatorandnextuserlist.add(1, nextEpersonrest);
+                    //  initeatorandnextuserlist.add(1, nextEpersonrest);
+                    workFlowProcessRest.setWorkflowProcessEpersonRests(initeatorandnextuserlist);
+                    if (workFlowProcessRest.getWorkFlowProcessDraftDetailsRest() != null) {
+                        workFlowProcessDraftDetailsRest = workFlowProcessRest.getWorkFlowProcessDraftDetailsRest();
+                    }
+                    if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null) {
+                        WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
+                        if (DateUtils.isNullOrEmptyOrBlank(workFlowProcessInwardDetailsRest.getInwardNumber())) {
+                            System.out.println("in set inward number");
+                            workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
+                        }
+                    }
+                    if (i > 0) {
+                        //Multiple Inward
+                        System.out.println(":::::::::::::IN MULTIPLE USER FROW CREATE  ::::::::::::::::::::::::::");
+                        //set inward number start
+                        WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
+                        WorkFlowProcessMasterValue usertype = workFlowProcessMasterValueConverter.convert(context1, nextEpersonrest.getUserType());
+                        if (usertype != null && usertype.getPrimaryvalue() != null && usertype.getPrimaryvalue().equalsIgnoreCase("cc")) {
+                            Map<String, String> d = getCCUserTapalnumber(cccount);
+                            String inwardnumber = d.get("inwardnumber");
+                            if (inwardnumber != null) {
+                                System.out.println(":::::::::::::cc user inward number.:::::::::" + inwardnumber);
+                                workFlowProcessInwardDetailsRest.setInwardNumber(inwardnumber);
+                                cccount++;
+                            }
+                        } else {
+                            workFlowProcessInwardDetailsRest.setInwardNumber(getInwardNumber().get("inwardnumber"));
+                        }
+                        workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsRest);
+                        //set inward number done
+                        //when multiple flow we nned to create doc
+                        List<WorkflowProcessReferenceDocRest> doclist = tempdoclist.stream().filter(d -> d != null).filter(d -> d.getUuid() != null).map(d -> {
+                            try {
+                                WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(d, context1);
+                                workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context1, workflowProcessReferenceDoc);
+                                System.out.println("document create success " + workflowProcessReferenceDoc.getID());
+                                return workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
+                            } catch (SQLException | AuthorizeException e) {
+                                throw new RuntimeException(e);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).collect(Collectors.toList());
+                        //sender
+                        List<WorkflowProcessSenderDiaryRest> tmpWorkflowProcessSenderDiaryRests = workflowProcessSenderDiaries.stream().filter(d -> d != null).filter(d -> d.getUuid() != null).map(d -> {
+                            try {
+                                WorkflowProcessSenderDiary workflowProcessSenderDiary = workflowProcessSenderDiaryConverter.convert(context, d);
+                                return workflowProcessSenderDiaryConverter.convert(workflowProcessSenderDiary, utils.obtainProjection());
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).collect(Collectors.toList());
+
+                        workFlowProcessRest.setWorkflowProcessSenderDiaryRests(tmpWorkflowProcessSenderDiaryRests);
+                        workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsRest);
+                        workFlowProcessRest.setWorkflowProcessReferenceDocRests(doclist);
+                        workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                        WorkflowProcess w = workFlowProcessConverter.convertByService(context1, workFlowProcessRestTemp);
+                        WorkflowProcess complateWorkflowProcess = w;
+                        if (workFlowProcessRest.getIsacknowledgement()) {
+                            AcknowledgementDTO acknowledgement = getAcknowledgementDTO(w);
+                            if (!acknowledgement.getRecipientemail().equalsIgnoreCase("-")) {
+                                sentAcknowledgementEmail(context1, null, acknowledgement);
+                            }
+                        }
+                        context1.commit();
+                        if (complateWorkflowProcess.getItem() != null) {
+                            Context context12 = ContextUtil.obtainContext(request);
+                            WorkFlowProcessRest workFlowProcessRest2 = complete(context12, complateWorkflowProcess.getID());
+                            if (workFlowProcessRest2 != null) {
+                                workFlowProcessRestTemp = workFlowProcessRest2;
+                                context12.commit();
+                            }
+                        }
+                    } else {
+                        //Single Inward
+                        System.out.println(":::::::::::::IN SINGLE USER FROW CREATE  ::::::::::::::::::::::::::");
+                        workFlowProcessRest.setWorkflowProcessReferenceDocRests(tempdoclist);
+                        workFlowProcessRestTemp = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
+                        WorkflowProcess w = workFlowProcessConverter.convertByService(context1, workFlowProcessRestTemp);
+                        WorkflowProcess complateWorkflowProcess = w;
+                        if (workFlowProcessRest.getIsacknowledgement()) {
+                            AcknowledgementDTO acknowledgement = getAcknowledgementDTO(w);
+                            sentAcknowledgementEmail(context1, null, acknowledgement);
+                        }
+                        context1.commit();
+                        if (complateWorkflowProcess.getItem() != null) {
+                            //System.out.println("In Putin File");
+                            Context context12 = ContextUtil.obtainContext(request);
+                            WorkFlowProcessRest workFlowProcessRest2 = complete(context12, complateWorkflowProcess.getID());
+                            if (workFlowProcessRest2 != null) {
+                                workFlowProcessRestTemp = workFlowProcessRest2;
+                                context12.commit();
+                            }
+                        }
+                    }
+                    i++;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -475,6 +517,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             List<WorkflowProcessEpersonRest> initeatorandnextuserlist = new ArrayList<>();
             initeatorandnextuserlist.add(0, initiatorEpersion.get());
             initeatorandnextuserlist.add(1, initiatorEpersion.get());
+
             workFlowProcessRest.setWorkflowProcessEpersonRests(initeatorandnextuserlist);
             if (workFlowProcessRest.getWorkFlowProcessInwardDetailsRest() != null) {
                 WorkFlowProcessInwardDetailsRest workFlowProcessInwardDetailsRest = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
@@ -774,15 +817,18 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         try {
 
             StringBuffer sb = new StringBuffer();
-            WorkFlowProcessMasterValue department;
+            WorkFlowProcessMasterValue department = null;
             if (cEPerson != null) {
-                department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
+                Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                if (map.isPresent()) {
+                    department=map.get().getEpersonmapping().getDepartment();
+                }
                 if (department.getPrimaryvalue() != null) {
                     sb.append("T/" + department.getSecondaryvalue());
                 }
-            }
-            if (cEPerson.getTablenumber() != null) {
-                sb.append("/" + cEPerson.getTablenumber());
+                if (map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getTablenumber()!= null) {
+                    sb.append("/" + map.get().getEpersonmapping().getTablenumber());
+                }
             }
             int count=workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.INWARD.getAction()).getID(),DateUtils.getVersion());
             count = count + 1;
@@ -809,16 +855,20 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             context.turnOffAuthorisationSystem();
             EPerson currentuser = context.getCurrentUser();
             StringBuffer sb = new StringBuffer();
-            WorkFlowProcessMasterValue department;
             if (currentuser != null) {
-                department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
-                if (department.getPrimaryvalue() != null) {
-                    sb.append("T/" + department.getSecondaryvalue());
+              //  department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
+                Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                if (map.isPresent()) {
+                    if (map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getDepartment() != null &&map.get().getEpersonmapping().getDepartment().getPrimaryvalue()!=null) {
+                        sb.append("T/" + map.get().getEpersonmapping().getDepartment().getSecondaryvalue());
+                    }
+                    if (map.get().getEpersonmapping() != null&&map.get().getEpersonmapping().getTablenumber()!=null) {
+                        sb.append("/" + map.get().getEpersonmapping().getTablenumber());
+                    }
                 }
+
             }
-            if (currentuser.getTablenumber() != null) {
-                sb.append("/" + currentuser.getTablenumber());
-            }
+
             int count =workflowProcessService.getCountByType(context, getMastervalueData(context, WorkFlowType.MASTER.getAction(), WorkFlowType.INWARD.getAction()).getID(),DateUtils.getVersion());
             count = count + 1;
             sb.append("/0000" + count);
@@ -845,9 +895,12 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             StringBuffer sb = new StringBuffer();
             WorkFlowProcessMasterValue department;
             if (currentuser != null) {
-                department = workFlowProcessMasterValueService.find(context, context.getCurrentUser().getDepartment().getID());
-                if (department.getPrimaryvalue() != null) {
-                    sb.append(department.getSecondaryvalue());
+                Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+                if (map.isPresent()) {
+                    if (map.get().getEpersonmapping() != null && map.get().getEpersonmapping().getDepartment() != null && map.get().getEpersonmapping().getDepartment().getSecondaryvalue() != null) {
+                        sb.append(map.get().getEpersonmapping().getDepartment().getSecondaryvalue());
+                    }
+
                 }
             }
           /*  if (currentuser.getTablenumber() != null) {
@@ -882,6 +935,11 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context);
             if (workFlowUserTypOptional.isPresent()) {
                 workflowProcessEpersonSubmitor.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(), utils.obtainProjection()));
+            }
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                EpersonToEpersonMappingRest rest=epersonToEpersonMappingConverter.convert(map.get(),utils.obtainProjection());
+                workflowProcessEpersonSubmitor.setEpersonToEpersonMappingRest(rest);
             }
             workflowProcessEpersonSubmitor.setePersonRest(ePersonRest);
             return workflowProcessEpersonSubmitor;

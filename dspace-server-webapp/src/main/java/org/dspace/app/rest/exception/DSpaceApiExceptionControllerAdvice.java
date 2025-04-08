@@ -118,7 +118,7 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
         //Using the value from HttpStatus.
         sendErrorResponse(request, response, null,
-                "Already DataExist Exception", HttpStatus.ACCEPTED.value());
+                "Already DataExist Exception", HttpStatus.NOT_ACCEPTABLE.value());
     }
 
     @ExceptionHandler({ JBPMServerExpetion.class})
@@ -128,7 +128,25 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         //Using the value from HttpStatus.
         sendErrorResponse(request, response, null,
                 "JBPM Server Expetion", HttpStatus.NOT_ACCEPTABLE.value());
-    } @ExceptionHandler({ UsersSameExeception.class})
+    }
+    @ExceptionHandler({ TokenNotFoundException.class})
+    protected void handleTokenNotFoundException(HttpServletRequest request, HttpServletResponse response,
+                                            Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "TokenNot Found Exception", HttpStatus.NOT_ACCEPTABLE.value());
+    }
+
+    @ExceptionHandler({ HtmlToPdfConvertException.class})
+    protected void handleHtmlToPdfConvertException(HttpServletRequest request, HttpServletResponse response,
+                                                Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "Html To PdfConvert Exception", HttpStatus.NOT_ACCEPTABLE.value());
+    }
+    @ExceptionHandler({ UsersSameExeception.class})
     protected void handleUsersSameExeception(HttpServletRequest request, HttpServletResponse response,
                                               Exception ex) throws IOException {
         //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".

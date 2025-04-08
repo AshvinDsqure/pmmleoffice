@@ -1,9 +1,5 @@
 package org.dspace.app.rest.utils;
 
-import com.spire.doc.Document;
-import com.spire.doc.DocumentObject;
-import com.spire.doc.FileFormat;
-import com.spire.doc.Section;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
 import org.apache.pdfbox.io.MemoryUsageSetting;
@@ -11,11 +7,8 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.*;
 import org.dspace.content.WorkFlowProcessComment;
@@ -196,7 +189,7 @@ public class MargedDocUtils {
     }
 
     public static void finalwriteDocument(String path) throws Exception {
-        DocumentMerger(path);
+        //DocumentMerger(path);
     }
 
     public static void DocOneWrite(Long notecount) {
@@ -518,48 +511,9 @@ public class MargedDocUtils {
         }
     }
 
-    public static void DocumentMerger(String finalpathe) throws Exception {
-        System.out.println("in marged doc 1 to 2 ");
-        Document document1 = new Document(filePaths[0]);
-        Document document2 = new Document(filePaths[1]);
-        Section lastSection = document1.getLastSection();
-        for (Section section : (Iterable<Section>) document2.getSections()) {
-            for (DocumentObject obj : (Iterable<DocumentObject>) section.getBody().getChildObjects()
-            ) {
-                lastSection.getBody().getChildObjects().add(obj.deepClone());
-            }
-        }
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File file1andfile2 = new File(TEMP_DIRECTORY, "file1andfile2.docx");
-        document1.saveToFile(file1andfile2.getAbsolutePath(), FileFormat.Docx_2013);
-        System.out.println("in marged doc 1 to 2 done");
-        DocumentMerger2(file1andfile2.getAbsolutePath(), finalpathe);
 
-    }
 
-    public static void DocumentMerger2(String mrgedoneandtwo, String finalpathe) throws Exception {
-        Document document = new Document();
-        System.out.println("in marged doc 2 to 3 ");
-        Document document1 = new Document(mrgedoneandtwo);
-        Document document2 = new Document(filePaths[2]);
-        Section lastSection = document1.getLastSection();
-        for (Section section : (Iterable<Section>) document2.getSections()) {
-            for (DocumentObject obj : (Iterable<DocumentObject>) section.getBody().getChildObjects()
-            ) {
-                lastSection.getBody().getChildObjects().add(obj.deepClone());
-            }
-        }
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        File finaldoc = new File(TEMP_DIRECTORY, "finaldoc.docx");
-        File finaldocbeforremove = new File(TEMP_DIRECTORY, "finaldocbeforremove.pdf");
-        document1.saveToFile(finaldoc.getAbsolutePath(), FileFormat.Docx_2013);
-        System.out.println("in marged doc 2 to 3 done");
-        System.out.println("Make final doc pathe is " + finaldoc.getAbsolutePath());
-        //  ConvertToPDF(finaldoc.getAbsolutePath(),finaldocbeforremove.getAbsolutePath());
-        System.out.println("Make final pdf before remove text pathe is " + finaldoc.getAbsolutePath());
-        removetext2(finaldoc.getAbsolutePath(), finalpathe);
 
-    }
 
     private static String DateFormate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");

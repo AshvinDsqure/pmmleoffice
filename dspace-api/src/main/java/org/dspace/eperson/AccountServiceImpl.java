@@ -207,6 +207,7 @@ public class AccountServiceImpl implements AccountService {
 
         // If it already exists, just re-issue it
         if (rd == null) {
+            System.out.println("in if RegistrationData null ");
             rd = registrationDataService.create(context);
             rd.setToken(Utils.generateHexKey());
 

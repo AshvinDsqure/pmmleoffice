@@ -119,6 +119,10 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     private Boolean isinternal = false;
 
+    @JsonProperty
+    private Boolean ispredefineuser = false;
+
+
 
 
     @JsonProperty
@@ -137,6 +141,13 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     WorkFlowProcessCommentRest workFlowProcessCommentRest=null;
 
+    public Boolean getIspredefineuser() {
+        return ispredefineuser;
+    }
+
+    public void setIspredefineuser(Boolean ispredefineuser) {
+        this.ispredefineuser = ispredefineuser;
+    }
 
     @JsonProperty
     List<WorkflowProcessSenderDiaryRest> workflowProcessSenderDiaryRests = new ArrayList<>();

@@ -24,26 +24,26 @@ import java.util.UUID;
  * @author kevinvandevelde at atmire.com
  */
 public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<WorkflowProcess> {
-    List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException;
-    List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException;
-    int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException;
+    List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
+    int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid) throws SQLException;
 
-    List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
-    int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException;
+    List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
+    int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
 
-    List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapping, Integer offset, Integer limit) throws SQLException;
 
-    int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException;
+    int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapping) throws SQLException;
 
-    List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
 
-    int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException;
+    int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid) throws SQLException;
 
-    List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid,Integer offset, Integer limit) throws SQLException;
 
-    int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid) throws SQLException;
+    int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
 
-    int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException;
+    int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid) throws SQLException;
 
     int getCountByType(Context context, UUID typeid,Integer version) throws SQLException;
 
@@ -52,34 +52,33 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     List<WorkflowProcess> Filter(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
 
     List<WorkflowProcess> filterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
-    List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
-    int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException;
+    List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid,Integer offset, Integer limit) throws SQLException;
+    int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
 
-    List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context,MetadataField metadataField,MetadataField metadataFieldsubject, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
     int countfilterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException;
 
     int countRefer(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException;
 
-    int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
-    int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException;
+    int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID epersontoepersonmapid) throws SQLException;
 
-    int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
-    int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
-    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
+    int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
+    int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
+    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
 
-    int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException;
-   int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID draftstatus) throws SQLException;
+    int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
+   int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID draftstatus,UUID epersontoepersonmapid) throws SQLException;
 
     List<WorkflowProcess> searchSubjectByWorkflowTypeandSubject(Context context, UUID workflowtypeid, String subject) throws SQLException;
 
-    List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
 
-    int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statusidclose) throws SQLException;
+    int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statusidclose,UUID epersontoepersonmapid) throws SQLException;
 
-    List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
+    List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
 
-    int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid) throws SQLException;
+    int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
 
     List<WorkflowProcess> acknowledgementTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
 
@@ -88,6 +87,9 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     List<WorkflowProcess> dispatchTapal(Context context, UUID eperson, UUID statusdraftid, UUID statusdspachcloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
 
     int countdispatchTapal(Context context, UUID eperson, UUID statusdraftid, UUID statusdspachcloseid, UUID workflowtypeid) throws SQLException;
-    List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException;
-    int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid) throws SQLException;
+    List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException;
+    int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
+    public List<Object[]> filterDepartmentWiseCount(Context context, HashMap<String, String> parameter,String startdate,String endDate, Integer offset, Integer limit) throws SQLException;
+    public List<Object[]> filterDepartmentWiseCountDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+
 }

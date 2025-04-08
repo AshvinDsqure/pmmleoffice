@@ -26,6 +26,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -43,14 +45,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p  " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", true);
@@ -58,6 +60,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", inwardoutwarttypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -68,14 +72,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p  " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", true);
@@ -83,6 +87,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", draftid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -93,14 +99,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p  " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", true);
@@ -108,6 +114,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", workflowtypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -118,14 +126,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid) throws SQLException {
+    public int countfindCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p  " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete ");
         query.setParameter("isOwner", true);
@@ -133,19 +141,21 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", workflowtypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
 
     @Override
-    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid) throws SQLException {
+    public int countfindNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID inwardoutwarttypeid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete ");
         query.setParameter("isOwner", true);
@@ -153,18 +163,20 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", inwardoutwarttypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
     @Override
-    public int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid) throws SQLException {
+    public int countfindNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
                 "left join ep.ePerson as p " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and p.id=:eperson " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson " +
                 "and st.id IN(:statusid) and t.id=:draftid " +
                 "and wp.isdelete=:isdelete ");
         query.setParameter("isOwner", true);
@@ -172,6 +184,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statusid);
         query.setParameter("draftid", draftid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
         return count(query);
     }
 
@@ -219,7 +232,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 //history
     @Override
-    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,  UUID statusdraft,UUID epersontoepersonmapid,Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT wp FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
@@ -227,6 +240,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as workflowtype " +
                 "where ep.isOwner=:isOwner " +
+                "and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
                 "and p.id=:eperson " +
                 "and st.id IN(:statusinprogress) " +
                 "and workflowtype.id IN (:workflowtypedraft) " +
@@ -236,6 +250,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isdelete", false);
         query.setParameter("statusinprogress", statuscloseid);
         query.setParameter("workflowtypedraft", statusdraftid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
        // query.setParameter("statusdraft", statusdraft);
 
         if (0 <= offset) {
@@ -248,34 +263,37 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft) throws SQLException {
+    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st join wp.workflowType as t  where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:statuscloseid) and st.id NOT IN(:statusdraft) and t.id IN (:statusdraftid) and wp.isdelete=:isdelete");
+                "join wp.workflowStatus as st join wp.workflowType as t  where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson and st.id NOT IN(:statuscloseid) and st.id NOT IN(:statusdraft) and t.id IN (:statusdraftid) and wp.isdelete=:isdelete");
         query.setParameter("isOwner", true);
         query.setParameter("eperson", eperson);
         query.setParameter("statuscloseid", statuscloseid);
         query.setParameter("statusdraftid", statusdraftid);
         query.setParameter("statusdraft", statusdraft);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
         return count(query);
     }
 
 
 
     @Override
-    public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete order by wp.InitDate desc");
+                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and p.id=:eperson and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", false);
         query.setParameter("eperson", eperson);
         query.setParameter("notDraft", statusid);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -285,14 +303,15 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         return query.getResultList();
     }
     @Override
-    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
-        Query query = createQuery(context,"SELECT wp FROM WorkflowProcess as wp " +
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        Query query = createQuery(context,"SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "left join wp.priority as p " +
+                "join wp.workflowProcessEpeople as ep " +
                 "left join wp.workflowStatus as st " +
                 "left join wp.workflowType as t  " +
                 "left join wp.workFlowProcessDraftDetails as draft  " +
                 "left join draft.documentsignator as p  " +
-                "where draft.issinglatter=:issinglatter " +
+                "where draft.epersontoepersonmapping.id=:epersontoepersonmapid and draft.issinglatter=:issinglatter " +
                 "and st.id=:statusid and t.id=:workflowtype " +
                 "and p.id=:eperson and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("issinglatter", false);
@@ -300,6 +319,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("statusid", statuscloseid);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -310,15 +331,16 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid) throws SQLException {
+    public int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
         try {
             Query query = createQuery(context,"SELECT count(wp) FROM WorkflowProcess as wp " +
                     "left join wp.priority as p " +
+                    "join wp.workflowProcessEpeople as ep " +
                     "left join wp.workflowStatus as st " +
                     "left join wp.workflowType as t  " +
                     "left join wp.workFlowProcessDraftDetails as draft  " +
                     "left join draft.documentsignator as p  " +
-                    "where draft.issinglatter=:issinglatter " +
+                    "where ep.epersontoepersonmapping.id=:epersontoepersonmapid and draft.issinglatter=:issinglatter " +
                     "and st.id=:statusid and t.id=:workflowtype " +
                     "and p.id=:eperson and wp.isdelete=:isdelete");
             query.setParameter("issinglatter", false);
@@ -326,6 +348,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             query.setParameter("statusid", statuscloseid);
             query.setParameter("workflowtype", workflowtypeid);
             query.setParameter("isdelete", false);
+            query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
             return count(query);
         }catch (Exception e){
             e.printStackTrace();
@@ -335,20 +359,22 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
     //sent tapal and efile both are include this query just status n=and workflow type change as per
     @Override
-    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                " where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:notDraft) and st.id NOT IN(:statusidclose)  and t.id IN (:workflowtype) and wp.isdelete=:isdelete order by wp.InitDate desc");
+                " where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson and st.id NOT IN(:notDraft) and st.id NOT IN(:statusidclose)  and t.id IN (:workflowtype) and wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("isOwner", false);
         query.setParameter("eperson", eperson);
         query.setParameter("notDraft", statusid);
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("statusidclose", statuscloseid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -359,32 +385,34 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statusidclose) throws SQLException {
+    public int countTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statusidclose,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner and t.id IN (:workflowtype) and p.id=:eperson and st.id NOT IN(:statusidclose) and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete");
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and t.id IN (:workflowtype) and p.id=:eperson and st.id NOT IN(:statusidclose) and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete");
         query.setParameter("isOwner", false);
         query.setParameter("eperson", eperson);
         query.setParameter("notDraft", statusid);
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("statusidclose",statusidclose);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
     @Override
-    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                " where  st.id NOT IN(:notDraft) " +
+                " where ep.epersontoepersonmapping.id=:epersontoepersonmapid and st.id NOT IN(:notDraft) " +
                 "and st.id IN(:statuscloseid) " +
                 "and t.id IN (:workflowtype) " +
                 "and p.id=:eperson " +
@@ -394,6 +422,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("eperson", eperson);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -404,14 +434,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid) throws SQLException {
+    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                "where  t.id IN (:workflowtype) " +
+                "where ep.epersontoepersonmapping.id=:epersontoepersonmapid and t.id IN (:workflowtype) " +
                 "and st.id NOT IN(:notDraft) " +
                 "and st.id IN(:statuscloseid) " +
                 "and p.id=:eperson " +
@@ -421,6 +451,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("eperson", eperson);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
@@ -519,14 +551,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid \n" +
                 "and p.id=:eperson " +
                 "and st.id NOT IN(:notDraft) " +
                 "and st.id IN(:statusparkedid) " +
@@ -538,6 +570,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("statusparkedid", statusparkedid);
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -548,14 +582,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid) throws SQLException {
+    public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                "where ep.isOwner=:isOwner " +
+                "where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid \n" +
                 "and p.id=:eperson " +
                 "and st.id NOT IN(:notDraft) " +
                 "and st.id IN(:notDraft) " +
@@ -568,30 +602,194 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("statusparkedid", statusparkedid);
         query.setParameter("isdelete", false);
         query.setParameter("workflowtype", workflowtypeid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
+
     @Override
-    public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid) throws SQLException {
+    public List<Object[]> filterDepartmentWiseCount(Context context, HashMap<String, String> parameter,String startdate,String endDate, Integer offset, Integer limit) throws SQLException {
+        StringBuffer sb = new StringBuffer("SELECT dpt.primaryvalue, COUNT(wp) " +
+                "FROM WorkflowProcess as wp " +
+                "LEFT JOIN wp.priority as p " +
+                "LEFT JOIN wp.workflowStatus as st " +
+                "LEFT JOIN wp.workflowType as t  " +
+                "LEFT JOIN wp.workFlowProcessInwardDetails as inward  " +
+                "LEFT JOIN wp.workFlowProcessDraftDetails as draft  " +
+                "LEFT JOIN wp.workflowProcessEpeople as ep " +
+                "LEFT JOIN ep.ePerson as user " +
+                "LEFT JOIN user.department as dpt " +
+                "WHERE 1=1 ");  // Ensures dynamic filters work properly
+
+        int i = 0;
+        for (Map.Entry<String, String> map : parameter.entrySet()) {
+            if (map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" AND ");
+                } else {
+                    sb.append(" AND ");
+                }
+                if (map.getKey().equalsIgnoreCase("subject")) {
+                    sb.append(" wp.Subject like :" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("status")) {
+                    sb.append(" st.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("type")) {
+                    sb.append(" t.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("priority")) {
+                    sb.append(" p.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("department")) {
+                    sb.append(" dpt.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("user")) {
+                    sb.append(" user.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("tapal")) {
+                    sb.append(" inward.inwardDate BETWEEN :startdate AND :endDate ");
+                }else if (map.getKey().equalsIgnoreCase("draft")) {
+                    sb.append(" draft.draftdate BETWEEN :startdate AND :endDate "); }
+                i++;
+            }
+        }
+        sb.append(" GROUP BY dpt.primaryvalue ");  // Grouping by department name
+        System.out.println("query ::::::::::" + sb.toString());
+        Query query = createQuery(context, sb.toString());
+        for (Map.Entry<String, String> map : parameter.entrySet()) {
+            if (map.getValue() != null) {
+                if (map.getKey().equalsIgnoreCase("tapal")||map.getKey().equalsIgnoreCase("draft")) {
+                //no need to add
+                }else if (map.getKey().equalsIgnoreCase("subject")) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else {
+                    query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
+                }
+            }
+        }
+try {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    Date parsedStartDate = dateFormat.parse(startdate);
+    Date parsedEndDate = dateFormat.parse(endDate);
+    Timestamp timestampStart = new Timestamp(parsedStartDate.getTime());
+    Timestamp timestampEnd = new Timestamp(parsedEndDate.getTime());
+
+    System.out.println("timestampStart :::"+timestampStart);
+    System.out.println("timestampEnd :::"+timestampEnd);
+    query.setParameter("startdate", timestampStart); // Assuming startdate is like "2024-11-22"
+    query.setParameter("endDate", timestampEnd); // Assuming endDate is like "2024-11-22" // assume endDate is already in 'yyyy-MM-dd' format
+}catch (Exception e){
+    e.printStackTrace();
+}
+
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();  // Returns department name and count
+    }
+
+    @Override
+    public List<Object[]> filterDepartmentWiseCountDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        StringBuffer sb = new StringBuffer("SELECT dpt.primaryvalue, COUNT(wp) " +
+                "FROM WorkflowProcess as wp " +
+                "LEFT JOIN wp.priority as p " +
+                "LEFT JOIN wp.workflowStatus as st " +
+                "LEFT JOIN wp.workflowType as t  " +
+                "LEFT JOIN wp.workFlowProcessInwardDetails as inward  " +
+                "LEFT JOIN wp.workFlowProcessDraftDetails as draft  " +
+                "LEFT JOIN wp.workflowProcessEpeople as ep " +
+                "LEFT JOIN ep.ePerson as user " +
+                "LEFT JOIN user.department as dpt " +
+                "WHERE 1=1 ");  // Ensures dynamic filters work properly
+
+        int i = 0;
+        for (Map.Entry<String, String> map : parameter.entrySet()) {
+            if (map.getValue() != null) {
+                if (i == 0) {
+                    sb.append(" AND ");
+                } else {
+                    sb.append(" AND ");
+                }
+                if (map.getKey().equalsIgnoreCase("subject")) {
+                    sb.append(" wp.Subject like :" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("status")) {
+                    sb.append(" st.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("type")) {
+                    sb.append(" t.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("priority")) {
+                    sb.append(" p.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("department")) {
+                    sb.append(" dpt.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("user")) {
+                    sb.append(" user.id=:" + map.getKey());
+                } else if (map.getKey().equalsIgnoreCase("tapal")) {
+                    sb.append(" inward.inwardDate BETWEEN :startdate AND :endDate ");
+                }else if (map.getKey().equalsIgnoreCase("draft")) {
+                    sb.append(" draft.draftdate BETWEEN :startdate AND :endDate "); }
+                i++;
+            }
+        }
+        sb.append(" GROUP BY dpt.primaryvalue ");  // Grouping by department name
+        System.out.println("query ::::::::::" + sb.toString());
+        Query query = createQuery(context, sb.toString());
+        for (Map.Entry<String, String> map : parameter.entrySet()) {
+            if (map.getValue() != null) {
+                if (map.getKey().equalsIgnoreCase("tapal")||map.getKey().equalsIgnoreCase("draft")) {
+                    //no need to add
+                }else if (map.getKey().equalsIgnoreCase("subject")) {
+                    query.setParameter(map.getKey(), "%" + map.getValue() + "%");
+                } else {
+                    query.setParameter(map.getKey(), UUID.fromString(map.getValue()));
+                }
+            }
+        }
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date parsedStartDate = dateFormat.parse(startdate);
+            Date parsedEndDate = dateFormat.parse(endDate);
+            Timestamp timestampStart = new Timestamp(parsedStartDate.getTime());
+            Timestamp timestampEnd = new Timestamp(parsedEndDate.getTime());
+
+            query.setParameter("startdate", timestampStart); // Assuming startdate is like "2024-11-22"
+            query.setParameter("endDate", timestampEnd); // Assuming endDate is like "2024-11-22" // assume endDate is already in 'yyyy-MM-dd' format
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return query.getResultList();  // Returns department name and count
+    }
+
+
+    @Override
+    public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
-                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and p.id=:eperson and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete");
+                "join wp.workflowStatus as st  where ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson and st.id NOT IN(:notDraft) and wp.isdelete=:isdelete");
         query.setParameter("isOwner", false);
         query.setParameter("eperson", eperson);
         query.setParameter("notDraft", statusid);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
+
         return count(query);
     }
     public static boolean isNullOrEmptyOrBlank(String str) {
         return str == null || str.trim().isEmpty();
     }
     @Override
-    public List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context, MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context, MetadataField metadataField,MetadataField metadataFieldsubject, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
       String filenumber="";
       String tapalnumber="";
-      UUID initiator=null;
+      String subject="";
+      String workflowtypename="";
+      UUID workflowtype=null;
+      UUID statusid=null;
+
+
+        System.out.println("offset :::"+offset);
+        System.out.println("limit :::"+limit);
+
         for (Map.Entry<String, String> map : perameter.entrySet()) {
             System.out.println("key : " + map.getKey() + " value : " + map.getValue());
             if (map.getKey().equalsIgnoreCase("filenumber") && map.getValue() != null) {
@@ -600,22 +798,38 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             if (map.getKey().equalsIgnoreCase("tapalnumber") && map.getValue() != null) {
                 tapalnumber = map.getValue();
             }
-            if (map.getKey().equalsIgnoreCase("initiator") && map.getValue() != null) {
-                initiator = UUID.fromString(map.getValue());
+
+            if (map.getKey().equalsIgnoreCase("statusuuid") && map.getValue() != null) {
+                statusid = UUID.fromString(map.getValue());
             }
+            if (map.getKey().equalsIgnoreCase("subject") && map.getValue() != null) {
+                subject =  map.getValue();
+            }
+            if (map.getKey().equalsIgnoreCase("workflowtype") && map.getValue() != null) {
+                workflowtype = UUID.fromString(map.getValue());
+            }
+            if (map.getKey().equalsIgnoreCase("workflowtypename") && map.getValue() != null) {
+                workflowtypename = map.getValue();
+            }
+
         }
         StringBuffer sb = new StringBuffer("SELECT DISTINCT wp FROM " +
                 "WorkflowProcess as wp " +
+                "LEFT JOIN wp.workflowStatus as st  " +
+                "LEFT JOIN wp.workflowType as wt  " +
                 "left join wp.workflowProcessEpeople as ep " +
-                "left join ep.ePerson as p left join ep.usertype as ut");
+                "left join ep.ePerson as p ");
         if(!isNullOrEmptyOrBlank(filenumber)) {
                     sb.append(" left join wp.item as i  left join i.metadata as metadatavalue " +
-                    "where ut.id=:initiator and p.id=:eperson AND  metadatavalue.metadataField =:metadataField AND lower(STR(metadatavalue.value)) like :filenumber");
+                    "where st.id=:statusid and  p.id=:eperson and   metadatavalue.metadataField =:metadataField AND lower(STR(metadatavalue.value)) like :filenumber");
+
+            System.out.println("sql:::filenumber "+sb.toString());
+
             Query query = createQuery(context,sb.toString());
             query.setParameter("eperson", context.getCurrentUser().getID());
             query.setParameter("filenumber", "%" + filenumber.toLowerCase() + "%");
             query.setParameter("metadataField", metadataField);
-            query.setParameter("initiator", initiator);
+            query.setParameter("statusid", statusid);
             if (0 <= offset) {
                 query.setFirstResult(offset);
             }
@@ -626,11 +840,12 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         }
         if(!isNullOrEmptyOrBlank(tapalnumber)){
             sb.append(" left join wp.workFlowProcessInwardDetails as inward  " +
-                      "where ut.id=:initiator and p.id=:eperson and inward.inwardNumber=:tapalnumber");
+                      "where st.id=:statusid and p.id=:eperson and lower(STR(inward.inwardNumber)) like :tapalnumber");
+            System.out.println("sql tapalnumber:::"+sb.toString());
             Query query = createQuery(context,sb.toString());
             query.setParameter("eperson", context.getCurrentUser().getID());
-            query.setParameter("tapalnumber", tapalnumber);
-            query.setParameter("initiator", initiator);
+            query.setParameter("tapalnumber", "%"+tapalnumber.toLowerCase()+"%");
+            query.setParameter("statusid", statusid);
             if (0 <= offset) {
                 query.setFirstResult(offset);
             }
@@ -639,21 +854,59 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             }
             return query.getResultList();
         }
+        if(!isNullOrEmptyOrBlank(subject) && workflowtype!=null&&workflowtypename!=null&&workflowtypename.equalsIgnoreCase("Draft")){
+            sb.append(" left join wp.item as i  left join i.metadata as metadatavalue " +
+                    "where wt.id=:workflowtype and st.id=:statusid and  p.id=:eperson and metadatavalue.metadataField =:metadataField AND lower(STR(metadatavalue.value)) like :subject");
+            System.out.println("sql subject::Draft:HQL::::::::::"+sb.toString());
+            Query query = createQuery(context,sb.toString());
+            query.setParameter("eperson", context.getCurrentUser().getID());
+            query.setParameter("subject", "%"+subject.toLowerCase()+"%");
+            query.setParameter("statusid", statusid);
+            query.setParameter("workflowtype", workflowtype);
+            query.setParameter("metadataField", metadataFieldsubject);
+            if (0 <= offset) {
+                query.setFirstResult(offset);
+            }
+            if (0 <= limit) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
+        }
+
+        if(!isNullOrEmptyOrBlank(subject) && workflowtype!=null&&workflowtypename!=null&&workflowtypename.equalsIgnoreCase("Inward")){
+            sb.append(" where wt.id=:workflowtype and st.id=:statusid and p.id=:eperson and  lower(wp.Subject) like :subject");
+            System.out.println("sql subject:::HQL:inward:::::::::"+sb.toString());
+            Query query = createQuery(context,sb.toString());
+            query.setParameter("eperson", context.getCurrentUser().getID());
+            query.setParameter("subject", "%"+subject.toLowerCase()+"%");
+            query.setParameter("statusid", statusid);
+            query.setParameter("workflowtype", workflowtype);
+            if (0 <= offset) {
+                query.setFirstResult(offset);
+            }
+            if (0 <= limit) {
+                query.setMaxResults(limit);
+            }
+            return query.getResultList();
+        }
+
         return null;
     }
     @Override
-    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT DISTINCT wp FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
-                " where p.id=:eperson and st.id IN(:isDraft) and t.id IN (:workflowtype) and  wp.isdelete=:isdelete order by wp.InitDate desc");
+                " where ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson and st.id IN(:isDraft) and t.id IN (:workflowtype) and  wp.isdelete=:isdelete order by wp.InitDate desc");
         query.setParameter("eperson", eperson);
         query.setParameter("isDraft", statusid);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         if (0 <= offset) {
             query.setFirstResult(offset);
         }
@@ -664,18 +917,20 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid) throws SQLException {
+    public int countgetHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st  " +
                 "join wp.workflowType as t " +
-                "where p.id=:eperson and st.id  IN(:isDraft) and t.id IN(:workflowtype) and wp.isdelete=:isdelete");
+                "where ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson and st.id  IN(:isDraft) and t.id IN(:workflowtype) and wp.isdelete=:isdelete");
         query.setParameter("eperson", eperson);
         query.setParameter("isDraft", statusid);
         query.setParameter("workflowtype", workflowtypeid);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
@@ -1372,42 +1627,37 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
 
     @Override
-    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
+    public int countByTypeAndStatus(Context context, UUID typeid, UUID statusid, UUID epersonid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context,
-                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.workflowStatus as st left join wp.workflowType as t where  t.id=:typeid and st.id=:statusid and user.id=:epersonid and ep.isOwner=:isOwner and wp.isdelete=:isdelete");
+                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.workflowStatus as st left join wp.workflowType as t where  t.id=:typeid and st.id=:statusid and user.id=:epersonid and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and wp.isdelete=:isdelete");
         query.setParameter("typeid", typeid);
         query.setParameter("statusid", statusid);
         query.setParameter("epersonid", epersonid);
         query.setParameter("isOwner", true);
         query.setParameter("isdelete", false);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
-    @Override
-    public int countByTypeAndStatusNotwoner(Context context, UUID typeid, UUID statusid, UUID epersonid) throws SQLException {
-        Query query = createQuery(context,
-                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.workflowStatus as st left join wp.workflowType as t where  t.id=:typeid and st.id=:statusid and user.id=:epersonid");
-        query.setParameter("typeid", typeid);
-        query.setParameter("statusid", statusid);
-        query.setParameter("epersonid", epersonid);
-        return count(query);
-    }
 
     @Override
-    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid) throws SQLException {
+    public int countByTypeAndPriority(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context,
-                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.priority as p left join wp.workflowType as t left join  wp.workflowStatus as st where t.id=:typeid and p.id=:priorityid and user.id=:epersonid and ep.isOwner=:isOwner and st.id=:statusid and wp.isdelete=:isdelete");
+                "SELECT count(wp) FROM WorkflowProcess as wp left join wp.workflowProcessEpeople as ep left join ep.ePerson as user left join wp.priority as p left join wp.workflowType as t left join  wp.workflowStatus as st where t.id=:typeid and p.id=:priorityid and user.id=:epersonid and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid  and st.id=:statusid and wp.isdelete=:isdelete");
         query.setParameter("typeid", typeid);
         query.setParameter("priorityid", priorityid);
         query.setParameter("epersonid", epersonid);
         query.setParameter("isOwner", true);
         query.setParameter("isdelete", false);
         query.setParameter("statusid", statusid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
     @Override
-    public int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+    public int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                         "left join wp.workflowProcessEpeople as ep " +
@@ -1418,7 +1668,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                         "where t.id=:typeid " +
                         "and p.id=:priorityid " +
                         "and user.id=:epersonid " +
-                        "and ep.isOwner=:isOwner " +
+                        "and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
                         "and st.id=:statusid " +
                         "and wp.isdelete=:isdelete");
         query.setParameter("typeid", typeid);
@@ -1427,11 +1677,13 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isOwner", false);
         query.setParameter("isdelete", false);
         query.setParameter("statusid", statusid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
     @Override
-    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context,
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                         "left join wp.workflowProcessEpeople as ep " +
@@ -1442,7 +1694,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                         "where t.id=:typeid " +
                         "and p.id=:priorityid " +
                         "and user.id=:epersonid " +
-                        "and ep.isOwner=:isOwner " +
+                        "and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
                         "and st.id=:statusid " +
                         "and wp.isdelete=:isdelete");
         query.setParameter("typeid", typeid);
@@ -1451,18 +1703,20 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("isOwner", false);
         query.setParameter("isdelete", false);
         query.setParameter("statusid", statusid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 
     @Override
-    public int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid) throws SQLException {
+    public int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
                 "join ep.ePerson as p  " +
                 "join wp.workflowStatus as st join wp.priority as pr  " +
                 "join wp.workflowType as t where t.id=:typeid " +
-                "and pr.id=:priorityid and  ep.isOwner=:isOwner " +
+                "and pr.id=:priorityid and  ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
                 "and p.id=:eperson and st.id NOT IN(:notDraft) " +
                 "and wp.isdelete=:isdelete");
         query.setParameter("isOwner", false);
@@ -1471,12 +1725,14 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("typeid", typeid);
         query.setParameter("isdelete", false);
         query.setParameter("priorityid", priorityid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
 
         return count(query);
     }
 
     @Override
-    public int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid, UUID draftstatusid) throws SQLException {
+    public int countByTypeAndStatusandNotDraft(Context context, UUID typeid, UUID statusid, UUID epersonid, UUID draftstatusid,UUID epersontoepersonmapid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
@@ -1484,7 +1740,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "join wp.workflowStatus as st " +
                 "join wp.workflowType as t " +
                 "where t.id=:typeid " +
-                "and  ep.isOwner=:isOwner " +
+                "and  ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
                 "and p.id=:eperson " +
                 "and st.id=:statusid " +
                 "and st.id NOT IN(:notDraft) " +
@@ -1495,6 +1751,8 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         query.setParameter("typeid", typeid);
         query.setParameter("isdelete", false);
         query.setParameter("statusid", statusid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+
         return count(query);
     }
 

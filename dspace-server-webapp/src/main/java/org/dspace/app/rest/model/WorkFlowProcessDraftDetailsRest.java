@@ -32,6 +32,9 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     //drafttype means notesheet or document
     private WorkFlowProcessMasterValueRest drafttypeRest;
     private EPersonRest documentsignatorRest;
+
+    @JsonProperty
+    private EpersonToEpersonMappingRest epersonToEpersonMappingRest = null;
     //for reply tapal
     private WorkFlowProcessMasterValueRest draftnatureRest;
 
@@ -190,5 +193,13 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
 
     public void setSapdocumenttypeRest(WorkFlowProcessMasterValueRest sapdocumenttypeRest) {
         this.sapdocumenttypeRest = sapdocumenttypeRest;
+    }
+
+    public EpersonToEpersonMappingRest getEpersonToEpersonMappingRest() {
+        return epersonToEpersonMappingRest;
+    }
+
+    public void setEpersonToEpersonMappingRest(EpersonToEpersonMappingRest epersonToEpersonMappingRest) {
+        this.epersonToEpersonMappingRest = epersonToEpersonMappingRest;
     }
 }

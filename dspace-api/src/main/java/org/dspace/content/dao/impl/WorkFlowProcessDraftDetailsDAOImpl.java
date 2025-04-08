@@ -16,6 +16,7 @@ import org.dspace.core.Context;
 
 import javax.persistence.Query;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 public class WorkFlowProcessDraftDetailsDAOImpl extends AbstractHibernateDAO<WorkFlowProcessDraftDetails> implements WorkFlowProcessDraftDetailsDAO {
@@ -38,5 +39,18 @@ public class WorkFlowProcessDraftDetailsDAOImpl extends AbstractHibernateDAO<Wor
         Query query = createQuery(context, "SELECT wfp FROM WorkflowProcess as wp left join wp.workFlowProcessDraftDetails as wfp where  wp.id=:workflowprocessid");
         query.setParameter("workflowprocessid", workflowprocessid);
         return (WorkFlowProcessDraftDetails)query.getSingleResult();
+    }
+
+    @Override
+    public List<WorkFlowProcessDraftDetails> getbyDocumentsignator(Context context,int limit) throws SQLException {
+        try {
+            Query query = createQuery(context,
+                    "SELECT DISTINCT em FROM WorkFlowProcessDraftDetails em WHERE em.documentsignator.id IS NOT NULL and em.epersontoepersonmapping.id IS NULL");
+            query.setMaxResults(limit);
+            return query.getResultList();
+        }catch (Exception e){
+            System.out.println("error :getbyDocumentsignator "+e.getMessage());
+            return null;
+        }
     }
 }

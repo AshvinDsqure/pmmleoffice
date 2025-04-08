@@ -55,6 +55,11 @@ public class WorkflowProcessSenderDiaryEperson extends DSpaceObject implements D
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "office_id")
     private WorkFlowProcessMasterValue office = null;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "epersontoepersonmapping")
+    private EpersonToEpersonMapping epersontoepersonmapping;
     @Column(name = "isdelete")
     private  Boolean isdelete=false;
 
@@ -131,5 +136,13 @@ public class WorkflowProcessSenderDiaryEperson extends DSpaceObject implements D
 
     public void setIsdelete(Boolean isdelete) {
         this.isdelete = isdelete;
+    }
+
+    public EpersonToEpersonMapping getEpersontoepersonmapping() {
+        return epersontoepersonmapping;
+    }
+
+    public void setEpersontoepersonmapping(EpersonToEpersonMapping epersontoepersonmapping) {
+        this.epersontoepersonmapping = epersontoepersonmapping;
     }
 }

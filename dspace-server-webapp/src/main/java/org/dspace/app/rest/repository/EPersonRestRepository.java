@@ -9,12 +9,13 @@ package org.dspace.app.rest.repository;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,13 +23,11 @@ import org.dspace.app.rest.DiscoverableEndpointsService;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.EPersonConverter;
+import org.dspace.app.rest.converter.EpersonMappingConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.enums.WorkFlowStatus;
-import org.dspace.app.rest.exception.DSpaceBadRequestException;
-import org.dspace.app.rest.exception.EPersonNameNotProvidedException;
-import org.dspace.app.rest.exception.PasswordNotValidException;
-import org.dspace.app.rest.exception.RESTEmptyWorkflowGroupException;
-import org.dspace.app.rest.exception.UnprocessableEntityException;
+import org.dspace.app.rest.enums.WorkFlowUserType;
+import org.dspace.app.rest.exception.*;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.model.patch.Operation;
 import org.dspace.app.rest.model.patch.Patch;
@@ -36,8 +35,10 @@ import org.dspace.app.util.AuthorizeUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.authorize.service.ValidatePasswordService;
-import org.dspace.content.Item;
-import org.dspace.content.WorkflowProcess;
+import org.dspace.content.*;
+import org.dspace.content.service.EpersonMappingService;
+import org.dspace.content.service.EpersonToEpersonMappingService;
+import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.EmptyWorkflowGroupException;
@@ -53,6 +54,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -77,6 +79,20 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
 
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
+
+    @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
+
+    @Autowired
+    EpersonMappingService epersonMappingService;
+
+
+    @Autowired
+    EpersonToEpersonMappingService epersonToEpersonMappingService;
+
+
 
     @Autowired
     DiscoverableEndpointsService discoverableEndpointsService;
@@ -107,6 +123,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Override
     protected EPersonRest createAndReturn(Context context)
             throws AuthorizeException {
+
+
+        System.out.println("createAndReturn:::::::::::::::::::::1");
         // this need to be revisited we should receive an EPersonRest as input
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
@@ -147,6 +166,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         EPerson eperson = null;
         try {
             eperson = es.create(context);
+
+            EPerson ePersonfinal=eperson;
             // this should be probably moved to the converter (a merge method?)
             eperson.setCanLogIn(epersonRest.isCanLogIn());
             eperson.setRequireCertificate(epersonRest.isRequireCertificate());
@@ -168,6 +189,34 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                     throw new PasswordNotValidException();
                 }
                 es.setPassword(eperson, epersonRest.getPassword());
+            }
+            if(epersonRest.getEpersonmapping()!=null&&!epersonRest.getEpersonmapping().isEmpty()){
+                if(epersonRest.getEpersonmapping().contains(",")) {
+                    System.out.println("in Multiple  mapping");
+                    List<String> list = Arrays.asList(epersonRest.getEpersonmapping().split(","));
+                    List<EpersonToEpersonMapping> epersonToEpersonMappings = list.stream()
+                            .filter(d -> d != null).map(we -> {
+                                try {
+                                    EpersonToEpersonMapping epersonDepartment = new EpersonToEpersonMapping();
+                                    epersonDepartment.setEperson(ePersonfinal);
+                                    epersonDepartment.setEpersonmapping(epersonMappingService.find(context, UUID.fromString(we)));
+                                    epersonDepartment.setIsactive(false);
+                                    return epersonDepartment;
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }).collect(Collectors.toList());
+                    eperson.setEpersonToEpersonMappings(epersonToEpersonMappings);
+                }else{
+                    System.out.println("in single mapping");
+                    EpersonToEpersonMapping epersonDepartment = new EpersonToEpersonMapping();
+                    epersonDepartment.setEperson(ePersonfinal);
+                    epersonDepartment.setEpersonmapping(epersonMappingService.find(context, UUID.fromString(epersonRest.getEpersonmapping())));
+                    List<EpersonToEpersonMapping> epersonToEpersonMappings=new ArrayList<>();
+                    epersonToEpersonMappings.add(epersonDepartment);
+                    eperson.setEpersonToEpersonMappings(epersonToEpersonMappings);
+                }
+
             }
             es.update(context, eperson);
             metadataConverter.setMetadata(context, eperson, epersonRest.getMetadata());
@@ -196,6 +245,8 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     private EPersonRest createAndReturn(Context context, EPersonRest epersonRest, String token)
             throws AuthorizeException, SQLException {
 
+
+        System.out.println("in createAndReturn:::::");
 
         if (!AuthorizeUtil.authorizeNewAccountRegistration(context, requestService
                 .getCurrentRequest().getHttpServletRequest())) {
@@ -354,6 +405,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     protected void patch(Context context, HttpServletRequest request, String apiCategory, String model, UUID uuid,
                          Patch patch) throws AuthorizeException, SQLException {
         try {
+            EPerson ePerson = es.find(context, uuid);
             boolean passwordChangeFound = false;
             for (Operation operation : patch.getOperations()) {
                 if (StringUtils.equalsIgnoreCase(operation.getPath(), "/password")) {
@@ -371,52 +423,105 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                             "for non \"password\" authentication");
                 }
             }
-            System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
-            EPerson ePerson = es.find(context, uuid);
-            for (Operation operation : patch.getOperations()) {
-                System.out.println("value getOp " + operation.getOp());
-                System.out.println("value getPath " + operation.getPath());
-                if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.end-user")) {
-                    System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
-                    patchDSpaceObject(apiCategory, model, uuid, patch);
-                    System.out.println(":::::::::::::::::::::::::::::::::out aggrement:done:::::::::::::::::::::::::::;");
-                } else if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.cookies")) {
-                    System.out.println(":::::::::::::::::::::::::::::::cookies::::::::::::::::::::::::::;");
-                    patchDSpaceObject(apiCategory, model, uuid, patch);
-                    System.out.println("::::::::::::::::::::::::::::::::cookies::done:::::::::::::::::::::::::::;");
-                } else if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
-                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
-                    rest.setUuid(operation.getValue().toString());
-                    ePerson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest));
-                } else if (operation.getPath().equalsIgnoreCase("/officeRest")) {
-                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
-                    rest.setUuid(operation.getValue().toString());
-                    ePerson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest));
-                } else if (operation.getPath().equalsIgnoreCase("/designationRest")) {
-                    WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
-                    rest.setUuid(operation.getValue().toString());
-                    ePerson.setDesignation(workFlowProcessMasterValueConverter.convert(context, rest));
-                } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.lastname/0/value")) {
-                    ePerson.setLastName(context, operation.getValue().toString());
-                } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.firstname/0/value")) {
-                    ePerson.setFirstName(context, operation.getValue().toString());
-                } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
-                    ePerson.setEmployeeid(operation.getValue().toString());
-                } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
-                    if (StringUtils.isNotBlank(operation.getValue().toString())) {
-                        ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
+            if(StringUtils.isNotBlank(request.getParameter("token")) && passwordChangeFound){
+                System.out.println("in update Password::::::::::::::");
+                patchDSpaceObject(apiCategory, model, uuid, patch);
+            }else {
+                System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
+                System.out.println("ep..........." + ePerson.getEmail());
+                for (Operation operation : patch.getOperations()) {
+                    System.out.println("value getOp " + operation.getOp());
+                    System.out.println("value getPath " + operation.getPath());
+                    if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.end-user")) {
+                        System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
+                        patchDSpaceObject(apiCategory, model, uuid, patch);
+                        System.out.println(":::::::::::::::::::::::::::::::::out aggrement:done:::::::::::::::::::::::::::;");
+                    } else if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.cookies")) {
+                        System.out.println(":::::::::::::::::::::::::::::::cookies::::::::::::::::::::::::::;");
+                        patchDSpaceObject(apiCategory, model, uuid, patch);
+                        System.out.println("::::::::::::::::::::::::::::::::cookies::done:::::::::::::::::::::::::::;");
+                    } else if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
+                        WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                        rest.setUuid(operation.getValue().toString());
+                        ePerson.setDepartment(workFlowProcessMasterValueConverter.convert(context, rest));
+                    } else if (operation.getPath().equalsIgnoreCase("/officeRest")) {
+                        WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                        rest.setUuid(operation.getValue().toString());
+                        ePerson.setOffice(workFlowProcessMasterValueConverter.convert(context, rest));
+                    } else if (operation.getPath().equalsIgnoreCase("/designationRest")) {
+                        WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
+                        rest.setUuid(operation.getValue().toString());
+                        ePerson.setDesignation(workFlowProcessMasterValueConverter.convert(context, rest));
+                    } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.lastname/0/value")) {
+                        ePerson.setLastName(context, operation.getValue().toString());
+                    } else if (operation.getPath().equalsIgnoreCase("/metadata/eperson.firstname/0/value")) {
+                        ePerson.setFirstName(context, operation.getValue().toString());
+                    } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
+                        ePerson.setEmployeeid(operation.getValue().toString());
+                    }else if(operation.getPath().equalsIgnoreCase("/epersonmapping")){
+//                       EPerson ePersonfinal=ePerson;
+//                      String mapping=  operation.getValue().toString();
+//                        if (mapping != null && !mapping.isEmpty()) {
+//                            List<EpersonToEpersonMapping> epersonToEpersonMappings = new ArrayList<>();
+//
+//                            List<String> mappingList = mapping.contains(",")
+//                                    ? Arrays.asList(mapping.split(","))
+//                                    : Collections.singletonList(mapping);
+//
+//                            for (String mapId : mappingList) {
+//                                try {
+//
+//                                    System.out.println("mapp id ::"+mapId);
+//                                    System.out.println("epeeee id ::"+ePersonfinal.getID());
+//                                    System.out.println("getEmail id ::"+ePersonfinal.getEmail());
+//
+//
+//                                    UUID mappingUUID = UUID.fromString(mapId);
+//                                    EpersonToEpersonMapping existingMapping = epersonToEpersonMappingService
+//                                            .findByEpersonAndEpersonMapping(context, mappingUUID, ePersonfinal.getID());
+//
+//                                    if (existingMapping == null) {
+//                                        System.out.println("add new mapping ::::::::::::::");
+//                                        EpersonToEpersonMapping newMapping = new EpersonToEpersonMapping();
+//                                        newMapping.setEperson(ePersonfinal);
+//                                        newMapping.setEpersonmapping(epersonMappingService.find(context, mappingUUID));
+//                                        newMapping.setIsactive(false);
+//                                        epersonToEpersonMappings.add(newMapping);
+//                                    }
+//                                } catch (SQLException e) {
+//                                    throw new RuntimeException("Error processing eperson mapping", e);
+//                                }
+//                            }
+//
+//                            if (!epersonToEpersonMappings.isEmpty()) {
+//
+//                                System.out.println("size ::::"+epersonToEpersonMappings.size());
+//
+//                                ePerson.setEpersonToEpersonMappings(epersonToEpersonMappings);
+//                            }
+//                        }
+
+                    } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
+                        if (!operation.getValue().toString().isEmpty()&&operation.getValue()!=null&&!StringUtils.isNotBlank(operation.getValue().toString())) {
+                            ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
+                        } else {
+                            ePerson.setTablenumber(null);
+                        }
+                    } else if (operation.getPath().equalsIgnoreCase("/email")) {
+                        ePerson.setEmail(operation.getValue().toString());
+                    } else if (operation.getPath().equalsIgnoreCase("/password")) {
+                        if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
+                            throw new PasswordNotValidException();
+                        }
+                        if (operation.getValue() instanceof String) {
+                            es.setPassword(ePerson, operation.getValue().toString());
+                        }else {
+                            System.out.println("pass:::not string:::::::" + operation.getValue());
+                            patchDSpaceObject(apiCategory, model, uuid, patch);
+                        }
                     } else {
-                        ePerson.setTablenumber(null);
+                        patchDSpaceObject(apiCategory, model, uuid, patch);
                     }
-                } else if (operation.getPath().equalsIgnoreCase("/email")) {
-                    ePerson.setEmail(operation.getValue().toString());
-                } else if (operation.getPath().equalsIgnoreCase("/password")) {
-                    if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
-                        throw new PasswordNotValidException();
-                    }
-                    es.setPassword(ePerson, operation.getValue().toString());
-                }else{
-                    patchDSpaceObject(apiCategory, model, uuid, patch);
                 }
             }
             es.update(context, ePerson);
@@ -443,7 +548,28 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         }
     }
 
-
+    @SearchRestMethod(name = "findByEmployeeID")
+    public EPersonRest findByEmployeeID(HttpServletResponse res, @Parameter(value = "employeeid", required = true) String employeeid) throws IOException {
+        try {
+            System.out.println("employeeid::"+employeeid);
+           Context context = obtainContext();
+           EPerson e= es.findByEmployeeID(context,employeeid);
+           if(e!=null){
+               throw new AlreadyDataExistException("THIS EmployeeID Already EXIST.");
+           }
+            return new EPersonRest();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (AlreadyDataExistException e) {
+            e.printStackTrace();
+            res.sendError(HttpStatus.NOT_ACCEPTABLE.value(), e.getMessage());
+            throw new AlreadyDataExistException(e.getMessage());
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
     @SearchRestMethod(name = "searchByDepartment")
     public Page<EPersonRest> searchByDepartment(
             @Parameter(value = "searchdepartmentorofficeid", required = true) UUID searchdepartmentorofficeid,
@@ -452,7 +578,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         try {
             Context context = obtainContext();
             List<EPerson> witems = es.getByDepartment(context, searchdepartmentorofficeid);
-
             ePersonRests = witems.stream().filter(d->!d.getEmail().equalsIgnoreCase(context.getCurrentUser().getEmail())).map(d -> {
                     return ePersonConverter.convertBYUSer(d, utils.obtainProjection());
             }).collect(toList());
