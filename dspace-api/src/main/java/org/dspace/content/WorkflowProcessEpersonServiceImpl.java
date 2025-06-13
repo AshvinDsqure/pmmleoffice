@@ -138,4 +138,19 @@ public class WorkflowProcessEpersonServiceImpl extends DSpaceObjectServiceImpl<W
     public List<WorkflowProcessEperson> getALLData(Context context, int limit) throws SQLException {
         return workflowProcessEpersonDAO.getALLData(context,limit);
     }
+
+    @Override
+    public int getCountByEpersontoepersonmapping(Context context,UUID eperson, UUID epersontoepersonmapping) {
+        return workflowProcessEpersonDAO.getCountByEpersontoepersonmapping(context,eperson,epersontoepersonmapping);
+    }
+
+    @Override
+    public int updateWorkflowProcessEperson(Context context, UUID epersonfrom, UUID epersontoepersonmappingfrom, UUID epersonto, UUID epersontoepersonmappingto) throws SQLException {
+        return workflowProcessEpersonDAO.updateWorkflowProcessEperson(context,epersonfrom,epersontoepersonmappingfrom,epersonto,epersontoepersonmappingto);
+    }
+
+    @Override
+    public int getCountByEperson(Context context, UUID eperson) {
+        return workflowProcessEpersonDAO.getCountByEperson(context,eperson);
+    }
 }

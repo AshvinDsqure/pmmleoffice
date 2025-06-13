@@ -8,7 +8,6 @@
 package org.dspace.app.rest.converter;
 
 import org.dspace.app.rest.model.WorkFlowProcessDraftDetailsRest;
-import org.dspace.app.rest.model.WorkflowProcessSenderDiaryRest;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.content.WorkFlowProcessDraftDetails;
@@ -19,9 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 @Component

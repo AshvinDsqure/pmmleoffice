@@ -118,7 +118,7 @@ public enum WorkFlowType {
              workflowProcess.setVersion(DateUtils.getVersion());
             workflowProcess = this.getWorkflowProcessService().create(context, workflowProcess);
             WorkflowProcess finalWorkflowProcess = workflowProcess;
-            workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().map(d -> {
+            workflowProcess.setWorkflowProcessReferenceDocs(workFlowProcessRest.getWorkflowProcessReferenceDocRests().stream().filter(d->d!=null&& d.getId()!=null).map(d -> {
                 try {
                     WorkflowProcessReferenceDoc workflowProcessReferenceDoc = this.getWorkflowProcessReferenceDocConverter().convertByService(context, d);
                     workflowProcessReferenceDoc.setWorkflowProcess(finalWorkflowProcess);

@@ -10,17 +10,22 @@ package org.dspace.app.rest.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.xmlbeans.UserType;
 import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
-import org.dspace.app.rest.converter.*;
+import org.dspace.app.rest.converter.WorkFlowProcessConverter;
+import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
+import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
-import org.dspace.app.rest.model.*;
-import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.app.rest.model.EPersonRest;
+import org.dspace.app.rest.model.WorkFlowProcessRest;
+import org.dspace.app.rest.model.WorkflowProcessDTO;
+import org.dspace.app.rest.model.WorkflowProcessEpersonRest;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
@@ -33,15 +38,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ValidatorFactory;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -90,16 +91,15 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @Override
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     public WorkFlowProcessRest findOne(Context context, UUID id) throws SQLException {
-        System.out.println("in view Flow::::::::::::::::");
+        //System.out.println("in view Flow::::::::::::::::");
         context.turnOffAuthorisationSystem();
         WorkFlowProcessRest workFlowProcessRest = null;
         WorkflowProcess workflowProcess = workflowProcessService.find(context, id);
         workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
         try {
             Optional<WorkflowProcessEperson> currentuser=workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getOwner()==true).filter(d->d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst();
-
             if (currentuser.isPresent()) {
-                System.out.println("Is Read Done");
+                //System.out.println("Is Read Done");
                 workflowProcess.setIsread(true);
                 workflowProcessService.update(context, workflowProcess);
                 workFlowProcessRest.setIsread(true);
@@ -126,20 +126,22 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-
-
             UUID epersonToEpersonMappingid = null;
             Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
-            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
 
+            HashMap<String, String> perameter=new HashMap<>();
+            Boolean iscreateddate=true;
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, statusdraftid,epersonToEpersonMappingid,perameter,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
-
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
             e.printStackTrace();
@@ -245,7 +247,12 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getByWorkFlowType")
-    public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+    public Page<WorkFlowProcessRest> getByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid,
+                                                       @Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                       @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                       @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                       @Parameter(value = "order", required = false) String order,
+                                                       Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             //
@@ -256,11 +263,56 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
+
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "getByWorkFlowTypeAttaged")
+    public Page<WorkFlowProcessRest> getByWorkFlowTypeAttaged(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            //
+            Context context = obtainContext(); context.turnOffAuthorisationSystem();
+            UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid=map.get().getID();
+            }
+            HashMap<String, String> perameter=new HashMap<>();
+            Boolean iscreateddate=true;
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            int count = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid,perameter,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().filter(d->d.getIsreplydraft()==false).map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
             e.printStackTrace();
@@ -268,9 +320,15 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraftByWorkFlowTypeID")
-    public Page<WorkFlowProcessRest> getDraftByWorkFlowTypeID(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+    public Page<WorkFlowProcessRest> getDraftByWorkFlowTypeID(@Parameter(value = "uuid", required = true) UUID typeid,
+                                                              @Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                              @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                              @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                              @Parameter(value = "order", required = false) String order,
+                                                              Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             System.out.println("in getDraftByWorkFlowTypeID");
@@ -281,9 +339,23 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countfindNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid);
             System.out.println("getDraftByWorkFlowTypeID size "+count);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findNotCompletedByUserDraft(context, context.getCurrentUser().getID(), statusid, typeid,epersonToEpersonMappingid, perameter,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             System.out.println("getDraftByWorkFlowTypeID size 2"+workflowProcesses.size());
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
@@ -354,7 +426,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentTapal")
-    public Page<WorkflowProcessDTO> sentTapal(Pageable pageable) {
+    public Page<WorkflowProcessDTO> sentTapal(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                              @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                              @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                              @Parameter(value = "order", required = false) String order,
+                                              Pageable pageable) {
          System.out.println("in sentTapal");
          List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
          try {
@@ -369,11 +445,25 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                  epersonToEpersonMappingid=map.get().getID();
              }
              int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose,epersonToEpersonMappingid);
+             HashMap<String, String> perameter=new HashMap<>();
+             if(iscreateddate!=null&&iscreateddate==true){
+                 perameter.put("iscreateddate","true");
+             }
+             if(isreciveddate!=null&&isreciveddate==true){
+                 perameter.put("isreciveddate","true");
+             }
+             if(ispriority!=null&&ispriority==true){
+                 perameter.put("ispriority","true");
+
+             }
+             if(order!=null&&!order.isEmpty()){
+                 perameter.put("order",order);
+             }
              List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
                      context.getCurrentUser().getID(),
                      statusid,
                      workflowtypeid,
-                     statusidclose,epersonToEpersonMappingid,
+                     statusidclose,epersonToEpersonMappingid,perameter,
                      Math.toIntExact(pageable.getOffset()),
                      Math.toIntExact(pageable.getPageSize()));
              workflowsRes = workflowProcesses.stream().map(d -> {
@@ -388,7 +478,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
      }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "sentEFile")
-    public Page<WorkflowProcessDTO> sentEFile(Pageable pageable) {
+    public Page<WorkflowProcessDTO> sentEFile(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                              @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                              @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                              @Parameter(value = "order", required = false) String order,
+                                              Pageable pageable) {
         System.out.println("in sentEFile");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -404,11 +498,26 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 epersonToEpersonMappingid=map.get().getID();
             }
             int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid,workflowtypeid,statusidclose,epersonToEpersonMappingid);
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
+
             List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
                     context.getCurrentUser().getID(),
                     statusid,
                     workflowtypeid,
-                    statusidclose,epersonToEpersonMappingid,
+                    statusidclose,epersonToEpersonMappingid,perameter,
                     Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
@@ -423,7 +532,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "closeTapal")
-    public Page<WorkflowProcessDTO> closeTapal(Pageable pageable) {
+    public Page<WorkflowProcessDTO> closeTapal(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                               @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                               @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                               @Parameter(value = "order", required = false) String order,
+                                               Pageable pageable) {
         System.out.println("in closeTapal");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -431,14 +544,34 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
+            UUID INITIATORid= WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
+
             UUID epersonToEpersonMappingid = null;
             Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
-            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,statusdispathcclose,workflowtypeid,epersonToEpersonMappingid,INITIATORid);
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,statusdispathcclose,workflowtypeid,epersonToEpersonMappingid,INITIATORid,perameter,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -451,7 +584,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "closeEFile")
-    public Page<WorkflowProcessDTO> closeEFile(Pageable pageable) {
+    public Page<WorkflowProcessDTO> closeEFile(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                               @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                               @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                               @Parameter(value = "order", required = false) String order,
+                                               Pageable pageable) {
         System.out.println("in closeEFile");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -459,14 +596,33 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdspachclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            UUID INITIATORid= WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
+
             UUID epersonToEpersonMappingid = null;
             Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
-            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
+            int count = workflowProcessService.countCloseTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,statusdspachclose,workflowtypeid,epersonToEpersonMappingid,INITIATORid);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.closeTapal(context, context.getCurrentUser().getID(), statusdraft,statusclose,statusdspachclose,workflowtypeid,epersonToEpersonMappingid,INITIATORid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -524,8 +680,12 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
-    @SearchRestMethod(name = "parkedWorkflow")
-    public Page<WorkflowProcessDTO> parkedWorkflow(Pageable pageable) {
+     @SearchRestMethod(name = "parkedWorkflow")
+     public Page<WorkflowProcessDTO> parkedWorkflow(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                   @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                   @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                    @Parameter(value = "order", required = false) String order,
+                                                   Pageable pageable) {
         System.out.println("in parkedWorkflow");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -541,8 +701,21 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid, perameter,Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -555,7 +728,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "parkedWorkflowTapal")
-    public Page<WorkflowProcessDTO> parkedWorkflowTapal(Pageable pageable) {
+    public Page<WorkflowProcessDTO> parkedWorkflowTapal(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                        @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                        @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                        @Parameter(value = "order", required = false) String order,
+                                                        Pageable pageable) {
         System.out.println("in parkedWorkflow");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -570,8 +747,25 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countparkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            System.out.println("count:::"+count);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.parkedFlow(context, context.getCurrentUser().getID(), statusdraft,statusparked,workflowtypeid,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -612,7 +806,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraft")
-    public Page<WorkFlowProcessRest> getDraft(Pageable pageable) {
+    public Page<WorkFlowProcessRest> getDraft(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                              @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                              @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                              @Parameter(value = "order", required = false) String order,
+                                              Pageable pageable) {
         log.info("in getDraft start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -626,11 +824,30 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+
+
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,workflowtypeid,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
+
+
             log.info("in getDraft stop!");
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
@@ -641,7 +858,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     }
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraftByWorkFlowType")
-    public Page<WorkFlowProcessRest> getDraftByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid, Pageable pageable) {
+    public Page<WorkFlowProcessRest> getDraftByWorkFlowType(@Parameter(value = "uuid", required = true) UUID typeid,@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                            @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                            @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                            @Parameter(value = "order", required = false) String order,
+                                                            Pageable pageable) {
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             //
@@ -654,10 +875,26 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 epersonToEpersonMappingid=map.get().getID();
             }
             int count = workflowProcessService.countgetHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            HashMap<String, String> perameter=new HashMap<>();
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getHistoryByOwnerAndIsDraft(context, context.getCurrentUser().getID(), statusid,typeid,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
+
             log.info("in getDraft stop!");
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
@@ -676,7 +913,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Pageable pageable) {
         try {
             Context context = obtainContext(); context.turnOffAuthorisationSystem();
-            System.out.println("::::::::::::::::::::start searchByFilenumberOrTapaleNumber :::::::::::::::::::");
+            //System.out.println("::::::::::::::::::::start searchByFilenumberOrTapaleNumber :::::::::::::::::::");
             HashMap<String, String> map = new HashMap<>();
             if (!isNullOrEmptyOrBlank(filenumber)) {
                 map.put("filenumber", filenumber);
@@ -698,7 +935,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                }
             }
 
-            System.out.println("map :"+map);
+            //System.out.println("map :"+map);r̥
 
             if(!map.isEmpty()) {
                 int count = 10;// workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()),Math.toIntExact(pageable.getPageSize()));
@@ -851,7 +1088,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
      @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getDraftNotePendingWorkflow")
-    public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(Pageable pageable) {
+    public Page<WorkFlowProcessRest> getDraftNotePendingWorkflow(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                                 @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                                 @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                                 @Parameter(value = "order", required = false) String order,
+                                                                 Pageable pageable) {
         log.info("in getDraftNotePendingWorkflow start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -869,11 +1110,29 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+
+           // ispriority=true;
+
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+           // System.out.println("size:::"+workflowProcesses.size());
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
+
             log.info("in getDraftNotePendingWorkflow stop!");
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
@@ -885,27 +1144,42 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getWorkflowAfterNoteApproved")
-    public Page<WorkFlowProcessRest> getWorkflowAfterNoteApproved(Pageable pageable) {
+    public Page<WorkFlowProcessRest> getWorkflowAfterNoteApproved(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                                                  @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                                                  @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                                                  @Parameter(value = "order", required = false) String order,
+                                                                  Pageable pageable) {
         log.info("in getWorkflowAfterNoteApproved start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statuscloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-           // UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
             UUID statusdraftid = null;
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-
             UUID epersonToEpersonMappingid = null;
             Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
             if (map.isPresent()) {
                 epersonToEpersonMappingid=map.get().getID();
             }
+            HashMap<String, String> perameter=new HashMap<>();
+            if(iscreateddate!=null&&iscreateddate==true){
+                perameter.put("iscreateddate","true");
+            }
+            if(ispriority!=null&&ispriority==true){
+                perameter.put("ispriority","true");
+            }
+            if(isreciveddate!=null&&isreciveddate==true){
+                perameter.put("isreciveddate","true");
+            }
+            if(order!=null&&!order.isEmpty()){
+                perameter.put("order",order);
+            }
             int count = workflowProcessService.getCountWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid,epersonToEpersonMappingid);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.getWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid,epersonToEpersonMappingid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.getWorkflowAfterNoteApproved(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraftid,epersonToEpersonMappingid,perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -983,7 +1257,6 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
         return null;
     }
-
     public static boolean isNullOrEmptyOrBlank(String str) {
         return str == null || str.trim().isEmpty();
     }

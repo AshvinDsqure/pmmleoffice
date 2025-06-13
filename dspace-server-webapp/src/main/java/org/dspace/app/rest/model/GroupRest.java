@@ -42,6 +42,7 @@ public class GroupRest extends DSpaceObjectRest {
     public static final String OBJECT = "object";
     private boolean permanent;
     private Boolean isdspace;
+    private Integer membercount;
     private WorkFlowProcessMasterValueRest grouptypeRest = null;
     @Override
     public String getCategory() {
@@ -76,5 +77,13 @@ public class GroupRest extends DSpaceObjectRest {
     }
     public void setGrouptypeRest(WorkFlowProcessMasterValueRest grouptypeRest) {
         this.grouptypeRest = grouptypeRest;
+    }
+
+    public Integer getMembercount() {
+        return membercount;
+    }
+
+    public void setMembercount(Integer membercount) {
+        this.membercount = membercount;
     }
 }

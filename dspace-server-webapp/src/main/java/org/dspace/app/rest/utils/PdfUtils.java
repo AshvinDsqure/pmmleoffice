@@ -7,13 +7,10 @@ import com.itextpdf.layout.font.FontProvider;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jsoup.Jsoup;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Random;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -173,6 +170,65 @@ public class PdfUtils {
 
             zipOut.finish();
             return byteArrayOutputStream.toByteArray();
+        }
+    }
+
+
+    public static Date getyyyyMMdd(String dateString){
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        try {
+            Date date = sdf.parse(dateString);
+            System.out.println("date:::"+date);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+
+        }
+    }
+
+
+
+    public static String replacePlaceholders(String template, Map<String, String> replacements) {
+        StringBuilder htmlContent = new StringBuilder();
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            var replacekey="${"+entry.getKey() +"}";
+            var displaykey=replacekey.replace("{","@").replace("}","@");
+
+            if(entry.getValue() != null && entry.getValue().trim().length() !=0 ) {
+                template = template.replace(replacekey, entry.getValue());
+                template = template.replace(displaykey, "");
+            }else{
+
+                template = template.replace(displaykey, "display: none;");
+                //System.out.println("=================================="+template +entry.getKey()+".display");
+            }
+        }
+        htmlContent.append(template);
+        return htmlContent.toString();
+    }
+
+    public static String readHtmlFile(String filePath) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+
+    public static Date getDateddMMyyyy(String dateString){
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        try {
+            Date date = sdf.parse(dateString);
+            System.out.println("Converted Date: " + date);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+
         }
     }
 

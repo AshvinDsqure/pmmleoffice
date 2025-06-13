@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
@@ -108,10 +109,15 @@ public static File getSingDoc(String docfathe,List<DigitalSignRequet> digitalSig
 }
     public  static String getCordinate(String path,String serchtext,int page) throws IOException {
         System.out.println(":::::::::::in getCordinate:::::::::::");
-        PDFTextSearch.PDFLastLineStripper stripper1 = new PDFTextSearch.PDFLastLineStripper();
-        stripper1.searchTerm = serchtext;
-        loadPDF(path, stripper1,page);
-        return stripper1.getCoordinates();
+       try {
+           PDFTextSearch.PDFLastLineStripper stripper1 = new PDFTextSearch.PDFLastLineStripper();
+           stripper1.searchTerm = serchtext;
+           loadPDF(path, stripper1, page);
+           return stripper1.getCoordinates();
+       }catch (Exception e){
+           e.printStackTrace();
+           return null;
+       }
     }
     public  static String getCordinate(String path,String serchtext) throws IOException {
         System.out.println(":::::::::::in getCordinate:::::::::::");
@@ -123,7 +129,8 @@ public static File getSingDoc(String docfathe,List<DigitalSignRequet> digitalSig
 
     public static Map<Integer,Integer> countOccurrencesPageWise(String pdfFilePath, String searchText) {
         Map<Integer,Integer>map=new HashMap<>();
-        try (PDDocument document = PDDocument.load(new File(pdfFilePath))) {
+        try (PDDocument document = PDDocument.load(new File(pdfFilePath), MemoryUsageSetting.setupTempFileOnly())){
+        //try (PDDocument document = PDDocument.load(new File(pdfFilePath))) {
             PDFTextStripper pdfStripper = new PDFTextStripper();
             int totalPages = document.getNumberOfPages();
 
@@ -171,13 +178,14 @@ public static File getSingDoc(String docfathe,List<DigitalSignRequet> digitalSig
 
     public static void loadPDF(String filePath, PDFLastLineStripper stripper1,int page) {
         System.out.println("filePath:::::::::" + filePath);
-        try (PDDocument document = PDDocument.load(new File(filePath))) {
+        try (PDDocument document = PDDocument.load(new File(filePath), MemoryUsageSetting.setupTempFileOnly())) {
             // Process each page
             stripper1.setStartPage(page + 1);
             stripper1.setEndPage(page + 1);
             stripper1.getText(document);
 
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

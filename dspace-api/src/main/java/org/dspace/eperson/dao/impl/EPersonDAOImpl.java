@@ -277,4 +277,18 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
 
         }
     }
+
+    @Override
+    public List<EPerson> findGroupMembers(Context context,UUID groupId, int offset, int limit) throws SQLException {
+        Query query = createQuery(context, "" +
+                "SELECT e FROM EPerson as e JOIN e.groups as g where g.id=:groupId");
+        query.setParameter("groupId", groupId);
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
 }

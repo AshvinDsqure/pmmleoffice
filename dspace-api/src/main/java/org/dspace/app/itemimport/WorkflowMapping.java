@@ -55,6 +55,7 @@ public class WorkflowMapping extends DSpaceRunnable<ItemImportScriptConfiguratio
     private static final EpersonToEpersonMappingService epersonToEpersonMappingService = EPersonServiceFactory.getInstance().epersonToEpersonMappingService();
 
     private static final WorkflowProcessEpersonService workflowProcessEpersonService = EPersonServiceFactory.getInstance().workflowProcessEpersonService();
+    private static final WorkFlowProcessHistoryService workFlowProcessHistoryService = EPersonServiceFactory.getInstance().workFlowProcessHistoryService();
 
     private static final WorkflowProcessSenderDiaryEpersonService workflowProcessSenderDiaryEpersonService = EPersonServiceFactory.getInstance().workflowProcessSenderDiaryEpersonService();
 
@@ -84,8 +85,6 @@ public class WorkflowMapping extends DSpaceRunnable<ItemImportScriptConfiguratio
         String eperson = "";
         int threadNumber = 7;
         int limitofrecord = -1;
-
-
         try {
             if (!line.hasOption('l')) {
                 System.out.println("Error  with, Thread Count  must add");
@@ -125,6 +124,29 @@ public class WorkflowMapping extends DSpaceRunnable<ItemImportScriptConfiguratio
                         } else {
                             System.out.println("mapping not avalable:>>>>>>>>>>>>>>>>>>>>>>::"+d.getePerson().getEmail());
                         }
+                    } catch (Exception e) {
+                        System.out.println("error-->:::2:::" + e.getMessage());
+                        // e.printStackTrace();
+                    }
+                });
+            }
+            else if (ePerson.getEmail().equalsIgnoreCase("akash22@gmail.com")) {
+                System.out.println(":::::::::::::update History:::::::::::::::");
+                List<WorkFlowProcessHistory> bitstreams = workFlowProcessHistoryService.getHistory(cs, limitofrecord);
+                bitstreams.forEach(d -> {
+                    try {
+                        if(d.getSentto()!=null&&d.getSentto().getePerson()!=null&&d.getSentto().getePerson().getFullName()!=null){
+                            d.setSenttoname(d.getSentto().getePerson().getFullName());
+                        }
+                       if(d.getWorkflowProcessEpeople()!=null&&d.getWorkflowProcessEpeople().getePerson()!=null&&d.getWorkflowProcessEpeople().getePerson().getFullName()!=null){
+                           d.setSentbyname(d.getWorkflowProcessEpeople().getePerson().getFullName());
+                           d.setIsupdate(true);
+                           workFlowProcessHistoryService.update(cs,d);
+                           successCount.incrementAndGet();
+                           System.out.println("History update done :::!!!");
+                       }else {
+                           System.out.println(" not update d.WorkFlowProcessHistory()::::"+d.getID());
+                       }
                     } catch (Exception e) {
                         System.out.println("error-->:::2:::" + e.getMessage());
                         // e.printStackTrace();
@@ -202,7 +224,8 @@ public class WorkflowMapping extends DSpaceRunnable<ItemImportScriptConfiguratio
                     }
                 });
 
-            }else{
+            }
+            else{
                 System.out.println("in Documentsignator ::::::::::::::::::::::>>>");
                 List<WorkFlowProcessDraftDetails> bitstreams = workFlowProcessDraftDetailsService.getbyDocumentsignator(cs,limitofrecord);
                 System.out.println("size:::"+bitstreams.size());

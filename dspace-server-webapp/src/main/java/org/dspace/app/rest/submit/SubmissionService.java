@@ -43,10 +43,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.content.*;
 import org.dspace.content.Collection;
-import org.dspace.content.service.CollectionService;
-import org.dspace.content.service.ItemService;
-import org.dspace.content.service.WorkFlowProcessMasterValueService;
-import org.dspace.content.service.WorkspaceItemService;
+import org.dspace.content.service.*;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.Utils;
@@ -82,6 +79,9 @@ public class SubmissionService {
     protected CollectionService collectionService;
     @Autowired
     protected ItemService itemService;
+    @Autowired
+    protected WorkflowProcessService workflowProcessService;
+
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
     @Autowired
@@ -194,11 +194,12 @@ public class SubmissionService {
                 if (currentuser != null) {
                     Optional<EpersonToEpersonMapping> map= currentuser.getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
                     if (map.isPresent()) {
-                        sb.append(map.get().getEpersonmapping().getDepartment().getSecondaryvalue());
+                        sb.append(map.get().getEpersonmapping().getDepartment().getPrimaryvalue());
                     }
                 }
                 sb.append("/" + DateUtils.getFinancialYear());
-                int count = itemService.countFileNumberByVersion(context,true,false,DateUtils.getVersion());
+                int count = workflowProcessService.getNextFileNumber(context);//itemService.countFileNumberByVersion(context,true,false,DateUtils.getVersion());
+                count=count+1;
                 sb.append("/0000" + count);
                 filenumber = sb.toString();
             } catch (Exception e) {

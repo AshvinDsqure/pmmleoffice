@@ -783,12 +783,12 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
             }
             //Reply Note
             if (workflowProcessReferenceDocRest.getDrafttypeRest() != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()) != null && workFlowProcessMasterValueConverter.convert(context, workflowProcessReferenceDocRest.getDrafttypeRest()).getPrimaryvalue().equalsIgnoreCase("Reply Note")) {
-                System.out.println("Reply Note in");
+               // System.out.println("Reply Note in");
                 if (workflowProcessReferenceDocRest.getUuid() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest() != null && workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getId() != null) {
                     workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, workflowProcessReferenceDocRest);
                     WorkflowProcessReferenceDocVersion version = workflowProcessReferenceDocVersionService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getWorkflowProcessReferenceDocVersionRest().getUuid()));
                     if (version != null) {
-                        System.out.println("Reply Note in version update!");
+                      //  System.out.println("Reply Note in version update!");
                         if (workflowProcessReferenceDocRest.getEditortext() != null) {
                             version.setEditortext(workflowProcessReferenceDocRest.getEditortext());
                             workflowProcessReferenceDoc.setEditortext(workflowProcessReferenceDocRest.getEditortext());
@@ -801,7 +801,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         workflowProcessReferenceDocVersionService.update(context, version);
                         WorkflowProcessReferenceDocRest rest = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDoc, utils.obtainProjection());
                         if (workflowProcessReferenceDocRest.getEditortext() != null) {
-                            System.out.println("doc update>>>>>");
+                            //System.out.println("doc update>>>>>");
                             workflowProcessReferenceDoc.setEditortext(workflowProcessReferenceDocRest.getEditortext());
                         }
                         workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
@@ -1157,7 +1157,6 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 }
             }
             List<WorkflowProcessReferenceDoc> witems = workflowProcessReferenceDocService.getDocumentByItemid(context, NoteUUID, UUID.fromString(itemid));
-
             if (witems != null && witems.size() != 0) {
                 for (WorkflowProcessReferenceDoc note : witems) {
                     WorkflowProcessReferenceDoc approveddoc = workflowProcessReferenceDocService.findbydrafttypeandworkflowprocessAndItem(context, UUID.fromString(itemid), note.getWorkflowProcess().getID(), ReplyNoteID);
@@ -1171,6 +1170,11 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                             }
                             approvedReplyDTOS.add(approvedReplyDTO);
                         }
+                    }else{
+                        System.out.println("::::::data not fount with ::");
+                        System.out.println("itemid::"+itemid);
+                        System.out.println("getWorkflowProcess::"+note.getWorkflowProcess().getID());
+                        System.out.println("ReplyNoteID::"+ReplyNoteID);
                     }
                 }
             }
@@ -1278,7 +1282,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-            System.out.println("HTML:::" + sb.toString());
+            //System.out.println("HTML:::" + sb.toString());
             int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
             InputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));

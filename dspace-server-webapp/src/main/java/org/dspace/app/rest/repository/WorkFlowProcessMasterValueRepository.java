@@ -92,11 +92,8 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         }
         return converter.toRest(workFlowProcessMasterValue, utils.obtainProjection());
     }
-
-
     private WorkFlowProcessMasterValue createWorkFlowProcessMasterFromRestObject(Context context, WorkFlowProcessMasterValueRest workFlowProcessMasterValueRest) throws AuthorizeException {
         WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
-
         try {
             workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
             workFlowProcessMasterValue.setIsdelete(false);
@@ -106,7 +103,6 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
         }
         return workFlowProcessMasterValue;
     }
-
     @Override
     protected WorkFlowProcessMasterValueRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
                                                  JsonNode jsonNode) throws SQLException, AuthorizeException {
@@ -120,6 +116,17 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
             throw new ResourceNotFoundException("WorkFlowProcessMasterRest  field with id: " + id + " not found");
         }
         workFlowProcessMasterValue = workFlowProcessMasterValueConverter.convert(workFlowProcessMasterValue, workFlowProcessMasterValueRest);
+
+        if(workFlowProcessMasterValueRest.getWorkFlowProcessMaster()!=null&&workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID()!=null){
+
+         WorkFlowProcessMaster workFlowProcessMaster =   masterService.find(context,workFlowProcessMasterValueRest.getWorkFlowProcessMaster().getID());
+          if(workFlowProcessMaster!=null) {
+              System.out.println("update workFlowProcessMaster "+workFlowProcessMaster.getMastername());
+              workFlowProcessMasterValue.setWorkflowprocessmaster(workFlowProcessMaster);
+           }
+          }
+        System.out.println("::::getPrimaryvalue:::::"+workFlowProcessMasterValue.getPrimaryvalue());
+        System.out.println(":::::getSecondaryvalue::::::::"+workFlowProcessMasterValue.getSecondaryvalue());
         workFlowProcessMasterValueService.update(context, workFlowProcessMasterValue);
         workFlowProcessMasterValueRestre =converter.toRest(workFlowProcessMasterValue, utils.obtainProjection());
         context.commit();

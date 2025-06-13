@@ -48,4 +48,13 @@ public class WorkFlowProcessHistoryDAOImpl  extends AbstractHibernateDAO<WorkFlo
         query.setParameter("workflowprocessid", workflowprocessid);
         return count(query);
     }
+
+    @Override
+    public List<WorkFlowProcessHistory> getHistory(Context context, int limit) throws SQLException {
+        Query query = createQuery(context, "SELECT history FROM WorkFlowProcessHistory as history " +
+                "WHERE history.isupdate=:isupdate");
+        query.setParameter("isupdate",false );
+        query.setMaxResults(limit);
+        return query.getResultList();
+    }
 }

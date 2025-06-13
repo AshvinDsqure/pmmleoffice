@@ -113,7 +113,7 @@ public class WorkflowProcessReferenceDocRepository extends DSpaceObjectRestRepos
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         try {
             workflowProcessReferenceDoc = workflowProcessReferenceDocService.find(context, id);
-            storeWorkFlowHistoryforDocumentDelete(context, workflowProcessReferenceDoc);
+            //storeWorkFlowHistoryforDocumentDelete(context, workflowProcessReferenceDoc);
             if (workflowProcessReferenceDoc == null) {
                 throw new ResourceNotFoundException(WorkflowProcessReferenceDocRest.CATEGORY + "." + WorkflowProcessReferenceDocRest.NAME +
                         " with id: " + id + " not found");

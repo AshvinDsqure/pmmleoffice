@@ -119,7 +119,24 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         //Using the value from HttpStatus.
         sendErrorResponse(request, response, null,
                 "Already DataExist Exception", HttpStatus.NOT_ACCEPTABLE.value());
+    } @ExceptionHandler({ DataNotFoundExpetion.class})
+    protected void handleDataNotFoundExpetion(HttpServletRequest request, HttpServletResponse response,
+                                              Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        sendErrorResponse(request, response, null,
+                "Data Not Found", HttpStatus.NOT_ACCEPTABLE.value());
+    } @ExceptionHandler({ FieldBlankOrNullException.class})
+    protected void handleFieldBlankOrNullException(HttpServletRequest request, HttpServletResponse response,
+                                              Exception ex) throws IOException {
+        //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
+        //Using the value from HttpStatus.
+        String message = ex.getMessage() != null ? ex.getMessage() : "Data not found.";
+        sendErrorResponse(request, response, null,
+                message, HttpStatus.NOT_ACCEPTABLE.value());
     }
+
+
 
     @ExceptionHandler({ JBPMServerExpetion.class})
     protected void handleJBPMServerExpetion(HttpServletRequest request, HttpServletResponse response,
@@ -127,7 +144,7 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         //422 is not defined in HttpServletResponse.  Its meaning is "Unprocessable Entity".
         //Using the value from HttpStatus.
         sendErrorResponse(request, response, null,
-                "JBPM Server Expetion", HttpStatus.NOT_ACCEPTABLE.value());
+                "Workflow service issue has been encountered, please connect to IT team to resolve it.", HttpStatus.NOT_ACCEPTABLE.value());
     }
     @ExceptionHandler({ TokenNotFoundException.class})
     protected void handleTokenNotFoundException(HttpServletRequest request, HttpServletResponse response,

@@ -78,10 +78,6 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "workflowProcess",cascade = {CascadeType.ALL})
     private List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
-    @OrderBy("actionDate")
-    private List<WorkFlowProcessHistory> workFlowProcessHistories = new ArrayList<>();
-    /* Office   Details*/
 
     @Column(name = "subject")
     private String Subject;
@@ -133,6 +129,10 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "isinternal")
     private Boolean isinternal = false;
 
+    @Column(name = "issignatorysame")
+    private Boolean issignatorysame = false;
+
+
     @Column(name = "isacknowledgement")
     private Boolean isacknowledgement = false;
 
@@ -152,14 +152,14 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 //    private Date assignDueDate;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcess", cascade = {CascadeType.ALL})
-    private List<WorkFlowProcessHistory> WorkFlowProcessHistory = new ArrayList<>();
-
-    public List<org.dspace.content.WorkFlowProcessHistory> getWorkFlowProcessHistory() {
-        return WorkFlowProcessHistory;
+    @OrderBy("receivedDate DESC")
+    private List<WorkFlowProcessHistory> workFlowProcessHistory = new ArrayList<>();
+    public List<WorkFlowProcessHistory> getWorkFlowProcessHistory() {
+        return workFlowProcessHistory;
     }
 
-    public void setWorkFlowProcessHistory(List<org.dspace.content.WorkFlowProcessHistory> workFlowProcessHistory) {
-        WorkFlowProcessHistory = workFlowProcessHistory;
+    public void setWorkFlowProcessHistory(List<WorkFlowProcessHistory> workFlowProcessHistory) {
+        this.workFlowProcessHistory = workFlowProcessHistory;
     }
 
     public Integer getVersion() {
@@ -279,13 +279,6 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
         this.workflowStatus = workflowStatus;
     }
 
-    public List<org.dspace.content.WorkFlowProcessHistory> getWorkFlowProcessHistories() {
-        return workFlowProcessHistories;
-    }
-
-    public void setWorkFlowProcessHistories(List<org.dspace.content.WorkFlowProcessHistory> workFlowProcessHistories) {
-        this.workFlowProcessHistories = workFlowProcessHistories;
-    }
 
     public WorkFlowProcessMasterValue getWorkflowType() {
         return workflowType;
@@ -376,5 +369,13 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
 
     public void setIsinternal(Boolean isinternal) {
         this.isinternal = isinternal;
+    }
+
+    public Boolean getIssignatorysame() {
+        return issignatorysame;
+    }
+
+    public void setIssignatorysame(Boolean issignatorysame) {
+        this.issignatorysame = issignatorysame;
     }
 }

@@ -73,7 +73,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
                 rest.setLatterDate(obj.getLatterDate());
             }
             if (obj.getCategory() != null) {
-                rest.setCategoryRest(obj.getCategory().getName());
+                rest.setCategoryRest(obj.getCategory().getCategoryname());
             }
             try {
                 if (obj.getSubcategory() != null) {
@@ -122,7 +122,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getReceivedDate() != null) {
             obj.setReceivedDate(rest.getReceivedDate());
         }
-        if (rest.getCategory() != null) {
+        if (rest.getCategoryRest() != null) {
             obj.setCategory(categoryService.find(context, UUID.fromString(rest.getCategoryRest())));
         }
         try {
@@ -189,7 +189,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
 
         }}
         try {
-            if (!DateUtils.isNullOrEmptyOrBlank(rest.getCategory())) {
+            if (!DateUtils.isNullOrEmptyOrBlank(rest.getCategoryRest())) {
                 obj.setCategory(categoryService.find(context, UUID.fromString(rest.getCategoryRest())));
             }
 

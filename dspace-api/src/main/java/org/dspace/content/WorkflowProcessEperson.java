@@ -72,7 +72,7 @@ public class WorkflowProcessEperson extends DSpaceObject implements DSpaceObject
     private Integer sequence;
     @Column(name = "assign_date", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date assignDate = new Date();
+    private Date assignDate =null;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "workflowProcessEpeople", cascade = {CascadeType.ALL})
     private List<WorkFlowProcessHistory> workFlowProcessHistories = new ArrayList<>();
     @Column(name = "isowner")

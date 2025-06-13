@@ -53,16 +53,16 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
-            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
-        }
-        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
-            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
-        }
+//        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
+//            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
+//        }
+//        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
+//            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
+//        }
         try {
-            if (obj.getDesignation() != null) {
-                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
-            }
+//            if (obj.getDesignation() != null) {
+//                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
+//            }
             if (obj.getFullName() != null) {
                 if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
                     eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());
@@ -92,16 +92,16 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
-            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
-        }
-        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
-            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
-        }
+//        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
+//            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
+//        }
+//        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
+//            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
+//        }
         try {
-            if (obj.getDesignation() != null) {
-                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
-            }
+//            if (obj.getDesignation() != null) {
+//                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
+//            }
             if (obj.getFullName() != null) {
                 if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
                     eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());

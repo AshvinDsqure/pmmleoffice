@@ -175,7 +175,7 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
     public WorkFlowProcessComment convert(Context context,  WorkFlowProcessComment obj, WorkFlowProcessCommentRest rest) throws Exception {
         if(rest.getComment()!=null){
             String htmlcomment = "<div>" + rest.getComment()+ "</div>";
-            System.out.println("::::::html::::::::::" + htmlcomment);
+           // System.out.println("::::::html::::::::::" + htmlcomment);
             System.out.println("::::::text:::::" + PdfUtils.htmlToText(htmlcomment));
             obj.setComment(htmlcomment);
         }

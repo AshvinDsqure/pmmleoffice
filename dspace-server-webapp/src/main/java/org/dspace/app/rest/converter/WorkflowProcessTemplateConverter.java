@@ -29,6 +29,10 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
     EPersonConverter ePersonConverter;
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
+
+    @Autowired
+    EpersonToEpersonMappingConverter epersonToEpersonMappingConverter;
+
     @Autowired
     WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
 
@@ -64,6 +68,9 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
             if(obj.getePerson()!=null){
                 rest.setePersonRest(ePersonConverter.convertBYUSer(obj.getePerson(),projection));
             }
+            if(obj.getEpersontoepersonmapping()!=null){
+                rest.setEpersontoepersonmappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+            }
             rest.setUuid(obj.getID().toString());
             return rest;
         } catch (Exception e) {
@@ -93,6 +100,9 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         if(rest.getEditortext()!=null){
             obj.setEditortext(rest.getEditortext());
         }
+        if(rest.getEpersontoepersonmappingRest()!=null){
+            obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersontoepersonmappingRest()));
+        }
         return obj;
     }
 
@@ -115,6 +125,10 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         if(rest.getEditortext()!=null){
             obj.setEditortext(rest.getEditortext());
         }
+        if(rest.getEpersontoepersonmappingRest()!=null){
+            obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersontoepersonmappingRest()));
+        }
+
         rest.setUuid(obj.getID().toString());
         return obj;
     }

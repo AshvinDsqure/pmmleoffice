@@ -10,6 +10,7 @@ package org.dspace.app.rest.converter;
 import org.dspace.app.rest.model.WorkFlowProcessMasterValueRest;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.app.rest.utils.DateUtils;
+import org.dspace.content.WorkFlowProcessMaster;
 import org.dspace.content.WorkFlowProcessMasterValue;
 import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.core.Context;
@@ -26,6 +27,8 @@ public class WorkFlowProcessMasterValueConverter extends DSpaceObjectConverter<W
     ModelMapper modelMapper;
     @Autowired
     WorkFlowProcessMasterValueService masterValueService;
+
+    WorkFlowProcessMasterConverter workFlowProcessMasterConverter;
 
     @Override
     public Class<WorkFlowProcessMasterValue> getModelClass() {

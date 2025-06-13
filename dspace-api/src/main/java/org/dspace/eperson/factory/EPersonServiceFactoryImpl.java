@@ -29,6 +29,9 @@ public class EPersonServiceFactoryImpl extends EPersonServiceFactory {
     private GroupService groupService;
     @Autowired(required = true)
     private EPersonService epersonService;
+
+    @Autowired(required = true)
+    private WorkFlowProcessHistoryService workFlowProcessHistoryService;
     @Autowired(required = true)
     private RegistrationDataService registrationDataService;
     @Autowired(required = true)
@@ -70,6 +73,11 @@ public class EPersonServiceFactoryImpl extends EPersonServiceFactory {
     @Override
     public WorkflowProcessEpersonService workflowProcessEpersonService() {
         return workflowProcessEpersonService;
+    }
+
+    @Override
+    public WorkFlowProcessHistoryService workFlowProcessHistoryService() {
+        return workFlowProcessHistoryService;
     }
 
     @Override

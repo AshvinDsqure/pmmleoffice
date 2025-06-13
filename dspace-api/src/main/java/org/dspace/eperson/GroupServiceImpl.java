@@ -448,7 +448,6 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
                 groups.add(group);
             }
         }
-
         return groups;
     }
 
@@ -468,6 +467,11 @@ public class GroupServiceImpl extends DSpaceObjectServiceImpl<Group> implements 
         }
 
         return result;
+    }
+
+    @Override
+    public int countMemberByGroupName(Context context, String groupName) throws SQLException {
+        return groupDAO.countMemberByGroupName(context,groupName);
     }
 
     @Override

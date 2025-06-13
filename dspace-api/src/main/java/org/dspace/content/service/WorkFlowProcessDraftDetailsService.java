@@ -32,5 +32,8 @@ public interface WorkFlowProcessDraftDetailsService extends DSpaceObjectService<
     public int countRows(Context context) throws SQLException;
     WorkFlowProcessDraftDetails getbyDocumentsignator(Context context, UUID workflowprocessid) throws SQLException;
     List<WorkFlowProcessDraftDetails> getbyDocumentsignator(Context context,int limit) throws SQLException;
+    int getCountByEpersontoepersonmapping(Context context,  UUID documentsignator,UUID epersontoepersonmapping);
+    int updateWorkFlowProcessDraftDetails(Context context,UUID epersonfrom, UUID epersontoepersonmappingfrom,UUID epersonto, UUID epersontoepersonmappingto) throws SQLException;
+    int getCountByEperson(Context context,  UUID documentsignator);
 
 }

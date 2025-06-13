@@ -144,6 +144,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
             }else{
                 System.out.println("create:::");
                 workFlowProcessComment=workFlowProcessCommentConverter.convert(context,workFlowProcessCommentRest);
+                 workFlowProcessComment.setIsdraftsave(true);
                  workFlowProcessComment1=  workFlowProcessCommentService.create(context, workFlowProcessComment);
             }
 
@@ -163,7 +164,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                         throw new RuntimeException(e);
                     }
                 }).collect(Collectors.toList());
-                List<Bitstream>bitstreams=workflowProcessReferenceDocs.stream().filter(d->d.getBitstream()!=null)
+                List<Bitstream>bitstreams=workflowProcessReferenceDocs.stream().filter(d->d.getDrafttype()!=null&&!d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")).filter(d->d.getBitstream()!=null)
                         .map(d->d.getBitstream()).collect(Collectors.toList());
 
                 final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
@@ -288,15 +289,12 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
     public WorkFlowProcessCommentRest updateComment(@Parameter(value = "commentid", required = true) UUID commentid,
                                                     @Parameter(value = "issign", required = true) Boolean issign) {
         try {
-            System.out.println("::::::::::updateComment:::::::::::::::in");
-            System.out.println("::::::::::issign:::::::::::::::in"+issign);
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             WorkFlowProcessComment workFlowProcessComment=workFlowProcessCommentService.find(context,commentid);
             WorkFlowProcessComment workFlowProcessComment1=workFlowProcessComment;
             workFlowProcessComment.setIsdraftsave(issign);
             workFlowProcessCommentService.update(context,workFlowProcessComment);
-            System.out.println("::::::::::updateComment:::::::::::::::done!");
             workFlowProcessComment1.setIsdraftsave(issign);
             WorkFlowProcessCommentRest rest=workFlowProcessCommentConverter.convert(workFlowProcessComment1,utils.obtainProjection());
             context.commit();
@@ -315,7 +313,6 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
 
         boolean isTextEditorFlow = false;
         boolean isdocupdate = false;
-
         int notenumbe=0;
         if(workFlowProcessCommentRest.getWorkflowProcessRest()!=null&&workFlowProcessCommentRest.getWorkflowProcessRest().getUuid()!=null) {
             List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
@@ -328,18 +325,49 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         }
         System.out.println("note number---- "+notenumbe);
        // System.out.println("start.......createFinalNote");
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}.footer {\n" +
-                "            width: 100%;\n" +
+        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>.footer {\n" +
+                "                margin-top: 10px;width: 100%;\n" +
                 "            text-align: left;\n" +
                 "            font-size: 12pt;\n" +
                 "            font-weight: bold;\n" +
                 "            position: fixed;\n" +
-                "            bottom: 10px;\n" +
+                "            bottom: 0px;\n" +
                 "            left: 0;\n" +
                 "            right: 0;\n" +
-                "            padding: 10px;\n" +
-                "            background: #c5e6c1; /* Match body background color */\n" +
-                "        }</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
+                "            padding: 0px;\n" +
+                "            /* background: #fff; Match body background color */\n" +
+                "        }   body {\n" +
+                "      font-family: Georgia, serif;\n" +
+                "      line-height: 1.8;\n" +
+                "     \n" +
+                "    }\n" +
+                "\n" +
+                "    h1, h2 {\n" +
+                "      text-align: center;\n" +
+                "    }\n" +
+                "\n" +
+                "    p {\n" +
+                "      margin-bottom: 15px;\n" +
+                "      font-size: 14pt;\n" +
+                "    }\n" +
+                "\n" +
+                "    body {\n" +
+                "      background-color:#fff;font-family: Georgia, serif;\n" +
+                "      line-height: 1.8;\n" +
+                "      margin: 0;\n" +
+                "\t  text-align: justify; word-break: break-word;\n" +
+                "    }\n" +
+                "\n" +
+                "    h1, h2 {\n" +
+                "      text-align: center;\n" +
+                "    }\n" +
+                "\n" +
+                "    p {\n" +
+                "      margin-bottom: 15px;\n" +
+                "      font-size: 14pt;\n" +
+                "    }\n" +
+                "\n" +
+                "  </style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body >");
        // System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
         //Items
 
@@ -352,15 +380,15 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 sb.append("<p> <b>SAP Document Number : " + workFlowProcessCommentRest.getSapdocumentno() + "</b></p>");
             }
             isTextEditorFlow = true;
-            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
+            sb.append("<div style=\"text-align: justify; word-break: break-word;width:100% ;text-align: left; float:left;\">");
             //coment count
             sb.append("<p><u>Note# " + notenumbe + "</u></p>");
             //comment text
             if (comment.getComment() != null) {
-                sb.append("<p>" + comment.getComment() + "</p>");
+                sb.append("<div style=\"text-align: justify; word-break: break-word;\">" + comment.getComment() + "</div>");
             }
             sb.append("<br><div style=\"width:100%;\"> ");
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Attachment :</b></p> ");
+            sb.append("<div style=\"width:50%;  float:left;\"> <p><b>Attachment :</b></p> ");
             System.out.println("omment.getWorkflowProcessReferenceDoc().size():::"+comment.getWorkflowProcessReferenceDoc().size());
             if (bitstreams.size()!= 0) {
                 for (Bitstream bitstream : bitstreams) {
@@ -374,12 +402,12 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 }
             }
             sb.append("</div>");
-            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_1_Name:</B> </p><B><span>");
+            sb.append("<div style=\"    float: right;  width:50%\"><p> <B>Signature_1_Name:</B> </p><B><span>");
             sb.append("</div>" +
                     "</br>\n" +
                     "</br>\n" +
                     "</br>\n" +
-                    "<center><p style=\"float:left;\">------------------------------------------- This Note ends here. / ही नोंद इथे संपते. ---------------------------------</p></center>\n</div>");
+                    "<p style=\"float:left;\">------------------- This Note ends here. / ही नोंद इथे संपते. ------------------- </p>\n</div>");
 
         sb.append("<div class=footer>");
         Item i=null;
@@ -394,8 +422,11 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-            //System.out.println("HTML:::" + sb.toString());
+            System.out.println("HTML:::" + sb.toString());
             int ii= jbpmServer.htmltopdf(sb.toString(),files);
+            if(ii==0){
+                int iia= jbpmServer.htmltopdf(sb.toString(),files);
+            }
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
             InputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));

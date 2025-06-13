@@ -189,7 +189,7 @@ public class AuthenticationRestController implements InitializingBean {
         System.out.println("user"+user);
         System.out.println("password"+password);
 
-        System.out.println("in Login");
+       // System.out.println("in Login");
         // Build our response. This will check if we have an EPerson.
         // If not, that means the authentication failed and we should return the error message
         return getLoginResponse(request,

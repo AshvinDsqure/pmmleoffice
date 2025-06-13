@@ -22,8 +22,11 @@ public class RequestData {
     public String errorMsg;
     public String status;
     public String errorCode;
+    public String commonName;
     public CertificateFilter certFilter;
     public PKCSSignRequest pKCSSignRequest;
+
+
 
     public String getEncryptedRequest() {
         return encryptedRequest;
@@ -162,5 +165,13 @@ public class RequestData {
 
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
+    }
+
+    public String getCommonName() {
+        return commonName;
+    }
+
+    public void setCommonName(String commonName) {
+        this.commonName = commonName;
     }
 }

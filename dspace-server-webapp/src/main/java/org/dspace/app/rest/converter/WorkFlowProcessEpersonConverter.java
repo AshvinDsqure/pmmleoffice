@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * This is the converter from/to the EPerson in the DSpace API data model and the
@@ -73,8 +70,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(obj.getEpersontoepersonmapping()!=null){
             workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
         }
-
-        workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        if(obj.getAssignDate()!=null) {
+            workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        }
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
         workflowProcessDefinitionEpersonRest.setSequence(obj.getSequence());
@@ -115,7 +113,9 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         if(obj.getEpersontoepersonmapping()!=null){
             workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
         }
-        workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        if(obj.getAssignDate()!=null){
+            workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        }
         workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
         workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
         workflowProcessDefinitionEpersonRest.setSequence(obj.getSequence());

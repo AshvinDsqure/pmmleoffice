@@ -60,7 +60,7 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     private Date actionDate = new Date();
 
     @Column(name = "isdraftsave")
-    private Boolean isdraftsave = false;
+    private Boolean isdraftsave = true;
 
     @Column(name = "margeddocuuid")
     private String margeddocuuid;

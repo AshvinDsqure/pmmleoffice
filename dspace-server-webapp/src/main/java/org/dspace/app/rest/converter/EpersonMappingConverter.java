@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.converter;
 
+import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.model.EpersonMappingRest;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.content.EpersonMapping;
@@ -67,19 +68,28 @@ public class EpersonMappingConverter extends DSpaceObjectConverter<EpersonMappin
         return null;
     }
 
-    public EpersonMapping convertbycreatenew(Context context,EpersonMappingRest rest) throws SQLException {
+    public EpersonMapping convertbycreatenew(Context context,EpersonMappingRest rest) throws SQLException, FieldBlankOrNullException {
         EpersonMapping obj = new EpersonMapping();
         if(rest.getOfficeRest()!=null){
             obj.setOffice(workFlowProcessMasterValueConverter.convert(context,rest.getOfficeRest()));
+        }else{
+            throw  new FieldBlankOrNullException(" Office can't Null");
         }
+
         if(rest.getDepartmentRest()!=null){
             obj.setDepartment(workFlowProcessMasterValueConverter.convert(context,rest.getDepartmentRest()));
+        }else{
+            throw  new FieldBlankOrNullException(" Department can't Null");
         }
         if(rest.getDesignationRest()!=null){
             obj.setDesignation(workFlowProcessMasterValueConverter.convert(context,rest.getDesignationRest()));
+        }else{
+            throw  new FieldBlankOrNullException(" Designation can't Null");
         }
         if(rest.getTablenumber()!=null){
             obj.setTablenumber(rest.getTablenumber());
+        }else{
+            obj.setTablenumber(0);
         }
         return obj;
     }

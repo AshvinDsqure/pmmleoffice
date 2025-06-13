@@ -43,6 +43,29 @@ public class GroupConverter extends DSpaceObjectConverter<Group, GroupRest> {
         epersongroup.setUuid(obj.getID().toString());
         return epersongroup;
     }
+
+    public GroupRest convertByCount(Context context,Group obj, Projection projection) {
+        GroupRest epersongroup = new GroupRest();
+        epersongroup.setPermanent(obj.isPermanent());
+        epersongroup.setIsdspace(obj.getIsdspace());
+        if(obj.getGrouptype()!=null) {
+            epersongroup.setGrouptypeRest(workFlowProcessMasterValueConverter.convert(obj.getGrouptype(), projection));
+        }
+        if(obj.getID()!=null){
+          try {
+              int c = groupService.countMemberByGroupName(context, obj.getID().toString());
+             // System.out.println("name::"+obj.getName()+" count"+c);
+              epersongroup.setMembercount(c);
+          }catch (Exception e){
+              e.printStackTrace();
+              epersongroup.setMembercount(0);
+          }
+        }
+        epersongroup.setName(obj.getName());
+        epersongroup.setUuid(obj.getID().toString());
+        return epersongroup;
+    }
+
     public Group convert(Context context,GroupRest rest) throws SQLException {
        if(rest!=null && rest.getId()!=null){
            return groupService.find(context, UUID.fromString(rest.getId()));

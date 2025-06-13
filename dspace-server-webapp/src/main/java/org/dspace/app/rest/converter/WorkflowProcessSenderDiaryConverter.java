@@ -146,9 +146,6 @@ public class WorkflowProcessSenderDiaryConverter extends DSpaceObjectConverter<W
             obj.setLandline(rest.getLandline());
         }
 
-
-
-
         if (rest.getVipRest() != null) {
             try {
                 obj.setVip(vipService.find(context, UUID.fromString(rest.getVipRest())));

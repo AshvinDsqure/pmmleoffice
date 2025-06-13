@@ -76,6 +76,9 @@ public class WorkFlowProcessHistory extends DSpaceObject implements DSpaceObject
     @Column(name = "senttoname")
     private String senttoname;
 
+    @Column(name = "isupdate")
+    private  Boolean isupdate=false;
+
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "workFlowProcessHistory", cascade = {CascadeType.ALL})
     private WorkFlowProcessComment workFlowProcessComment;
 
@@ -175,5 +178,13 @@ public class WorkFlowProcessHistory extends DSpaceObject implements DSpaceObject
 
     public void setSenttoname(String senttoname) {
         this.senttoname = senttoname;
+    }
+
+    public Boolean getIsupdate() {
+        return isupdate;
+    }
+
+    public void setIsupdate(Boolean isupdate) {
+        this.isupdate = isupdate;
     }
 }

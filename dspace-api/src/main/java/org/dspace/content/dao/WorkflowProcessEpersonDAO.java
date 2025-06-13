@@ -12,6 +12,7 @@ import org.dspace.core.Context;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Database Access Object interface class for the Item object.
@@ -23,5 +24,9 @@ import java.util.List;
 public interface WorkflowProcessEpersonDAO extends DSpaceObjectLegacySupportDAO<WorkflowProcessEperson> {
 
       List<WorkflowProcessEperson> getALLData(Context context,int limit) throws SQLException;
+      int getCountByEpersontoepersonmapping(Context context,UUID eperson, UUID epersontoepersonmapping);
+      int getCountByEperson(Context context,UUID eperson);
+
+      int updateWorkflowProcessEperson(Context context,UUID epersonfrom, UUID epersontoepersonmappingfrom,UUID epersonto, UUID epersontoepersonmappingto) throws SQLException;
 
 }

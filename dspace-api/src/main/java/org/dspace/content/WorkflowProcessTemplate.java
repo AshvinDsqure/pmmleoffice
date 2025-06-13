@@ -43,6 +43,7 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "eperson")
     private EPerson ePerson = null;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template")
     private WorkFlowProcessMasterValue template = null;
@@ -54,6 +55,10 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
     @JsonProperty
     @Column(name = "index")
     private Integer index;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "epersontoepersonmapping")
+    private EpersonToEpersonMapping epersontoepersonmapping;
 
     @Column(name = "isdelete")
     private Boolean isdelete = false;
@@ -128,5 +133,13 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
 
     public void setEditortext(String editortext) {
         this.editortext = editortext;
+    }
+
+    public EpersonToEpersonMapping getEpersontoepersonmapping() {
+        return epersontoepersonmapping;
+    }
+
+    public void setEpersontoepersonmapping(EpersonToEpersonMapping epersontoepersonmapping) {
+        this.epersontoepersonmapping = epersontoepersonmapping;
     }
 }

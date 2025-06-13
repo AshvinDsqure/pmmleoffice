@@ -15,6 +15,7 @@ import javax.mail.MessagingException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service interface class for the Item object.
@@ -59,5 +60,8 @@ public interface WorkflowProcessSenderDiaryEpersonService extends DSpaceObjectSe
      */
     public List<WorkflowProcessSenderDiaryEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     List<WorkflowProcessSenderDiaryEperson> getALLData(Context context, int limit) throws SQLException;
+    int getCountByEpersontoepersonmapping(Context context,UUID eperson, UUID epersontoepersonmapping);
+    int updateWorkflowProcessSenderDiaryEperson(Context context,UUID epersonfrom, UUID epersontoepersonmappingfrom,UUID epersonto, UUID epersontoepersonmappingto) throws SQLException;
+    int getCountByEperson(Context context,UUID eperson);
 
 }

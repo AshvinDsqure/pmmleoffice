@@ -60,4 +60,18 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
         query.setParameter("submiter", submiter);
         return (WorkFlowProcessComment) query.getSingleResult();
     }
+
+    @Override
+    public int getCountBysubmiter(Context context, UUID submiter) {
+        try {
+            Query query = createQuery(context, "" +
+                    "SELECT count(c) FROM WorkFlowProcessComment as c where c.submitter.id=:submiter");
+            query.setParameter("submiter",submiter);
+            return count(query);
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+
+        }
+    }
 }

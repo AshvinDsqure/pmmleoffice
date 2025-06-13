@@ -25,7 +25,8 @@ import java.util.*;
  */
 @Entity
 @Table(name = "workflowprocessinwarddetails")
-public class WorkFlowProcessInwardDetails extends DSpaceObject implements DSpaceObjectLegacySupport {
+public class
+WorkFlowProcessInwardDetails extends DSpaceObject implements DSpaceObjectLegacySupport {
     /**
      * Wild card for Dublin Core metadata qualifiers/languages
      */

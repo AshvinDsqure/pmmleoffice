@@ -47,8 +47,12 @@ public class JbpmServerImpl {
            HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
            System.out.println("::::::::::::::URL::::::::::::::::::::::" + baseurl + JBPM.CREATEPROCESS);
            return restTemplate.exchange(baseurl + JBPM.CREATEPROCESS, HttpMethod.POST, entity, String.class).getBody();
-       }catch (Exception e){
+       }catch (JBPMServerExpetion e){
+           e.printStackTrace();
         throw new JBPMServerExpetion(e.getMessage());
+       }catch (Exception e){
+           e.printStackTrace();
+        throw new RuntimeException(e.getMessage());
        }
     }
 
@@ -67,6 +71,7 @@ public class JbpmServerImpl {
             HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
             return restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
         }catch (Exception e){
+            e.printStackTrace();
             throw new JBPMServerExpetion(e.getMessage());
         }
     }
@@ -86,6 +91,7 @@ public class JbpmServerImpl {
             HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
             return restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
         }catch (Exception e){
+            e.printStackTrace();
             throw new JBPMServerExpetion(e.getMessage());
         }
     }
@@ -111,6 +117,7 @@ public class JbpmServerImpl {
            System.out.println("::::::::::::::URL::::::::::::::::::::::" + baseurl + JBPM.FORWARDPROCESS);
            return restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
        }catch (Exception e){
+           e.printStackTrace();
            throw new JBPMServerExpetion(e.getMessage());
        }
     }
@@ -130,6 +137,7 @@ public class JbpmServerImpl {
             HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
             return restTemplate.exchange(baseurl + JBPM.BACKWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
         }catch (Exception e){
+            e.printStackTrace();
             throw new JBPMServerExpetion(e.getMessage());
         }
     }
@@ -149,6 +157,7 @@ public class JbpmServerImpl {
            System.out.println("test body:" + entity.getBody());
            return restTemplate.exchange(baseurl + JBPM.HOLDPROCESS, HttpMethod.PUT, entity, String.class).getBody();
        }catch (Exception e){
+           e.printStackTrace();
            throw new JBPMServerExpetion(e.getMessage());
        }
     }
@@ -229,8 +238,8 @@ public class JbpmServerImpl {
     }
     public int htmltopdf(String htmlcontent, FileOutputStream out) throws RuntimeException ,JBPMServerExpetion{
         try {
-            // String url = "http://lab.d2t.co:36/api/admin/dspace/htmltopdf";
-            String url = configurationService.getProperty("html.to.pdf");
+            // String url = "http://localhost:5000/htmltopdf";
+           String url = configurationService.getProperty("html.to.pdf");
             System.out.println("URL: " + url);
             // Prepare the request model
             HtmltppdfModel jbpmCallbackRequest = new HtmltppdfModel();
@@ -255,16 +264,19 @@ public class JbpmServerImpl {
                     return 1;
                 } else {
                     System.out.println("Error: Response body is null.");
-                    throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
+             return 0;
+                    //       throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
                 }
             } else {
                 System.out.println("Error: Received response status " + response.getStatusCode());
-                throw new RuntimeException("Error: Received response status for HTML TO PDF "+response.getStatusCode());
+               return 0;
+                //throw new RuntimeException("Error: Received response status for HTML TO PDF "+response.getStatusCode());
             }
         } catch (Exception e) {
             System.err.println("Error during HTML to PDF conversion: " + e.getMessage());
             e.printStackTrace();
-            throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
+            return 0;
+          //  throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
         }
     }
 

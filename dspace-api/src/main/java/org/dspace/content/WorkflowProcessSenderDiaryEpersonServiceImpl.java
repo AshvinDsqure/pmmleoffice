@@ -94,4 +94,19 @@ public class WorkflowProcessSenderDiaryEpersonServiceImpl extends DSpaceObjectSe
     public List<WorkflowProcessSenderDiaryEperson> getALLData(Context context, int limit) throws SQLException {
         return WorkflowProcessSenderDiaryEpersonDAO.getALLData(context,limit);
     }
+
+    @Override
+    public int getCountByEpersontoepersonmapping(Context context, UUID eperson,UUID epersontoepersonmapping) {
+        return WorkflowProcessSenderDiaryEpersonDAO.getCountByEpersontoepersonmapping(context,eperson,epersontoepersonmapping);
+    }
+
+    @Override
+    public int updateWorkflowProcessSenderDiaryEperson(Context context, UUID epersonfrom, UUID epersontoepersonmappingfrom, UUID epersonto, UUID epersontoepersonmappingto) throws SQLException {
+        return WorkflowProcessSenderDiaryEpersonDAO.updateWorkflowProcessSenderDiaryEperson(context,epersonfrom,epersontoepersonmappingfrom,epersonto,epersontoepersonmappingto);
+    }
+
+    @Override
+    public int getCountByEperson(Context context, UUID eperson) {
+        return WorkflowProcessSenderDiaryEpersonDAO.getCountByEperson(context,eperson);
+    }
 }

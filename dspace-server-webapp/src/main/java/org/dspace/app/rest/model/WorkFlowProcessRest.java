@@ -7,17 +7,10 @@
  */
 package org.dspace.app.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.Data;
+import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.model.helper.MyDateConverter;
-import org.dspace.app.rest.validation.WorkflowProcessMasterValueValid;
-import org.dspace.app.rest.validation.WorkflowProcessValid;
-import org.dspace.content.Item;
-import org.dspace.content.WorkflowProcessEperson;
-import org.dspace.content.WorkflowProcessSenderDiary;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -103,10 +96,10 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String body;
 
     @JsonProperty
-    private  Boolean ismode =false;
+    private Boolean ismode = false;
 
     @JsonProperty
-    private  Boolean isread =false;
+    private Boolean isread = false;
     @JsonProperty
     private Boolean isDraft = false;
 
@@ -114,16 +107,14 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     private Boolean isacknowledgement = false;
     @JsonProperty
-    private  Boolean issignnote=false;
-
+    private Boolean issignnote = false;
     @JsonProperty
     private Boolean isinternal = false;
-
     @JsonProperty
     private Boolean ispredefineuser = false;
 
-
-
+    @JsonProperty
+    private Boolean issignatorysame = false;
 
     @JsonProperty
     private String comment;
@@ -135,11 +126,11 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     @JsonProperty
     private String priority;
     @JsonProperty
-    private List<ItemRest> itemsRests=new ArrayList<>();
+    private List<ItemRest> itemsRests = new ArrayList<>();
     @JsonProperty
     List<WorkflowProcessReferenceDocRest> workflowProcessReferenceDocRests = new ArrayList<>();
     @JsonProperty
-    WorkFlowProcessCommentRest workFlowProcessCommentRest=null;
+    WorkFlowProcessCommentRest workFlowProcessCommentRest = null;
 
     public Boolean getIspredefineuser() {
         return ispredefineuser;
@@ -573,7 +564,188 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
         return isinternal;
     }
 
+    public Boolean getIssignatorysame() {
+        return issignatorysame;
+    }
+
+    public void setIssignatorysame(Boolean issignatorysame) {
+        this.issignatorysame = issignatorysame;
+    }
+
     public void setIsinternal(Boolean isinternal) {
         this.isinternal = isinternal;
     }
+    public void validateFileRequest(WorkFlowProcessRest workFlowProcessRest) throws FieldBlankOrNullException {
+        if (workFlowProcessRest.getSubject() == null || workFlowProcessRest.getSubject().trim().isEmpty()) {
+            throw new FieldBlankOrNullException("Subject cannot be blank or null.");
+        }
+        if(workFlowProcessRest.getItemRest()==null||workFlowProcessRest.getItemRest().getId().isEmpty()){
+            throw new FieldBlankOrNullException("Item or File  cannot be blank or null.");
+        }
+        if(workFlowProcessRest.getItemRest()==null||workFlowProcessRest.getItemRest().getId().isEmpty()){
+            throw new FieldBlankOrNullException("Item or File  cannot be blank or null.");
+        }
+        if (Boolean.TRUE.equals(workFlowProcessRest.getIsreplydraft())) {
+            var draftDetails = workFlowProcessRest.getWorkFlowProcessDraftDetailsRest();
+            if (draftDetails == null) {
+                throw new FieldBlankOrNullException("Draft details are required for reply drafts.");
+            }
+
+            if (draftDetails.getReplytypeRest() == null) {
+                throw new FieldBlankOrNullException("Reply type is required in draft details.");
+            }
+
+            if (draftDetails.getDrafttypeRest() == null || draftDetails.getDrafttypeRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Draft type  cannot be blank or null.");
+            }
+
+            if (draftDetails.getDraftnatureRest() == null || draftDetails.getDraftnatureRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Draft nature  cannot be blank or null.");
+            }
+
+            if (draftDetails.getDocumentsignatorRest() == null || draftDetails.getDocumentsignatorRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Document signator  cannot be blank or null.");
+            }
+
+            if (draftDetails.getEpersonToEpersonMappingRest() == null || draftDetails.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Document signator Eperson-to-Eperson mapping UUID cannot be blank or null.");
+            }
+
+            if(workFlowProcessRest.getIsinternal()) {
+                // Sender Diary Eperson Details
+                var senderEpersons = workFlowProcessRest.getWorkflowProcessSenderDiaryEpersonRests();
+                if (senderEpersons == null || senderEpersons.isEmpty()) {
+                    throw new FieldBlankOrNullException("At least one sender diary eperson entry is required.");
+                }
+
+                var eperson = senderEpersons.get(0);
+                if (eperson.getOfficeRest() == null || eperson.getOfficeRest().getUuid().trim().isEmpty()) {
+                    throw new FieldBlankOrNullException("Office  in sender diary eperson must not be blank.");
+                }
+
+                if (eperson.getDepartmentRest() == null || eperson.getDepartmentRest().getUuid().trim().isEmpty()) {
+                    throw new FieldBlankOrNullException("Department  in sender diary eperson must not be blank.");
+                }
+
+                if (eperson.getePersonRest() == null || eperson.getePersonRest().getUuid().trim().isEmpty()) {
+                    throw new FieldBlankOrNullException("EPerson  in sender diary eperson must not be blank.");
+                }
+
+                if (eperson.getEpersonToEpersonMappingRest() == null || eperson.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
+                    throw new FieldBlankOrNullException("Eperson-to-Eperson mapping  in sender diary eperson must not be blank.");
+                }
+
+                if (eperson.getUserType() == null || eperson.getUserType().getUuid().trim().isEmpty()) {
+                    throw new FieldBlankOrNullException("User type  in sender diary eperson must not be blank.");
+                }
+            }
+        }
+    }
+
+    public void validateTapalRequest(WorkFlowProcessRest workFlowProcessRest) throws FieldBlankOrNullException {
+
+        // Subject
+        if (workFlowProcessRest.getSubject() == null || workFlowProcessRest.getSubject().trim().isEmpty()) {
+            throw new FieldBlankOrNullException("Subject cannot be blank or null.");
+        }
+
+        // Inward Details
+        var inwardDetails = workFlowProcessRest.getWorkFlowProcessInwardDetailsRest();
+        if (inwardDetails == null) {
+            throw new FieldBlankOrNullException("Inward details must not be null.");
+        }
+
+        if (inwardDetails.getReceivedDate() == null) {
+            throw new FieldBlankOrNullException("Received date cannot be null.");
+        }
+
+        if (inwardDetails.getLatterDate() == null) {
+            throw new FieldBlankOrNullException("Letter date cannot be null.");
+        }
+
+        if (inwardDetails.getCategoryRest() == null || inwardDetails.getCategoryRest().isEmpty()) {
+            throw new FieldBlankOrNullException("Category cannot be blank or null.");
+        }
+
+        // Sender Diary
+        var senderDiaries = workFlowProcessRest.getWorkflowProcessSenderDiaryRests();
+        if (senderDiaries == null || senderDiaries.isEmpty()) {
+            throw new FieldBlankOrNullException("At least one sender diary entry is required.");
+        }
+
+        var sender = senderDiaries.get(0);
+        if (sender.getSendername() == null || sender.getSendername().trim().isEmpty()) {
+            throw new FieldBlankOrNullException("Sender name in sender diary cannot be blank or null.");
+        }
+
+        // Document Type
+        var documentType = workFlowProcessRest.getDocumenttypeRest();
+        if (documentType == null || documentType.getUuid() == null || documentType.getUuid().trim().isEmpty()) {
+            throw new FieldBlankOrNullException("Document type  cannot be blank or null.");
+        }
+
+        // Dispatch Mode
+        var dispatchMode = workFlowProcessRest.getDispatchModeRest();
+        if (dispatchMode == null || dispatchMode.getUuid() == null || dispatchMode.getUuid().trim().isEmpty()) {
+            throw new FieldBlankOrNullException("Tapal type (dispatch mode) UUID cannot be blank or null.");
+        }
+
+
+        // Draft Details (if it's a reply draft)
+        if (Boolean.TRUE.equals(workFlowProcessRest.getIsreplydraft())) {
+            var draftDetails = workFlowProcessRest.getWorkFlowProcessDraftDetailsRest();
+            if (draftDetails == null) {
+                throw new FieldBlankOrNullException("Draft details are required for reply drafts.");
+            }
+
+            if (draftDetails.getReplytypeRest() == null) {
+                throw new FieldBlankOrNullException("Reply type is required in draft details.");
+            }
+
+            if (draftDetails.getDrafttypeRest() == null || draftDetails.getDrafttypeRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Draft type  cannot be blank or null.");
+            }
+
+            if (draftDetails.getDraftnatureRest() == null || draftDetails.getDraftnatureRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Draft nature  cannot be blank or null.");
+            }
+
+            if (draftDetails.getDocumentsignatorRest() == null || draftDetails.getDocumentsignatorRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Document signator  cannot be blank or null.");
+            }
+
+            if (draftDetails.getEpersonToEpersonMappingRest() == null || draftDetails.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Document signator Eperson-to-Eperson mapping UUID cannot be blank or null.");
+            }
+
+            // Sender Diary Eperson Details
+            var senderEpersons = workFlowProcessRest.getWorkflowProcessSenderDiaryEpersonRests();
+            if (senderEpersons == null || senderEpersons.isEmpty()) {
+                throw new FieldBlankOrNullException("At least one sender diary eperson entry is required.");
+            }
+
+            var eperson = senderEpersons.get(0);
+            if (eperson.getOfficeRest() == null || eperson.getOfficeRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Office  in sender diary eperson must not be blank.");
+            }
+
+            if (eperson.getDepartmentRest() == null || eperson.getDepartmentRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Department  in sender diary eperson must not be blank.");
+            }
+
+            if (eperson.getePersonRest() == null || eperson.getePersonRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("EPerson  in sender diary eperson must not be blank.");
+            }
+
+            if (eperson.getEpersonToEpersonMappingRest() == null || eperson.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Eperson-to-Eperson mapping UUID in sender diary eperson must not be blank.");
+            }
+
+            if (eperson.getUserType() == null || eperson.getUserType().getUuid().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("User type  in sender diary eperson must not be blank.");
+            }
+        }
+    }
+
+
 }

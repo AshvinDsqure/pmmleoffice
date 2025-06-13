@@ -28,7 +28,7 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     public static final String GROUPS = "groups";
     private Integer legacyId;
     @JsonDeserialize(converter = MyDateConverter.class)
-    private Date draftdate;
+    private Date draftdate=new Date();
     //drafttype means notesheet or document
     private WorkFlowProcessMasterValueRest drafttypeRest;
     private EPersonRest documentsignatorRest;

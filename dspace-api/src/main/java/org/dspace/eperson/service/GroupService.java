@@ -279,6 +279,7 @@ public interface GroupService extends DSpaceObjectService<Group>, DSpaceObjectLe
      * @throws SQLException if error
      */
     public int searchResultCount(Context context, String query) throws SQLException;
+    int countMemberByGroupName(Context context, String groupName) throws SQLException;
 
     /**
      * Return true if group has no direct or indirect members

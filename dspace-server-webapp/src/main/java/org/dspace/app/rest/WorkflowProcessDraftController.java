@@ -23,6 +23,7 @@ import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
+import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.exception.JBPMServerExpetion;
 import org.dspace.app.rest.exception.MissingParameterException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
@@ -163,6 +164,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         WorkflowProcess workFlowProcess = null;
         WorkFlowProcessRest workFlowProcessRest2=null;
         try {
+            workFlowProcessRest.validateFileRequest(workFlowProcessRest1);
             HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
             Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
@@ -227,6 +229,10 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             create.setWorkflowProcessReferenceDocs(null);
             create.setInitiator(false);
             }
+        } catch (FieldBlankOrNullException e) {
+            e.printStackTrace();
+            res.sendError(406, e.getMessage());
+            throw new FieldBlankOrNullException(e.getMessage());
         }
         catch (JBPMServerExpetion e) {
             String errorMessage = "JBPM Server Exception CREATE Task: " + e.getMessage();
@@ -616,7 +622,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-            System.out.println("HTML:::" + sb.toString());
+            //System.out.println("HTML:::" + sb.toString());
             int ii= jbpmServer.htmltopdf(sb.toString(),files);
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
@@ -728,7 +734,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
         if (workFlowProcessMaster != null) {
             WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
             if (workFlowProcessMasterValue != null) {
-                System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
+                //System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
                 return workFlowProcessMasterValue;
             }
         }

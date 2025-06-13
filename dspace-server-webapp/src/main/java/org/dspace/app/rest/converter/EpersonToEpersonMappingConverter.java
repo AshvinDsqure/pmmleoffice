@@ -12,6 +12,7 @@ import org.dspace.app.rest.projection.Projection;
 import org.dspace.content.EpersonToEpersonMapping;
 import org.dspace.content.service.EpersonToEpersonMappingService;
 import org.dspace.core.Context;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -45,10 +46,20 @@ public class EpersonToEpersonMappingConverter extends DSpaceObjectConverter<Eper
         EpersonToEpersonMappingRest rest = new EpersonToEpersonMappingRest();
         try {
             if(obj.getEperson()!=null){
-                rest.setEpersonRest(ePersonConverter.convert(obj.getEperson(),projection));
+                try {
+                    rest.setEpersonRest(ePersonConverter.convert(obj.getEperson(), projection));
+                } catch (ObjectNotFoundException ex) {
+                    // Handle gracefully, maybe log and ignore
+                    ex.printStackTrace();
+                }
             }
             if(obj.getEpersonmapping()!=null){
-                rest.setEpersonMappingRest(epersonMappingConverter.convert(obj.getEpersonmapping(),projection));
+               try {
+                   rest.setEpersonMappingRest(epersonMappingConverter.convert(obj.getEpersonmapping(),projection));
+               } catch (ObjectNotFoundException ex) {
+                    // Handle gracefully, maybe log and ignore
+                    ex.printStackTrace();
+                }
             }
             rest.setIsactive(obj.getIsactive());
             if(obj.getID()!=null){

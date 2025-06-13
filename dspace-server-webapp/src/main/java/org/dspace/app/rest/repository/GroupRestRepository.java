@@ -7,10 +7,12 @@
  */
 package org.dspace.app.rest.repository;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,7 @@ import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,6 +51,9 @@ import org.springframework.stereotype.Component;
 public class GroupRestRepository extends DSpaceObjectRestRepository<Group, GroupRest> {
     @Autowired
     GroupService gs;
+
+    @Autowired
+    GroupConverter groupConverter;
     @Autowired
     WorkFlowProcessMasterValueConverter workFlowProcessMasterValueConverter;
 
@@ -147,10 +153,15 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
 
         try {
             Context context = obtainContext();
+            List<GroupRest> groupsRest=new ArrayList<>();
             long total = gs.searchResultCount(context, query);
             List<Group> groups = gs.search(context, query, Math.toIntExact(pageable.getOffset()),
                                                            Math.toIntExact(pageable.getPageSize()));
-            return converter.toRestPage(groups, pageable, total, utils.obtainProjection());
+
+            groupsRest = groups.stream().map(d -> {
+                return groupConverter.convertByCount(context, d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(groupsRest, pageable, total);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

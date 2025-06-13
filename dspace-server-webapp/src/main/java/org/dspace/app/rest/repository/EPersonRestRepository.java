@@ -123,8 +123,6 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
     @Override
     protected EPersonRest createAndReturn(Context context)
             throws AuthorizeException {
-
-
         System.out.println("createAndReturn:::::::::::::::::::::1");
         // this need to be revisited we should receive an EPersonRest as input
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
@@ -164,11 +162,12 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
 
     private EPerson createEPersonFromRestObject(Context context, EPersonRest epersonRest) throws AuthorizeException {
         EPerson eperson = null;
+        EPerson ePersonfinal1=null;
         try {
             eperson = es.create(context);
-
-            EPerson ePersonfinal=eperson;
             // this should be probably moved to the converter (a merge method?)
+            EPerson ePersonfinal=eperson;
+            ePersonfinal1=ePersonfinal;
             eperson.setCanLogIn(epersonRest.isCanLogIn());
             eperson.setRequireCertificate(epersonRest.isRequireCertificate());
             eperson.setEmail(epersonRest.getEmail());
@@ -223,7 +222,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return eperson;
+        return ePersonfinal1;
     }
 
     /**
@@ -392,9 +391,15 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
         try {
             Context context = obtainContext();
             long total = es.searchResultCount(context, query);
+            List<EPersonRest> epersonsRest=new ArrayList<>();
             List<EPerson> epersons = es.search(context, query, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
-            return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
+
+            epersonsRest = epersons.stream().map(d -> {
+                return ePersonConverter.convert(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(epersonsRest, pageable, total);
+            //return converter.toRestPage(epersons, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -428,18 +433,16 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                 patchDSpaceObject(apiCategory, model, uuid, patch);
             }else {
                 System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
-                System.out.println("ep..........." + ePerson.getEmail());
+                //System.out.println("ep..........." + ePerson.getEmail());
                 for (Operation operation : patch.getOperations()) {
-                    System.out.println("value getOp " + operation.getOp());
-                    System.out.println("value getPath " + operation.getPath());
                     if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.end-user")) {
-                        System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
+                        //System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
                         patchDSpaceObject(apiCategory, model, uuid, patch);
-                        System.out.println(":::::::::::::::::::::::::::::::::out aggrement:done:::::::::::::::::::::::::::;");
+                       // System.out.println(":::::::::::::::::::::::::::::::::out aggrement:done:::::::::::::::::::::::::::;");
                     } else if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.cookies")) {
-                        System.out.println(":::::::::::::::::::::::::::::::cookies::::::::::::::::::::::::::;");
+                       // System.out.println(":::::::::::::::::::::::::::::::cookies::::::::::::::::::::::::::;");
                         patchDSpaceObject(apiCategory, model, uuid, patch);
-                        System.out.println("::::::::::::::::::::::::::::::::cookies::done:::::::::::::::::::::::::::;");
+                        //System.out.println("::::::::::::::::::::::::::::::::cookies::done:::::::::::::::::::::::::::;");
                     } else if (operation.getPath().equalsIgnoreCase("/departmentRest")) {
                         WorkFlowProcessMasterValueRest rest = new WorkFlowProcessMasterValueRest();
                         rest.setUuid(operation.getValue().toString());
@@ -516,7 +519,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                         if (operation.getValue() instanceof String) {
                             es.setPassword(ePerson, operation.getValue().toString());
                         }else {
-                            System.out.println("pass:::not string:::::::" + operation.getValue());
+                           // System.out.println("pass:::not string:::::::" + operation.getValue());
                             patchDSpaceObject(apiCategory, model, uuid, patch);
                         }
                     } else {

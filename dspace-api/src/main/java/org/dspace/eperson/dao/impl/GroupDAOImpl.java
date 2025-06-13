@@ -166,6 +166,20 @@ public class GroupDAOImpl extends AbstractHibernateDSODAO<Group> implements Grou
     }
 
     @Override
+    public int countMemberByGroupName(Context context, String groupName) throws SQLException {
+       try {
+           String sqlQuery="SELECT count(ee)\n" +
+                   "FROM eperson AS ee\n" +
+                   "LEFT JOIN epersongroup2eperson AS e2g ON e2g.eperson_id = ee.uuid\n" +
+                   "WHERE e2g.eperson_group_id='"+groupName+"';";
+           return Integer.parseInt(createSQLQuery(context, sqlQuery).uniqueResult().toString());
+       }catch (Exception e){
+           e.printStackTrace();
+           return 0;
+       }
+    }
+
+    @Override
     public void delete(Context context, Group group) throws SQLException {
         Query query = getHibernateSession(context)
             .createNativeQuery("DELETE FROM group2group WHERE parent_id=:groupId or child_id=:groupId");

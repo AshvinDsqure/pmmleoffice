@@ -177,16 +177,21 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
 
     @Override
     public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
-        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
-                " left join d.drafttype as dt " +
-                " left join d.workflowProcess wp " +
-                 "left join wp.item as i " +
-                " where dt.id=:drafttypeid " +
-                " and wp.id=:workflowprocess " +
-                " and i.id=:item");
-        query.setParameter("drafttypeid",drafttypeid);
-        query.setParameter("workflowprocess",workflowprocess);
-        query.setParameter("item",item);
-        return (WorkflowProcessReferenceDoc) query.getSingleResult();
+       try {
+           Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+                   " left join d.drafttype as dt " +
+                   " left join d.workflowProcess wp " +
+                   "left join wp.item as i " +
+                   " where dt.id=:drafttypeid " +
+                   " and wp.id=:workflowprocess " +
+                   " and i.id=:item");
+           query.setParameter("drafttypeid", drafttypeid);
+           query.setParameter("workflowprocess", workflowprocess);
+           query.setParameter("item", item);
+           return (WorkflowProcessReferenceDoc) query.getSingleResult();
+       }catch (Exception e){
+           e.printStackTrace();
+           return null;
+       }
     }
 }

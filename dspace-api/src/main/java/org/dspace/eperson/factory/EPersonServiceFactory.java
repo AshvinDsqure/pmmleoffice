@@ -34,6 +34,9 @@ public abstract class EPersonServiceFactory {
     public abstract EpersonToEpersonMappingService epersonToEpersonMappingService();
 
     public abstract WorkflowProcessEpersonService workflowProcessEpersonService();
+
+    public abstract WorkFlowProcessHistoryService workFlowProcessHistoryService();
+
     public abstract WorkflowProcessSenderDiaryEpersonService workflowProcessSenderDiaryEpersonService();
 
     public abstract WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService();

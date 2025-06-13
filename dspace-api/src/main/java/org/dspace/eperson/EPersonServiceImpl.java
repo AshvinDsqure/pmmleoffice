@@ -604,6 +604,11 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
+    public List<EPerson> findGroupMembers(Context context, UUID groupId, int offset, int limit) throws SQLException {
+        return ePersonDAO.findGroupMembers(context,groupId,offset,limit);
+    }
+
+    @Override
     public String getName(EPerson dso) {
         return dso.getName();
     }

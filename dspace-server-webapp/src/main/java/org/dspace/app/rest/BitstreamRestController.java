@@ -273,7 +273,7 @@ public class BitstreamRestController {
         if (workFlowProcessMaster != null) {
             WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
             if (workFlowProcessMasterValue != null) {
-                System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
+               // System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
                 return workFlowProcessMasterValue;
             }
         }

@@ -112,7 +112,7 @@ public class JWTTokenRestAuthenticationServiceImpl implements RestAuthentication
     @Override
     public AuthenticationToken getShortLivedAuthenticationToken(Context context, HttpServletRequest request) {
         try {
-            System.out.println("in login ");
+           // System.out.println("in login ");
             String token = shortLivedJWTTokenHandler.createTokenForEPerson(context, request, null);
             context.commit();
             return new AuthenticationToken(token);

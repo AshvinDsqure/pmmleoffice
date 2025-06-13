@@ -135,6 +135,8 @@ public interface GroupDAO extends DSpaceObjectDAO<Group>, DSpaceObjectLegacySupp
      * @throws SQLException if database error
      */
     int countByNameLike(Context context, String groupName) throws SQLException;
+    int countMemberByGroupName(Context context, String groupName) throws SQLException;
+
 
     /**
      * Find a group by its name and the membership of the given EPerson

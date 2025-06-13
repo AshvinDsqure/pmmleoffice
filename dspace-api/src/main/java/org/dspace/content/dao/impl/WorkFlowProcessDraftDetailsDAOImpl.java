@@ -53,4 +53,44 @@ public class WorkFlowProcessDraftDetailsDAOImpl extends AbstractHibernateDAO<Wor
             return null;
         }
     }
+
+    @Override
+    public int getCountByEpersontoepersonmapping(Context context, UUID documentsignator, UUID epersontoepersonmapping) {
+        try {
+            Query query = createQuery(context,
+                    "SELECT  count(em) FROM WorkFlowProcessDraftDetails em WHERE em.documentsignator.id=:documentsignator and em.epersontoepersonmapping.id=:epersontoepersonmapping");
+          query.setParameter("documentsignator",documentsignator);
+          query.setParameter("epersontoepersonmapping",epersontoepersonmapping);
+            return count(query);
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
+    public int getCountByEperson(Context context, UUID documentsignator) {
+        try {
+            Query query = createQuery(context,
+                    "SELECT  count(em) FROM WorkFlowProcessDraftDetails em WHERE em.documentsignator.id=:documentsignator");
+            query.setParameter("documentsignator",documentsignator);
+            return count(query);
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
+    public int updateWorkFlowProcessDraftDetails(Context context, UUID epersonfrom, UUID epersontoepersonmappingfrom, UUID epersonto, UUID epersontoepersonmappingto) throws SQLException {
+        try {
+            String sqlQuery="update workflowprocessdraftdetails set documentsignator_id ='"+epersonto+"', epersontoepersonmapping='"+epersontoepersonmappingto+"'" +
+                    "where documentsignator_id ='"+epersonfrom+"' and epersontoepersonmapping ='"+epersontoepersonmappingfrom+"';\n";
+            createSQLQuery(context, sqlQuery).executeUpdate();
+            return 1;
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
+    }
 }

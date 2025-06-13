@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service interface class for the Item object.
@@ -64,4 +65,8 @@ public interface WorkflowProcessEpersonService extends DSpaceObjectService<Workf
     public List<WorkflowProcessEperson> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public void sendEmail(Context context, String recipientEmail, String recipientName, String subject) throws IOException, MessagingException, SQLException, AuthorizeException;
     List<WorkflowProcessEperson> getALLData(Context context,int limit) throws SQLException;
+    int getCountByEpersontoepersonmapping(Context context,UUID eperson, UUID epersontoepersonmapping);
+    int updateWorkflowProcessEperson(Context context,UUID epersonfrom, UUID epersontoepersonmappingfrom,UUID epersonto, UUID epersontoepersonmappingto) throws SQLException;
+    int getCountByEperson(Context context,UUID eperson);
+
 }

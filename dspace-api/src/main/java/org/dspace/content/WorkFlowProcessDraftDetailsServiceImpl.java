@@ -96,4 +96,19 @@ public class WorkFlowProcessDraftDetailsServiceImpl extends DSpaceObjectServiceI
     public List<WorkFlowProcessDraftDetails> getbyDocumentsignator(Context context,int limit) throws SQLException {
         return workFlowProcessDraftDetailsDAO.getbyDocumentsignator(context,limit);
     }
+
+    @Override
+    public int getCountByEpersontoepersonmapping(Context context, UUID documentsignator, UUID epersontoepersonmapping) {
+        return workFlowProcessDraftDetailsDAO.getCountByEpersontoepersonmapping(context,documentsignator,epersontoepersonmapping);
+    }
+
+    @Override
+    public int updateWorkFlowProcessDraftDetails(Context context, UUID epersonfrom, UUID epersontoepersonmappingfrom, UUID epersonto, UUID epersontoepersonmappingto) throws SQLException {
+        return workFlowProcessDraftDetailsDAO.updateWorkFlowProcessDraftDetails(context,epersonfrom,epersontoepersonmappingfrom,epersonto,epersontoepersonmappingto);
+    }
+
+    @Override
+    public int getCountByEperson(Context context, UUID documentsignator) {
+       return workFlowProcessDraftDetailsDAO.getCountByEperson(context,documentsignator);
+    }
 }

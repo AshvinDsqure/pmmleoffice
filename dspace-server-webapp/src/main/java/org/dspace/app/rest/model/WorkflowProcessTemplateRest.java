@@ -8,6 +8,7 @@
 package org.dspace.app.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.dspace.content.EpersonToEpersonMapping;
 import org.dspace.content.WorkFlowProcessMasterValue;
 
 import java.util.Date;
@@ -41,6 +42,8 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest templatetypeRest = null;
     @JsonProperty
     private String editortext;
+    @JsonProperty
+    private EpersonToEpersonMappingRest epersontoepersonmappingRest;
 
     @Override
     public String getCategory() {
@@ -99,5 +102,14 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
 
     public void setEditortext(String editortext) {
         this.editortext = editortext;
+    }
+
+
+    public EpersonToEpersonMappingRest getEpersontoepersonmappingRest() {
+        return epersontoepersonmappingRest;
+    }
+
+    public void setEpersontoepersonmappingRest(EpersonToEpersonMappingRest epersontoepersonmappingRest) {
+        this.epersontoepersonmappingRest = epersontoepersonmappingRest;
     }
 }

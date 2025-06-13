@@ -38,7 +38,7 @@ public class WorkFlowProcessDraftDetails extends DSpaceObject implements DSpaceO
     private Integer legacyId;
     @Column(name = "draftdate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date draftdate;
+    private Date draftdate=new Date();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "documentsignator_id")

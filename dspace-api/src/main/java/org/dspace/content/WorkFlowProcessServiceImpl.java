@@ -113,14 +113,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid, offset, limit);
+    public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid,perameter, offset, limit);
     }
 
     @Override
-    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid, offset, limit);
-
+    public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid,perameter,offset, limit);
     }
 
     @Override
@@ -159,8 +158,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid, offset, limit);
+    public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid,perameter, offset, limit);
     }
 
     @Override
@@ -243,8 +242,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid, offset, limit);
+    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid,perameter, offset, limit);
     }
 
     @Override
@@ -375,8 +374,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,epersontoepersonmapid,offset,limit);
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,epersontoepersonmapid,perameter,offset,limit);
     }
 
     @Override
@@ -392,8 +391,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,offset,limit);
+    public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,perameter,offset,limit);
     }
 
     @Override
@@ -402,13 +401,13 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,epersontoepersonmapid,offset,limit);
+    public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid, UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,statusdspatchcloseid,workflowtypeid,epersontoepersonmapid,usertype,perameter,offset,limit);
     }
 
     @Override
-    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
-        return workflowProcessDAO.countCloseTapal(context,eperson,statusdraftid,statuscloseid,workflowtypeid,epersontoepersonmapid);
+    public int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid, UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype) throws SQLException {
+        return workflowProcessDAO.countCloseTapal(context,eperson,statusdraftid,statuscloseid,statusdspatchcloseid,workflowtypeid,epersontoepersonmapid,usertype);
     }
 
     @Override
@@ -432,8 +431,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid,offset,limit);
+    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid,perameter,offset,limit);
     }
 
     @Override
@@ -475,12 +474,22 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return workflowProcessDAO.filterDepartmentWiseCountDownload(context,parameter,startdate,endDate);
     }
 
+    @Override
+    public int getNextInwardNumber(Context context) throws SQLException {
+        return workflowProcessDAO.getNextInwardNumber(context);
+    }
+
+    @Override
+    public int getNextFileNumber(Context context) throws SQLException {
+        return workflowProcessDAO.getNextFileNumber(context);
+    }
+
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);
         if (workFlowProcessMaster != null) {
             WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
             if (workFlowProcessMasterValue != null) {
-                System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
+               // System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
                 return workFlowProcessMasterValue.getID();
             }
         }
