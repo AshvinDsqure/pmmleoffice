@@ -1655,14 +1655,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                 e.printStackTrace();
             }
         }
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html lang=\"en\">\n" + "<head>\n" + "    <meta charset=\"UTF-8\">\n" + "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" + "    <title> </title>\n" + "\t<style>@page{size:A4;margin: 0;}\n" + "\t.content{\n" + "\tmargin-left:40px;\n" + "\t}\n" + "\t</style>\n" + "</head>\n" + "<body>");
+        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html lang=\"en\">\n" + "<head>\n" + "    <meta charset=\"UTF-8\">\n" + "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" + "    <title> </title>\n" + "\t<style>@page{size:A4;margin: 0;}\n" + "\t.content{\n" + "\tmargin-left:40px; margin: 0; padding: 20px;\n" + "\t}\n" + "\t</style>\n" + "</head>\n" + "<body>");
         sb.append("<div class=\"container\">");
-
 
         String logopath = configurationService.getProperty("pcmc.acknowledgement.logo");
         String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(logopath)));
         if (base64Image != null) {
-            sb.append("<center><img src=\"data:image/png;base64," + base64Image + "\" style=\"margin:-50px; height:70px;\"></center>");
+            sb.append("<center><img src=\"data:image/png;base64," + base64Image + "\" style=\"margin:-100px; height:70px;\"></center>");
         }
         sb.append("<br>");
         sb.append("<br>");
@@ -1712,7 +1711,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         sb.append("</body></html>");
         //System.out.println("::::::::::IN isTextEditorFlow :::::::::");
         FileOutputStream files = new FileOutputStream(new File(acknowledgementfile.getAbsolutePath()));
-        //System.out.println("HTML:::" + sb.toString());
+        System.out.println("HTML:::" + sb.toString());
         int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
         if (result == 1) {
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + acknowledgementfile.getAbsolutePath());
@@ -1759,7 +1758,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         sb.append("</body></html>");
         System.out.println("::::::::::IN isTextEditorFlow :::::::::");
         FileOutputStream files = new FileOutputStream(new File(acknowledgementfile.getAbsolutePath()));
-        //System.out.println("HTML:::" + sb.toString());
+        System.out.println("HTML:::" + sb.toString());
         int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
         if (result == 1) {
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + acknowledgementfile.getAbsolutePath());
@@ -1797,20 +1796,25 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                 Optional<EPerson> creator = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getIndex() == 0).map(d -> d.getePerson()).findFirst();
                 if (creator.isPresent()) {
                     if (creator.get() != null) {
-                        if (creator.get().getDepartment() != null && creator.get().getDepartment().getPrimaryvalue() != null) {
-                            acknowledgementDTO.setDepartment(creator.get().getDepartment().getPrimaryvalue());
-                        } else {
-                            acknowledgementDTO.setDepartment("-");
-                        }
-                        if (creator.get().getOffice() != null && creator.get().getOffice().getPrimaryvalue() != null) {
-                            acknowledgementDTO.setOffice(creator.get().getOffice().getPrimaryvalue());
-                        } else {
-                            acknowledgementDTO.setOffice("-");
-                        }
-                        if (creator.get().getDesignation() != null && creator.get().getDesignation().getPrimaryvalue() != null) {
-                            acknowledgementDTO.setDesignation(creator.get().getDesignation().getPrimaryvalue());
-                        } else {
-                            acknowledgementDTO.setDesignation("-");
+
+                        Optional<EpersonToEpersonMapping> map= creator.get().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                        if (map.isPresent()) {
+                            EpersonToEpersonMapping ep=map.get();
+                            if(ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getOffice()!=null&&ep.getEpersonmapping().getOffice().getPrimaryvalue()!=null){
+                                acknowledgementDTO.setOffice(ep.getEpersonmapping().getOffice().getPrimaryvalue());
+                            }else{
+                                acknowledgementDTO.setOffice("-");
+                            }
+                            if (ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getDesignation()!=null&&ep.getEpersonmapping().getDesignation().getPrimaryvalue()!=null) {
+                                acknowledgementDTO.setDesignation(ep.getEpersonmapping().getDesignation().getPrimaryvalue());
+                            }else{
+                                acknowledgementDTO.setDesignation("-");
+                            }
+                            if (ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getDepartment()!=null&&ep.getEpersonmapping().getDepartment().getPrimaryvalue()!=null) {
+                                acknowledgementDTO.setDepartment(ep.getEpersonmapping().getDepartment().getPrimaryvalue());
+                            }else{
+                                acknowledgementDTO.setDepartment("-");
+                            }
                         }
                         if (creator.get().getFullName() != null) {
                             acknowledgementDTO.setName(creator.get().getFullName());

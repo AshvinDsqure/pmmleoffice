@@ -297,7 +297,7 @@ public class WorkflowProcessItemReportController {
         try {
             Context context = ContextUtil.obtainContext(request);
             StringBuffer sb = new StringBuffer();
-            sb.append("PCMC/" + department);
+            sb.append("PMML/" + department);
             sb.append("/" + DateUtils.getFinancialYear());
             int count = workflowProcessService.getNextFileNumber(context);
             count = count + 1;

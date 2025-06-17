@@ -189,7 +189,7 @@ public class SubmissionService {
             try {
                 EPerson currentuser = context.getCurrentUser();
                 StringBuffer sb = new StringBuffer();
-                sb.append("F/PCMC/");
+                sb.append("F/PMML/");
                 WorkFlowProcessMasterValue department;
                 if (currentuser != null) {
                     Optional<EpersonToEpersonMapping> map= currentuser.getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();

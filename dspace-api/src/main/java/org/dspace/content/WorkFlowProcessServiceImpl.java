@@ -20,9 +20,7 @@ import org.dspace.core.Email;
 import org.dspace.core.I18nUtil;
 import org.dspace.eperson.EPerson;
 import org.dspace.event.Event;
-import org.dspace.workflow.WorkflowType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -323,14 +321,18 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             if (currentuser != null && currentuser.getFullName() != null) {
                 senderName = currentuser.getFullName();
             }
-            if (currentuser != null && currentuser.getDesignation() != null && currentuser.getDesignation().getPrimaryvalue() != null) {
-                senderDesignation = currentuser.getDesignation().getPrimaryvalue();
-            }
-            if (currentuser != null && currentuser.getDepartment() != null && currentuser.getDepartment().getPrimaryvalue() != null) {
-                senderDepartment = currentuser.getDepartment().getPrimaryvalue();
-            }
-            if (currentuser != null && currentuser.getOffice() != null && currentuser.getOffice().getPrimaryvalue() != null) {
-                senderOffice = currentuser.getOffice().getPrimaryvalue();
+            Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+            if (map.isPresent()) {
+                EpersonToEpersonMapping ep=map.get();
+                if(ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getOffice()!=null&&ep.getEpersonmapping().getOffice().getPrimaryvalue()!=null){
+                    senderOffice=ep.getEpersonmapping().getOffice().getPrimaryvalue();
+                }
+                if (currentuser != null&& ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getDesignation()!=null&&ep.getEpersonmapping().getDesignation().getPrimaryvalue()!=null) {
+                    senderDesignation = currentuser.getDesignation().getPrimaryvalue();
+                }
+                if (currentuser != null && ep.getEpersonmapping()!=null&&ep.getEpersonmapping().getDepartment()!=null&&ep.getEpersonmapping().getDepartment().getPrimaryvalue()!=null) {
+                    senderDepartment = currentuser.getDepartment().getPrimaryvalue();
+                }
             }
             if (currentuser != null && currentuser.getEmail() != null) {
                 senderEmail = currentuser.getEmail();
