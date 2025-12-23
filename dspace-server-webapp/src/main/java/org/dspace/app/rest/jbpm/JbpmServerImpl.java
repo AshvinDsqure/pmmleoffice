@@ -236,6 +236,39 @@ public class JbpmServerImpl {
            throw new JBPMServerExpetion(e.getMessage());
         }
     }
+    public String startProcess1(JBPMProcess jbpmProcess) throws RuntimeException,JBPMServerExpetion {
+        System.out.println("::::::::::::::CREATE ACTION::::::::::::::::::::::");
+        try {
+            String baseurl = configurationService.getProperty("jbpm.server");
+            System.out.println("jbpm json::Request" + new Gson().toJson(jbpmProcess));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
+            System.out.println("::::::::::::::URL::::::::::::::::::::::" + baseurl + JBPM.CREATEPROCESS);
+            return restTemplate.exchange(baseurl + JBPM.CREATEPROCESS, HttpMethod.POST, entity, String.class).getBody();
+        }catch (JBPMServerExpetion e){
+            e.printStackTrace();
+            throw new JBPMServerExpetion(e.getMessage());
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public String forwardTask1(JBPMProcess jbpmProcess) throws RuntimeException ,JBPMServerExpetion{
+        System.out.println("::::::::::::::FORWARD ACTION::::::::::::::::::::::");
+        try {
+            String baseurl = configurationService.getProperty("jbpm.server");
+            System.out.println("jbpm json::" + new Gson().toJson(jbpmProcess));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
+            return restTemplate.exchange(baseurl + JBPM.FORWARDPROCESS, HttpMethod.POST, entity, String.class).getBody();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new JBPMServerExpetion(e.getMessage());
+        }
+    }
     public int htmltopdf(String htmlcontent, FileOutputStream out) throws RuntimeException ,JBPMServerExpetion{
         try {
             // String url = "http://localhost:5000/htmltopdf";

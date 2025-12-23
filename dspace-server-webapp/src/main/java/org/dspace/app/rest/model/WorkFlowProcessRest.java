@@ -100,6 +100,10 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     @JsonProperty
     private Boolean isread = false;
+
+    @JsonProperty
+    private Boolean iscallback = false;
+
     @JsonProperty
     private Boolean isDraft = false;
 
@@ -125,6 +129,18 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private String workflowstatus;
     @JsonProperty
     private String priority;
+
+    @JsonProperty
+    private String departmentname;
+
+    @JsonProperty
+    private String filenumber;
+
+    @JsonProperty
+    private String filesubject;
+
+    @JsonProperty
+    private String inwardnumber;
     @JsonProperty
     private List<ItemRest> itemsRests = new ArrayList<>();
     @JsonProperty
@@ -721,31 +737,73 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
             // Sender Diary Eperson Details
             var senderEpersons = workFlowProcessRest.getWorkflowProcessSenderDiaryEpersonRests();
             if (senderEpersons == null || senderEpersons.isEmpty()) {
-                throw new FieldBlankOrNullException("At least one sender diary eperson entry is required.");
-            }
+                if (workFlowProcessRest.getIsinternal()) {
+                    if (senderEpersons == null || senderEpersons.isEmpty()){
+                        throw new FieldBlankOrNullException("At least one sender diary eperson entry is required");
+                    }
+                    var eperson = senderEpersons.get(0);
+                    if (eperson.getOfficeRest() == null || eperson.getOfficeRest().getUuid().trim().isEmpty()) {
+                        throw new FieldBlankOrNullException("Office  in sender diary eperson must not be blank.");
+                    }
 
-            var eperson = senderEpersons.get(0);
-            if (eperson.getOfficeRest() == null || eperson.getOfficeRest().getUuid().trim().isEmpty()) {
-                throw new FieldBlankOrNullException("Office  in sender diary eperson must not be blank.");
-            }
+                    if (eperson.getDepartmentRest() == null || eperson.getDepartmentRest().getUuid().trim().isEmpty()) {
+                        throw new FieldBlankOrNullException("Department  in sender diary eperson must not be blank.");
+                    }
 
-            if (eperson.getDepartmentRest() == null || eperson.getDepartmentRest().getUuid().trim().isEmpty()) {
-                throw new FieldBlankOrNullException("Department  in sender diary eperson must not be blank.");
-            }
+                    if (eperson.getePersonRest() == null || eperson.getePersonRest().getUuid().trim().isEmpty()) {
+                        throw new FieldBlankOrNullException("EPerson  in sender diary eperson must not be blank.");
+                    }
 
-            if (eperson.getePersonRest() == null || eperson.getePersonRest().getUuid().trim().isEmpty()) {
-                throw new FieldBlankOrNullException("EPerson  in sender diary eperson must not be blank.");
-            }
+                    if (eperson.getEpersonToEpersonMappingRest() == null || eperson.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
+                        throw new FieldBlankOrNullException("Eperson-to-Eperson mapping UUID in sender diary eperson must not be blank.");
+                    }
 
-            if (eperson.getEpersonToEpersonMappingRest() == null || eperson.getEpersonToEpersonMappingRest().getUuid().trim().isEmpty()) {
-                throw new FieldBlankOrNullException("Eperson-to-Eperson mapping UUID in sender diary eperson must not be blank.");
-            }
+                    if (eperson.getUserType() == null || eperson.getUserType().getUuid().trim().isEmpty()) {
+                        throw new FieldBlankOrNullException("User type  in sender diary eperson must not be blank.");
+                    }
+                }
 
-            if (eperson.getUserType() == null || eperson.getUserType().getUuid().trim().isEmpty()) {
-                throw new FieldBlankOrNullException("User type  in sender diary eperson must not be blank.");
             }
         }
     }
 
+    public String getDepartmentname() {
+        return departmentname;
+    }
 
+    public void setDepartmentname(String departmentname) {
+        this.departmentname = departmentname;
+    }
+
+    public String getFilenumber() {
+        return filenumber;
+    }
+
+    public void setFilenumber(String filenumber) {
+        this.filenumber = filenumber;
+    }
+
+    public String getFilesubject() {
+        return filesubject;
+    }
+
+    public void setFilesubject(String filesubject) {
+        this.filesubject = filesubject;
+    }
+
+    public String getInwardnumber() {
+        return inwardnumber;
+    }
+
+    public void setInwardnumber(String inwardnumber) {
+        this.inwardnumber = inwardnumber;
+    }
+
+    public Boolean getIscallback() {
+        return iscallback;
+    }
+
+    public void setIscallback(Boolean iscallback) {
+        this.iscallback = iscallback;
+    }
 }

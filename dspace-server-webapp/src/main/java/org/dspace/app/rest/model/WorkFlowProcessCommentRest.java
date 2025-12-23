@@ -39,6 +39,8 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
     private String margeddocuuid;
 
     private String sapdocumentno;
+    private Boolean isdosign=false;
+
     private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
 
     @JsonProperty
@@ -173,5 +175,13 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     public void setMargeddocuuid(String margeddocuuid) {
         this.margeddocuuid = margeddocuuid;
+    }
+
+    public Boolean getIsdosign() {
+        return isdosign;
+    }
+
+    public void setIsdosign(Boolean isdosign) {
+        this.isdosign = isdosign;
     }
 }

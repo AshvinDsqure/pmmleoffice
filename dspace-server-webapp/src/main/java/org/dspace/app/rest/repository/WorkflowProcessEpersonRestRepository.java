@@ -40,10 +40,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -140,7 +137,6 @@ public class WorkflowProcessEpersonRestRepository extends DSpaceObjectRestReposi
             throw new RuntimeException(e.getMessage(), e);
         }
         try {
-          //  eperson.setWorkflowProcess(null);
             eperson.setIsdelete(true);
             eperson.setWorkflowProcess(null);
             workflowProcessEpersonService.update(context, eperson);

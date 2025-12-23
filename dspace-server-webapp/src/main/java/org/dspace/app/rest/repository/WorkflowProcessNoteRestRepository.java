@@ -111,7 +111,7 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
     @Override
     @PreAuthorize("hasPermission(#id, 'ITEM', 'STATUS') || hasPermission(#id, 'ITEM', 'READ')")
     protected WorkflowProcessNoteRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
-                                   JsonNode jsonNode) throws SQLException, AuthorizeException {
+                                          JsonNode jsonNode) throws SQLException, AuthorizeException {
         WorkflowProcessNoteRest workflowProcessNoteRest = new Gson().fromJson(jsonNode.toString(), WorkflowProcessNoteRest.class);
         WorkflowProcessNote WorkflowProcessNote = workflowProcessNoteService.find(context, id);
         if (WorkflowProcessNote == null) {
@@ -178,10 +178,13 @@ public class WorkflowProcessNoteRestRepository extends DSpaceObjectRestRepositor
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-           // System.out.println("status id:"+statusid);
-            long total = workflowProcessNoteService.countDocumentByItemid(context, itemid,statusid);
-            List<WorkflowProcessNote> witems = workflowProcessNoteService.getDocumentByItemid(context, itemid,statusid, Math.toIntExact(pageable.getOffset()),
+            UUID DISPATCHCLOSE= WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
+
+            // System.out.println("status id:"+statusid);
+            long total = workflowProcessNoteService.countDocumentByItemid(context, itemid,statusid,DISPATCHCLOSE);
+            List<WorkflowProcessNote> witems = workflowProcessNoteService.getDocumentByItemid(context, itemid,statusid,DISPATCHCLOSE, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
+
             return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);

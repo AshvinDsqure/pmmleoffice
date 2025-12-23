@@ -112,16 +112,19 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> findNotCompletedByUser(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid,perameter, offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.findNotCompletedByUser(context, eperson, statusid, draftid,epersontoepersonmapid,perameter, metadataFields,offset, limit);
     }
 
     @Override
     public List<WorkflowProcess> findNotCompletedByUserDraft(Context context, UUID eperson, UUID statusid, UUID draftid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid,perameter,offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.findNotCompletedByUserDraft(context, eperson, statusid, draftid,epersontoepersonmapid,perameter,metadataFields,offset, limit);
     }
 
     @Override
     public List<WorkflowProcess> findCompletedFlow(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID epersontoepersonmapid, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
         return workflowProcessDAO.findCompletedFlow(context,eperson,statusid,workflowtypeid,epersontoepersonmapid,offset,limit);
     }
 
@@ -143,10 +146,12 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> getHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid,Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid,epersontoepersonmapid, offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.getHistoryByNotOwnerAndNotDraft(context, eperson, statusid,epersontoepersonmapid,metadataFields, offset, limit);
     }
     @Override
     public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
         return workflowProcessDAO.countgetHistoryByNotOwnerAndNotDraft(context, eperson, statusid,epersontoepersonmapid);
     }
     @Override
@@ -157,7 +162,8 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> getHistoryByOwnerAndIsDraft(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid,perameter, offset, limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "firstname", null);
+        return workflowProcessDAO.getHistoryByOwnerAndIsDraft(context, eperson, statusid,workflowtypeid,epersontoepersonmapid,perameter, metadataFields, offset, limit);
     }
 
     @Override
@@ -169,17 +175,17 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     public synchronized void storeWorkFlowMataDataTOBitsream(Context context, WorkflowProcessReferenceDoc workflowProcessReferenceDoc, Item item) throws SQLException, AuthorizeException {
         Bitstream bitstream = workflowProcessReferenceDoc.getBitstream();
         if (bitstream != null) {
-            System.out.println("in store ::::storeWorkFlowMataDataTOBitsream");
+            // System.out.println("in store ::::storeWorkFlowMataDataTOBitsream");
             List<Bundle> bundles = item.getBundles("ORIGINAL");
-            System.out.println("bundles size"+bundles.size());
+            // System.out.println("bundles size"+bundles.size());
             Bundle finalBundle = null;
             if (bundles.size() == 0) {
-                System.out.println("create new Bundel");
+                // System.out.println("create new Bundel");
                 finalBundle = bundleService.create(context, item, "ORIGINAL");
             } else {
                 finalBundle = bundles.stream().findFirst().get();
             }
-            System.out.println("finalBundle ::name "+finalBundle.getName());
+            // System.out.println("finalBundle ::name "+finalBundle.getName());
             Bundle finalBundle1 = finalBundle;
             bundleService.addBitstream(context, finalBundle1, bitstream);
             if (workflowProcessReferenceDoc.getWorkFlowProcessReferenceDocType() != null) {
@@ -205,7 +211,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
                 bitstreamService.addMetadata(context, bitstream, "dc", "page", null, null, workflowProcessReferenceDoc.getPage().toString());
             }
         }else{
-            System.out.println("bitstream not::::::::::::::in thid doc ");
+            // System.out.println("bitstream not::::::::::::::in thid doc ");
         }
 
     }
@@ -240,13 +246,26 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid,perameter, offset, limit);
+    public List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid,HashMap<String, String> perameter,UUID statusReject, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.findDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid,perameter,metadataFields,statusReject, offset, limit);
     }
 
     @Override
-    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid) throws SQLException {
-        return workflowProcessDAO.countfindDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid);
+    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapid,UUID statusReject) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.countfindDraftPending(context, eperson, statuscloseid, statusdraftid, statusdraft,epersontoepersonmapid,metadataFields,statusReject);
+    }
+
+    @Override
+    public List<WorkflowProcess> findFilePendingDueDate(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, UUID epersontoepersonmapping, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.findFilePendingDueDate(context,eperson,statuscloseid,statusdraftid,statusdraft,epersontoepersonmapping,perameter,metadataFields,offset,limit);
+    }
+
+    @Override
+    public int countfindFilePendingDueDate(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, UUID epersontoepersonmapping) throws SQLException {
+        return workflowProcessDAO.countfindFilePendingDueDate(context,eperson,statuscloseid,statusdraftid,statusdraft,epersontoepersonmapping);
     }
 
     @Override
@@ -298,8 +317,28 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     }
 
     @Override
-    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid) throws SQLException {
-        return workflowProcessDAO.countByTypeAndPriorityClose(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid);
+    public int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid,UUID epersontoepersonmapid,UUID statusdraft,UUID statusdispatch,UUID usertype) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityClose(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid,statusdraft,statusdispatch,usertype);
+    }
+
+    @Override
+    public int countByTypeAndPriorityCloseTapal(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid, UUID statusdraft, UUID statusdispatch, UUID usertype) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityCloseTapal(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid,statusdraft,statusdispatch,usertype);
+    }
+
+    @Override
+    public int countByTypeAndPriorityDraftTapal(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityDraftTapal(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid);
+    }
+
+    @Override
+    public int countByTypeAndPriorityCloseSignLatter(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid, UUID statusdraft, UUID statusdispatch, UUID usertype) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityCloseSignLatter(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid,statusdraft,statusdispatch,usertype);
+    }
+
+    @Override
+    public int countByTypeAndPriorityPark(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid, UUID statusdraftid) throws SQLException {
+        return workflowProcessDAO.countByTypeAndPriorityPark(context,typeid,priorityid,epersonid,statusid,epersontoepersonmapid,statusdraftid);
     }
 
     @Override
@@ -340,7 +379,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
             Email email = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "electronical"));
             email.addArgument(subject);                   //0
             if(recipientEmails!=null){
-            email.addRecipient(recipientEmail);}
+                email.addRecipient(recipientEmail);}
             if(recipientEmails!=null){
                 for (String emailid:recipientEmails) {
                     email.addRecipient(emailid);
@@ -377,6 +416,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
         return workflowProcessDAO.getWorkflowAfterNoteApproved(context,eperson,statuscloseid,statusdraftid,workflowtypeid,epersontoepersonmapid,perameter,offset,limit);
     }
 
@@ -394,17 +434,25 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     @Override
     public List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,perameter,offset,limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.sentTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,perameter,metadataFields,offset,limit);
     }
 
     @Override
-    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid) throws SQLException {
-        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid);
+    public int countTapal(Context context, UUID eperson, UUID statusid, UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid,HashMap<String, String> perameter) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.countTapal(context,eperson,statusid,workflowtypeid,statuscloseid,epersontoepersonmapid,metadataFields,perameter);
     }
 
     @Override
     public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid, UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,statusdspatchcloseid,workflowtypeid,epersontoepersonmapid,usertype,perameter,offset,limit);
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,statusdspatchcloseid,workflowtypeid,epersontoepersonmapid,usertype,perameter,metadataFields,offset,limit);
+    }
+    @Override
+    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid,perameter,metadataFields,offset,limit);
     }
 
     @Override
@@ -432,10 +480,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return workflowProcessDAO.countdispatchTapal(context,eperson,statusdraftid,statusdspachcloseid,workflowtypeid);
     }
 
-    @Override
-    public List<WorkflowProcess> parkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
-        return workflowProcessDAO.parkedFlow(context,eperson,statusdraftid,statusparkedid,workflowtypeid,epersontoepersonmapid,perameter,offset,limit);
-    }
+
 
     @Override
     public int countparkedFlow(Context context, UUID eperson, UUID statusdraftid, UUID statusparkedid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException {
@@ -447,21 +492,21 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
 
 
-        System.out.println("in CallSap SAP");
+        // System.out.println("in CallSap SAP");
         try {
             JCoDestination destination = JCoDestinationManager.getDestination("ZDMS_DOCUMENT_POST");
             JCoFunction function = destination.getRepository().getFunction("ZDMS_DOCUMENT_POST");
             if (function == null) {
-                System.out.println("in if ");
+                //System.out.println("in if ");
                 throw new RuntimeException("ZDMS_DOCUMENT_POST not found in SAP.");
             }else{
-                System.out.println("in Else ");
+                // System.out.println("in Else ");
                 function.getImportParameterList().setValue("IT_MESSAGES", "IT_MESSAGES");
                 function.execute(destination);
             }
-            System.out.println("out CallSap SAP");
+            // System.out.println("out CallSap SAP");
         }catch (Exception e){
-            System.out.println("in error CallSap"+e.getMessage());
+            // System.out.println("in error CallSap"+e.getMessage());
             e.printStackTrace();
         }
     }
@@ -486,12 +531,74 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return workflowProcessDAO.getNextFileNumber(context);
     }
 
+    @Override
+    public List<Object[]> withinDepartmentDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.withinDepartmentDownload(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public List<Object[]> outerDepartmentDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.outerDepartmentDownload(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public List<Object[]> stagewithinDepartmentDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.stagewithinDepartmentDownload(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public List<Object[]> stageouterDepartmentDownload(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.stageouterDepartmentDownload(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public List<Object[]> NoOfFileCreatedAndClose(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.NoOfFileCreatedAndClose(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public List<Object[]> NoOfTapalCreatedAndClose(Context context, HashMap<String, String> parameter, String startdate, String endDate) throws SQLException {
+        return workflowProcessDAO.NoOfTapalCreatedAndClose(context,parameter,startdate,endDate);
+    }
+
+    @Override
+    public int countTapalPrkedDateRange(Context context, String startdate, String enddate) throws SQLException {
+        return workflowProcessDAO.countTapalPrkedDateRange(context,startdate,enddate);
+    }
+
+    @Override
+    public int countTapalStageWISE(Context context, String startdate, String enddate) throws SQLException {
+        return workflowProcessDAO.countTapalStageWISE(context,startdate,enddate);
+    }
+
+    @Override
+    public List<Object[]> getActiveAndDActiveUsers(Context context, String flag) throws SQLException {
+        return workflowProcessDAO.getActiveAndDActiveUsers(context,flag);
+    }
+
+    @Override
+    public List<Object[]> getFileByDayTakenAndDepartment(Context context, Integer daytaken, String flag,String startdate, String enddate) throws SQLException {
+
+        if(flag!=null || flag.equalsIgnoreCase("yes")){
+            flag="Complete";
+        }else {
+            flag="Forward";
+        }
+        System.out.println("flag value:::"+flag);
+        return workflowProcessDAO.getFileByDayTakenAndDepartment(context,daytaken,flag,startdate,enddate);
+    }
+
+    @Override
+    public List<String> getDraftMigration(Context context, Integer limit) throws SQLException {
+        return workflowProcessDAO.getDraftMigration(context,limit);
+    }
+
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);
         if (workFlowProcessMaster != null) {
             WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, mastervaluename, workFlowProcessMaster);
             if (workFlowProcessMasterValue != null) {
-               // System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
+                // System.out.println(" MAster value" + workFlowProcessMasterValue.getPrimaryvalue());
                 return workFlowProcessMasterValue.getID();
             }
         }
@@ -500,12 +607,12 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
 
     public static String getFinancialYear() {
         LocalDate today = LocalDate.now();
-        System.out.println("todate date" + today);
+        // System.out.println("todate date" + today);
         int year = today.getYear();
         int month = today.getMonthValue();
-        System.out.println("date\t" + today.getDayOfMonth());
-        System.out.println("dmonth\t" + today.getMonthValue());
-        System.out.println("year\t" + today.getYear());
+        // System.out.println("date\t" + today.getDayOfMonth());
+        //System.out.println("dmonth\t" + today.getMonthValue());
+        //System.out.println("year\t" + today.getYear());
         String financialYear;
         String financialYears;
         if (month <= 1) {

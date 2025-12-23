@@ -3,7 +3,6 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/dspace-api/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/dspace-api/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/dspace-api/target/generated-sources/jaxb" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/dspace-iiif/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/dspace-iiif/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/dspace-oai/src/main/java" charset="UTF-8" />

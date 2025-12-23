@@ -1,4 +1,4 @@
-    /**
+/**
  * The contents of this file are subject to the license and copyright
  * detailed in the LICENSE and NOTICE files at the root of the source
  * tree and available online at
@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.dspace.app.rest.model.helper.MyDateConverter;
@@ -23,11 +24,11 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private Integer legacyId;
 
     private String inwardNumber;
-    @JsonDeserialize(converter = MyDateConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date inwardDate;
-    @JsonDeserialize(converter = MyDateConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date receivedDate;
-    @JsonDeserialize(converter = MyDateConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date latterDate;
     private String filereferencenumber;
     private String letterrefno;
@@ -38,6 +39,11 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
     private String subcategoryRest = null;
     @JsonProperty
     private WorkFlowProcessMasterValueRest lettercategoryRest = null;
+
+
+    @JsonProperty
+    private WorkFlowProcessMasterValueRest documenttypeRest = null;
+
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest inwardmodeRest = null;
@@ -175,5 +181,13 @@ public class WorkFlowProcessInwardDetailsRest extends  DSpaceObjectRest{
 
     public void setLetterrefno(String letterrefno) {
         this.letterrefno = letterrefno;
+    }
+
+    public WorkFlowProcessMasterValueRest getDocumenttypeRest() {
+        return documenttypeRest;
+    }
+
+    public void setDocumenttypeRest(WorkFlowProcessMasterValueRest documenttypeRest) {
+        this.documenttypeRest = documenttypeRest;
     }
 }

@@ -24,6 +24,7 @@ import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.enums.WorkFlowAction;
+import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.repository.BundleRestRepository;
@@ -186,6 +187,7 @@ public class WorkflowProcessDigitalSignController {
             req.setErrorMsg(data.getErrorMsg());
             return req;
         } catch (Exception e) {
+            log.error("Errro in getRequestData"+e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -202,6 +204,7 @@ public class WorkflowProcessDigitalSignController {
             ResponseDataListProviderToken responseDataListProviderToken = bridge.decListToken(data.getEncryptedRequest());
             return responseDataListProviderToken;
         } catch (Exception e) {
+            log.error("Errro in getTokenResponse"+e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -230,6 +233,7 @@ public class WorkflowProcessDigitalSignController {
             req.setErrorCode(data.getErrorCode());
             return req;
         } catch (Exception e) {
+            log.error("Errror in getCertificateRequestByKeyStoreDisplayName"+e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -245,6 +249,7 @@ public class WorkflowProcessDigitalSignController {
             ResponseDataListPKCSCertificate responseDataListPKCSCertificate = bridge.decListCertificate(data.getEncryptedRequest(), new CertificateFilter());
             return responseDataListPKCSCertificate;
         } catch (Exception e) {
+            log.error("Errror in getCertificateResponse"+e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -294,10 +299,10 @@ public class WorkflowProcessDigitalSignController {
                     System.out.println("TEMP_DIRECTORY1::" + TEMP_DIRECTORY);
                     String type = getDrftType(workflowProcess);
                     if (type != null&&!type.isEmpty()) {
-                            System.out.println("type::::" + type);
-                            String htmlformatepath = pdfOprationServer.getHtmlTamplateByType(type);
-                            Map<String, String> map = pdfOprationServer.getMAPByType(type, context, workflowProcessReferenceDocVersion.getEditortext(), workflowProcess);
-                            fileInputa = pdfgenrator(context, workflowProcess, map, htmlformatepath, tempFile1html);
+                        System.out.println("type::::" + type);
+                        String htmlformatepath = pdfOprationServer.getHtmlTamplateByType(type);
+                        Map<String, String> map = pdfOprationServer.getMAPByType(type, context, workflowProcessReferenceDocVersion.getEditortext(), workflowProcess);
+                        fileInputa = pdfgenrator(context, workflowProcess, map, htmlformatepath, tempFile1html);
                     } else {
                         fileInputa = createFinalDraftDoc(context, workflowProcessReferenceDocVersion, tempFile1html, workflowProcess);
                     }
@@ -331,6 +336,7 @@ public class WorkflowProcessDigitalSignController {
                     pdfFile.close();
                     String pdfStr = Base64.encodeBase64String(pdfBytes);
                     System.out.println("Coordinates.BottomRight::::;;" + Coordinates.BottomMiddle);
+
                     //  emBridgeSignerInput input = new emBridgeSignerInput(pdfStr, pdf.getName(), "Pune", "Distribution",context.getCurrentUser().getFullName(), true, PageTobeSigned.First, Coordinates.BottomRight, "", false);
 //            String Cordinate=PDFTextSearch.getCordinate(path.toAbsolutePath().toString(),"Signature_1");
 //            System.out.println("cordinate ::::"+Cordinate);
@@ -354,16 +360,21 @@ public class WorkflowProcessDigitalSignController {
                             c, "Name : " + commonName + "\nDesignation:" + designation + "\nLocation:" + location + ".\nDate :" + getDateCurrentDate() + "", false);
 
                     inputs.add(emSignerInputforMultipleSignature4);
-                }catch (IOException ioEx) {
+                } catch (IOException ioEx) {
+
                     ioEx.printStackTrace();
                     System.err.println("I/O error processing file: " + ioEx.getMessage());
+                    log.error("Errror in pdfSignRequest"+ioEx.getMessage());
 
                 } catch (RuntimeException runtimeEx) {
                     runtimeEx.printStackTrace();
                     System.err.println("Runtime error with file: => " + runtimeEx.getMessage());
+                    log.error("Errror in pdfSignRequest"+runtimeEx.getMessage());
+
                 }catch (Exception e){
                     e.printStackTrace();
                     System.err.println("Exception: => " + e.getMessage());
+                    log.error("Errror in pdfSignRequest"+e.getMessage());
                 }
             }
             // Initiate PKCSBulkPdfHashSignRequest Object
@@ -393,7 +404,13 @@ public class WorkflowProcessDigitalSignController {
             req.setTempfolder(TEMP_DIRECTORY);
             this.isdraftnotesin = true;
             return req;
+        }catch (FieldBlankOrNullException w){
+            w.printStackTrace();
+            System.err.println("I/O error processing file: " + w.getMessage());
+            log.error("Errror in pdfSignRequest"+w.getMessage());
+            throw  new FieldBlankOrNullException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
         } catch (Exception e) {
+            log.error("Errror in pdfSignRequest"+e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -408,7 +425,7 @@ public class WorkflowProcessDigitalSignController {
         return null;
     }
 
-    public InputStream pdfgenrator(Context context, WorkflowProcess workflowProcess, Map<String, String> map, String templateFullpath, File tempFile1html) throws IOException, SQLException, AuthorizeException {
+    public InputStream pdfgenrator(Context context, WorkflowProcess workflowProcess, Map<String, String> map, String templateFullpath, File tempFile1html) throws IOException, SQLException, AuthorizeException, FieldBlankOrNullException {
         InputStream inputStream = null;
         String htmlString = "";
         try {
@@ -434,9 +451,12 @@ public class WorkflowProcessDigitalSignController {
             }
         }
         FileOutputStream files = new FileOutputStream(new File(replyDraft.getAbsolutePath()));
-        System.out.println("HTML:::" + htmlString);
+        //System.out.println("HTML:::" + htmlString);
         //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
         int ii = jbpmServer.htmltopdf(htmlString, files);
+        if(ii==0){
+            throw  new FieldBlankOrNullException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
+        }
         System.out.println("HTML CONVERT DONE::::::::::::::: :" + replyDraft.getAbsolutePath());
         FileInputStream draftFile = new FileInputStream(new File(replyDraft.getAbsolutePath()));
         FileInputStream marge = getMargedDoc(context, workflowProcess, draftFile, tempFile1html);
@@ -511,7 +531,7 @@ public class WorkflowProcessDigitalSignController {
                 }
 
                 String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
-              //  String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
+                //  String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
 //                emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
 //                        c, "Name:" + commonName + "\nLocation:" + location + "\nReason:" + reason + "", false);
 //
@@ -656,7 +676,7 @@ public class WorkflowProcessDigitalSignController {
                 // Generate a random 4-digit number
                 int randomNumber = random.nextInt(9000) + 1000;
                 byte[] signedDocBytes = Base64.decodeBase64(doc.getSignedData());
-                File file = new File(TEMP_DIRECTORY1, "sing_" + name + "_" + randomNumber + ".pdf");
+                File file = new File(TEMP_DIRECTORY1, "signed_" + name + "_" + randomNumber + ".pdf");
                 System.out.println("sing doc" + file.getAbsolutePath());
                 OutputStream os = new FileOutputStream(file);
                 os.write(signedDocBytes);
@@ -700,7 +720,7 @@ public class WorkflowProcessDigitalSignController {
                         } else {
                             WorkFlowProcessDraftDetails d = workFlowProcessDraftDetailsService.find(context, workflowProcess.getWorkFlowProcessDraftDetails().getID());
                             if (d != null) {
-                                System.out.println("update done signflag::::::::::::::::::");
+                                System.out.println("update done signflag::  ::::::::::::::::");
                                 d.setIssinglatter(true);
                                 workFlowProcessDraftDetailsService.update(context, d);
                             }
@@ -713,15 +733,16 @@ public class WorkflowProcessDigitalSignController {
                     if (workflowProcess.getIsinternal() && workflowProcess.getWorkflowProcessSenderDiaryEpeople() != null) {
                         if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
                             createTapal(context, workflowProcess);
+                            System.out.println("create tapal done after sign:");
                         }
                     } else {
                         WorkFlowProcessDraftDetails d = workFlowProcessDraftDetailsService.find(context, workflowProcess.getWorkFlowProcessDraftDetails().getID());
                         if (d != null) {
-                            System.out.println("update done signflag::::::::::::::::::");
+                            System.out.println("update done signflag::::   ::::::::::::::");
                             d.setIssinglatter(true);
                             workFlowProcessDraftDetailsService.update(context, d);
                         }
-                        System.out.println("create tapal done after sign:");
+
                     }
                 }
                 if(wdoc.getDrafttype()!=null&&wdoc.getDrafttype().getPrimaryvalue()!=null&&wdoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note")||wdoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Tapal")) {
@@ -868,6 +889,9 @@ public class WorkflowProcessDigitalSignController {
             //System.out.println("HTML:::" + sb.toString());
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             int ii = jbpmServer.htmltopdf(sb.toString(), files);
+            if(ii==0){
+                throw  new FieldBlankOrNullException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
+            }
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + replyDraft.getAbsolutePath());
 
             FileInputStream draftFile = new FileInputStream(new File(replyDraft.getAbsolutePath()));
@@ -1100,7 +1124,7 @@ public class WorkflowProcessDigitalSignController {
 //update
             WorkFlowProcessDraftDetails d = workFlowProcessDraftDetailsService.find(context, workflowProcess.getWorkFlowProcessDraftDetails().getID());
             if (d != null) {
-                System.out.println("update done signflag::::::::::::::::::");
+                System.out.println("update done sign flag::::::::::::::::::");
                 d.setIssinglatter(true);
                 workFlowProcessDraftDetailsService.update(context, d);
             }

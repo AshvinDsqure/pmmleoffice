@@ -21,6 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Component
@@ -66,11 +71,12 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
             if (obj.getInwardDate() != null) {
                 rest.setInwardDate(obj.getInwardDate());
             }
-            if (obj.getReceivedDate() != null) {
-                rest.setReceivedDate(obj.getReceivedDate());
-            }
             if (obj.getLatterDate() != null) {
                 rest.setLatterDate(obj.getLatterDate());
+            }
+
+            if (obj.getReceivedDate() != null) {
+                rest.setReceivedDate(obj.getReceivedDate());
             }
             if (obj.getCategory() != null) {
                 rest.setCategoryRest(obj.getCategory().getCategoryname());
@@ -79,9 +85,13 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
                 if (obj.getSubcategory() != null) {
                     rest.setSubcategoryRest(obj.getSubcategory().getSubcategoryname());
                 }
+                if (obj.getDocumenttype() != null) {
+                    rest.setDocumenttypeRest(workFlowProcessMasterValueConverter.convert(obj.getDocumenttype(), projection));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
 
             if (obj.getLettercategory() != null) {
                 rest.setLettercategoryRest(workFlowProcessMasterValueConverter.convert(obj.getLettercategory(), projection));
@@ -100,7 +110,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
             }
             rest.setUuid(obj.getID().toString());
             return rest;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return rest;
         }
@@ -126,10 +136,13 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
             obj.setCategory(categoryService.find(context, UUID.fromString(rest.getCategoryRest())));
         }
         try {
-
-        if (rest.getSubcategoryRest() != null) {
-            obj.setSubcategory(subcategoryService.find(context, UUID.fromString(rest.getSubcategoryRest())));
-        }}catch (Exception e){
+            if (rest.getDocumenttypeRest() != null) {
+                obj.setDocumenttype(workFlowProcessMasterValueConverter.convert(context, rest.getDocumenttypeRest()));
+            }
+            if (rest.getSubcategoryRest() != null) {
+                obj.setSubcategory(subcategoryService.find(context, UUID.fromString(rest.getSubcategoryRest())));
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -151,6 +164,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
         if (rest.getLatterDate() != null) {
             obj.setLatterDate(rest.getLatterDate());
         }
+
         return obj;
     }
 
@@ -183,17 +197,23 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
             }
         }
         if (!DateUtils.isNullOrEmptyOrBlank(rest.getVipnameRest())) {
-            try{
-            obj.setVipname(vipNameService.find(context, UUID.fromString(rest.getVipnameRest())));
-        }catch (Exception e){
+            try {
+                obj.setVipname(vipNameService.find(context, UUID.fromString(rest.getVipnameRest())));
+            } catch (Exception e) {
 
-        }}
+            }
+        }
         try {
+
+            if (rest.getDocumenttypeRest() != null) {
+                obj.setDocumenttype(workFlowProcessMasterValueConverter.convert(context, rest.getDocumenttypeRest()));
+            }
+
             if (!DateUtils.isNullOrEmptyOrBlank(rest.getCategoryRest())) {
                 obj.setCategory(categoryService.find(context, UUID.fromString(rest.getCategoryRest())));
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
         try {
@@ -207,6 +227,7 @@ public class WorkFlowProcessInwardDetailsConverter extends DSpaceObjectConverter
             obj.setLanguage(workFlowProcessMasterValueConverter.convert(context, rest.getLanguageRest()));
         }
         if (rest.getLatterDate() != null) {
+            System.out.println("date:rest.getLatterDate():::::" + rest.getLatterDate());
             obj.setLatterDate(rest.getLatterDate());
         }
         if (!DateUtils.isNullOrEmptyOrBlank(rest.getLetterrefno())) {

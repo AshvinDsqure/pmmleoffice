@@ -111,22 +111,22 @@ public class WorkflowProcessNoteServiceImpl extends DSpaceObjectServiceImpl<Work
     }
 
     @Override
-    public int countDocumentByItemid(Context context, UUID itemid,UUID workflowstatuscloseid) throws SQLException {
+    public int countDocumentByItemid(Context context, UUID itemid,UUID workflowstatuscloseid,UUID dspacecloseid) throws SQLException {
 
         WorkFlowProcessMaster  workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Draft Type");
         if(workFlowProcessMaster!=null){
             WorkFlowProcessMasterValue note=workFlowProcessMasterServicevalue.findByName(context,"Note",workFlowProcessMaster);
-            return workflowProcessNoteDAO.countDocumentByItemid(context,note.getID(),itemid,workflowstatuscloseid);
+            return workflowProcessNoteDAO.countDocumentByItemid(context,note.getID(),itemid,workflowstatuscloseid,dspacecloseid);
         }
         return 0;
     }
 
     @Override
-    public List<WorkflowProcessNote> getDocumentByItemid(Context context, UUID itemid,UUID workflowstatuscloseid, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcessNote> getDocumentByItemid(Context context, UUID itemid,UUID workflowstatuscloseid,UUID dspacecloseid, Integer offset, Integer limit) throws SQLException {
         WorkFlowProcessMaster  workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Draft Type");
         if(workFlowProcessMaster!=null){
             WorkFlowProcessMasterValue note=workFlowProcessMasterServicevalue.findByName(context,"Note",workFlowProcessMaster);
-            return workflowProcessNoteDAO.getDocumentByItemid(context,note.getID(),itemid,workflowstatuscloseid,offset,limit);
+            return workflowProcessNoteDAO.getDocumentByItemid(context,note.getID(),itemid,workflowstatuscloseid,dspacecloseid,offset,limit);
         }
         return null;
     }

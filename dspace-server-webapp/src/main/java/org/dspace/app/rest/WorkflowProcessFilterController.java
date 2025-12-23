@@ -15,6 +15,9 @@ import org.dspace.app.rest.converter.WorkFlowProcessConverter;
 import org.dspace.app.rest.converter.WorkFlowProcessMasterValueConverter;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
+import org.dspace.app.rest.enums.WorkFlowUserType;
+import org.dspace.app.rest.jbpm.JbpmServerImpl;
+import org.dspace.app.rest.jbpm.models.JBPMProcess;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.app.rest.utils.ExcelHelper;
@@ -34,6 +37,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,6 +75,9 @@ public class WorkflowProcessFilterController {
 
     @Autowired
     CountryService countryService;
+    @Autowired
+    JbpmServerImpl jbpmServer;
+
 
 
     @Autowired
@@ -194,7 +201,7 @@ public class WorkflowProcessFilterController {
                 map.put("outward", rest.getOutward());
                 /*}*/
             }
-            System.out.println(map);
+            //System.out.println(map);
             List<WorkflowProcess> list = workflowProcessService.Filter(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             List<WorkFlowProcessRest> rests = list.stream().map(d -> {
                 return workFlowProcessConverter.convertFilter(d, utils.obtainProjection());
@@ -288,7 +295,7 @@ public class WorkflowProcessFilterController {
             if (rest.getOutward() != null) {
                 map.put("outward", rest.getOutward());
             }
-            System.out.println(map);
+            //System.out.println(map);
             int count = workflowProcessService.countfilterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             List<WorkflowProcess> list = workflowProcessService.filterInwarAndOutWard(context, map, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             List<WorkFlowProcessRest> rests = list.stream().map(d -> {
@@ -332,10 +339,10 @@ public class WorkflowProcessFilterController {
             if (rest.getSubject() != null) {
                 map.put("subject", rest.getSubject());
             }
-            System.out.println(map);
+            //System.out.println(map);
             int count = 100;
             List<Object[]> list = workflowProcessService.filterDepartmentWiseCount(context, map, rest.getStartdate(), rest.getEnddate(), Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
-            System.out.println("List----" + list.size());
+            // System.out.println("List----" + list.size());
             List<DepartmentDTO> rests = list.stream().filter(d -> d[0] != null && d[1] != null).map(d -> {
                 DepartmentDTO dd = new DepartmentDTO();
                 dd.setName(d[0].toString());
@@ -382,11 +389,11 @@ public class WorkflowProcessFilterController {
             if (rest.getSubject() != null) {
                 map.put("subject", rest.getSubject());
             }
-            System.out.println(map);
+            //System.out.println(map);
 
             String filename = "DepartmentWiseTotal_" + name + "count.xlsx";
             List<Object[]> list = workflowProcessService.filterDepartmentWiseCountDownload(context, map, rest.getStartdate(), rest.getEnddate());
-            System.out.println("List----" + list.size());
+            // System.out.println("List----" + list.size());
             List<DepartmentDTO> rests = list.stream().filter(d -> d[0] != null && d[1] != null).map(d -> {
                 DepartmentDTO dd = new DepartmentDTO();
                 dd.setName(d[0].toString());
@@ -482,10 +489,17 @@ public class WorkflowProcessFilterController {
         return null;
     }
 
+
+
+
+
     @RequestMapping(method = RequestMethod.GET, value = "/getCountsDashboard")
-    public HashMap<String, HashMap<String, Integer>> getCountsDashboard(HttpServletRequest request) {
+    public HashMap<String, HashMap<String, Integer>> getCountsDashboard( @Parameter(value = "type", required = true) String type,
+                                                                         @Parameter(value = "tab", required = true) String tab,
+                                                                         HttpServletRequest request) {
         try {
             Context context = ContextUtil.obtainContext(request);
+            HashMap<String, String> perameter = new HashMap<>();
             context.turnOffAuthorisationSystem();
             UUID userid = context.getCurrentUser().getID();
             UUID Lowid = null;
@@ -495,6 +509,7 @@ public class WorkflowProcessFilterController {
             UUID inwardid = null;
             UUID draftid = null;
             UUID epersonToEpersonMappingid = null;
+            HashMap<String, HashMap<String, Integer>> maps = new HashMap<>();
             Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
             if (map.isPresent()) {
                 epersonToEpersonMappingid = map.get().getID();
@@ -509,90 +524,129 @@ public class WorkflowProcessFilterController {
             inwardid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             draftid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             //:::::::::::::::::::status:::::::::::::::::::::::::::
-            UUID tSuspendid = WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get().getID();
-            UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            UUID tInProgressid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            UUID tReferid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
-            UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID draftnote = WorkFlowStatus.DRAFTNOTE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             //:::::::::::::::::::inward Map:::::::::::::::::::::::::
             HashMap<String, Integer> mapInward = new HashMap<>();
-            //inbox
-            mapInward.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapInward.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapInward.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapInward.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapInward.put("inbox_Suspend", workflowProcessService.countByTypeAndStatus(context, inwardid, tSuspendid, userid, epersonToEpersonMappingid));
+            if(type!=null&&type.equalsIgnoreCase("Tapal")) {
+                //inbox
+                if(tab!=null&&tab.equalsIgnoreCase("Inbox")) {
+                    UUID tInProgressid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+                    UUID tSuspendid = WorkFlowStatus.SUSPEND.getUserTypeFromMasterValue(context).get().getID();
+                    mapInward.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapInward.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapInward.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapInward.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapInward.put("inbox_Suspend", workflowProcessService.countByTypeAndStatus(context, inwardid, tSuspendid, userid, epersonToEpersonMappingid));
+                    UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+                    int inbox_InProgresst = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, inwardid, epersonToEpersonMappingid);
+                    mapInward.put("inbox_InProgress", inbox_InProgresst);
+                } else  if(tab!=null&&tab.equalsIgnoreCase("Draft")) {
+                    UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+                    //draft
+                    mapInward.put("draft_Medium", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, Mediumid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("draft_Low", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, Lowid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("draft_High", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, Highid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
+                }else  if(tab!=null&&tab.equalsIgnoreCase("Closed")) {
+                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
+                    //close
+                    mapInward.put("close_Medium", workflowProcessService.countByTypeAndPriorityCloseTapal(context, inwardid, Mediumid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapInward.put("close_Low", workflowProcessService.countByTypeAndPriorityCloseTapal(context, inwardid, Lowid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapInward.put("close_High", workflowProcessService.countByTypeAndPriorityCloseTapal(context, inwardid, Highid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapInward.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityCloseTapal(context, inwardid, mostimedeatlyid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                }else  if(tab!=null&&tab.equalsIgnoreCase("SentTo")) {
+                    UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+                    UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+                    //sentto
+                    mapInward.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Mediumid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Lowid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Highid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
+                    mapInward.put("sent_InProgress", sentInProgressTapal(context, epersonToEpersonMappingid, perameter));
+                    mapInward.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tparkedid, userid, createdid, epersonToEpersonMappingid));
 
-            UUID statusid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            int inbox_InProgresst = workflowProcessService.countfindNotCompletedByUser(context, context.getCurrentUser().getID(), statusid, inwardid, epersonToEpersonMappingid);
-            mapInward.put("inbox_InProgress", inbox_InProgresst);
+                }else  if(tab!=null&&tab.equalsIgnoreCase("Parked")) {
+                    UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+                    //park
+                    mapInward.put("park_Medium", workflowProcessService.countByTypeAndPriorityPark(context, inwardid, Mediumid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapInward.put("park_Low", workflowProcessService.countByTypeAndPriorityPark(context, inwardid, Lowid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapInward.put("park_High", workflowProcessService.countByTypeAndPriorityPark(context, inwardid, Highid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapInward.put("park_MostImmediate", workflowProcessService.countByTypeAndPriorityPark(context, inwardid, mostimedeatlyid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                }
+                maps.put(WorkFlowType.INWARD.getAction(), mapInward);
+            }else  if (type!=null&&type.equalsIgnoreCase("File")) {
+                //::::::::::::::::::Draft Map::::FILE::::::::::::::::::::::::::::::::::
+                HashMap<String, Integer> mapDraft = new HashMap<>();
+                if(tab!=null&&tab.equalsIgnoreCase("Inbox")) {
+                    UUID tInProgressid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+                    UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+                    //inbox
+                    mapDraft.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapDraft.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapDraft.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapDraft.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid, tInProgressid, epersonToEpersonMappingid));
+                    mapDraft.put("inbox_InProgress", inboxInProgressFile(context, epersonToEpersonMappingid));
+                    mapDraft.put("inbox_Parked", workflowProcessService.countByTypeAndStatus(context, draftid, tparkedid, userid, epersonToEpersonMappingid));
+                    mapDraft.put("duedate_count", duedatecount(context, epersonToEpersonMappingid));
 
-            //draft
-            mapInward.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, inwardid, Mediumid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, inwardid, Lowid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("draft_High", workflowProcessService.countByTypeAndPriority(context, inwardid, Highid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, inwardid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
-            //close
-            mapInward.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Mediumid, userid, tCloseid, epersonToEpersonMappingid));
-            mapInward.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Lowid, userid, tCloseid, epersonToEpersonMappingid));
-            mapInward.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, Highid, userid, tCloseid, epersonToEpersonMappingid));
-            mapInward.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, inwardid, mostimedeatlyid, userid, tCloseid, epersonToEpersonMappingid));
-
-            //sentto
-            mapInward.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Mediumid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Lowid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, Highid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, inwardid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
-            mapInward.put("sent_InProgress", sentInProgressTapal(context,epersonToEpersonMappingid));
-            mapInward.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, inwardid, tparkedid, userid, createdid, epersonToEpersonMappingid));
-
-            //::::::::::::::::::Draft Map::::FILE::::::::::::::::::::::::::::::::::
-            HashMap<String, Integer> mapDraft = new HashMap<>();
-            //inbox
-            mapDraft.put("inbox_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapDraft.put("inbox_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapDraft.put("inbox_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid, tInProgressid, epersonToEpersonMappingid));
-            mapDraft.put("inbox_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid, tInProgressid, epersonToEpersonMappingid));
-            //inbox_InProgress file
-            mapDraft.put("inbox_InProgress", inboxInProgressFile(context,epersonToEpersonMappingid));
-            mapDraft.put("inbox_Parked", workflowProcessService.countByTypeAndStatus(context, draftid, tparkedid, userid, epersonToEpersonMappingid));
-            //Draft
-            mapDraft.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid, draftnote, epersonToEpersonMappingid));
-            mapDraft.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid, draftnote, epersonToEpersonMappingid));
-            mapDraft.put("draft_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid, draftnote, epersonToEpersonMappingid));
-            mapDraft.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid, draftnote, epersonToEpersonMappingid));
-            //created
-            mapDraft.put("created_Medium", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Mediumid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("created_Low", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Lowid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("created_High", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Highid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("created_MostImmediate", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
-            //park
-            mapDraft.put("park_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid, tparkedid, epersonToEpersonMappingid));
-            mapDraft.put("park_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid, tparkedid, epersonToEpersonMappingid));
-            mapDraft.put("park_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid, tparkedid, epersonToEpersonMappingid));
-            mapDraft.put("park_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid, tparkedid, epersonToEpersonMappingid));
-            mapDraft.put("pending_Sign", getPendingsign(context, epersonToEpersonMappingid));
-            //close
-            mapDraft.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Mediumid, userid, tCloseid, epersonToEpersonMappingid));
-            mapDraft.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Lowid, userid, tCloseid, epersonToEpersonMappingid));
-            mapDraft.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Highid, userid, tCloseid, epersonToEpersonMappingid));
-            mapDraft.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, draftid, mostimedeatlyid, userid, tCloseid, epersonToEpersonMappingid));
-            //sent
-            mapDraft.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Mediumid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Lowid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Highid, userid, createdid, epersonToEpersonMappingid));
-            mapDraft.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
-            //sent_InProgress file
-            mapDraft.put("sent_InProgress", sentInProgressFile(context,epersonToEpersonMappingid));
-            mapDraft.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tparkedid, userid, createdid, epersonToEpersonMappingid));
-            HashMap<String, HashMap<String, Integer>> maps = new HashMap<>();
-            maps.put(WorkFlowType.INWARD.getAction(), mapInward);
-            maps.put(WorkFlowType.DRAFT.getAction(), mapDraft);
+                }else if(tab!=null&&tab.equalsIgnoreCase("Draft")) {
+                    UUID draftnote = WorkFlowStatus.DRAFTNOTE.getUserTypeFromMasterValue(context).get().getID();
+                    //Draft
+                    mapDraft.put("draft_Medium", workflowProcessService.countByTypeAndPriority(context, draftid, Mediumid, userid, draftnote, epersonToEpersonMappingid));
+                    mapDraft.put("draft_Low", workflowProcessService.countByTypeAndPriority(context, draftid, Lowid, userid, draftnote, epersonToEpersonMappingid));
+                    mapDraft.put("draft_High", workflowProcessService.countByTypeAndPriority(context, draftid, Highid, userid, draftnote, epersonToEpersonMappingid));
+                    mapDraft.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriority(context, draftid, mostimedeatlyid, userid, draftnote, epersonToEpersonMappingid));
+                }else if(tab!=null&&tab.equalsIgnoreCase("Created")) {
+                    UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+                    //created
+                    mapDraft.put("created_Medium", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Mediumid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("created_Low", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Lowid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("created_High", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, Highid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("created_MostImmediate", workflowProcessService.countByTypeAndPriorityCreted(context, draftid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
+                }else if(tab!=null&&tab.equalsIgnoreCase("Parked")) {
+                    UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+                    //park
+                    mapDraft.put("park_Medium", workflowProcessService.countByTypeAndPriorityPark(context, draftid, Mediumid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapDraft.put("park_Low", workflowProcessService.countByTypeAndPriorityPark(context, draftid, Lowid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapDraft.put("park_High", workflowProcessService.countByTypeAndPriorityPark(context, draftid, Highid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapDraft.put("park_MostImmediate", workflowProcessService.countByTypeAndPriorityPark(context, draftid, mostimedeatlyid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
+                    mapDraft.put("pending_Sign", getPendingsign(context, epersonToEpersonMappingid));
+                }else if(tab!=null&&tab.equalsIgnoreCase("Closed")) {
+                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
+                    //close
+                    mapDraft.put("close_Medium", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Mediumid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("close_Low", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Lowid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("close_High", workflowProcessService.countByTypeAndPriorityClose(context, draftid, Highid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("close_MostImmediate", workflowProcessService.countByTypeAndPriorityClose(context, draftid, mostimedeatlyid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                }else if(tab!=null&&tab.equalsIgnoreCase("SentTo")) {
+                    UUID tparkedid = WorkFlowStatus.PARKED.getUserTypeFromMasterValue(context).get().getID();
+                    UUID createdid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+                    //sent
+                    mapDraft.put("sent_Medium", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Mediumid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("sent_Low", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Lowid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("sent_High", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, Highid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("sent_MostImmediate", workflowProcessService.countByTypeAndPriorityNotDraft(context, draftid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
+                    mapDraft.put("sent_InProgress", sentInProgressFile(context, epersonToEpersonMappingid, perameter));
+                    mapDraft.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tparkedid, userid, createdid, epersonToEpersonMappingid));
+                }else if(tab!=null&&tab.equalsIgnoreCase("SignLetter")){
+                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
+                    //sign Latter
+                    mapDraft.put("sign_Medium", workflowProcessService.countByTypeAndPriorityCloseSignLatter(context, draftid, Mediumid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("sign_Low", workflowProcessService.countByTypeAndPriorityCloseSignLatter(context, draftid, Lowid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("sign_High", workflowProcessService.countByTypeAndPriorityCloseSignLatter(context, draftid, Highid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                    mapDraft.put("sign_MostImmediate", workflowProcessService.countByTypeAndPriorityCloseSignLatter(context, draftid, mostimedeatlyid, userid, tCloseid, epersonToEpersonMappingid, statusdraft, statusdispathcclose, INITIATORid));
+                }
+                maps.put(WorkFlowType.DRAFT.getAction(), mapDraft);
+            }
             return maps;
         } catch (Exception e) {
-            System.out.println("ERROr in Dsbrd count"+e.getMessage());
+            // System.out.println("ERROr in Dsbrd count"+e.getMessage());
         }
         return null;
     }
@@ -601,55 +655,57 @@ public class WorkflowProcessFilterController {
     public int inboxInProgressFile(Context context, UUID epersonToEpersonMappingid) {
         try {
             UUID statuscloseid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusRejected = WorkFlowStatus.REJECTED.getUserTypeFromMasterValue(context).get().getID();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
             UUID statusdraftid = null;
             if (workFlowProcessMaster != null) {
                 statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
             }
-            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft, epersonToEpersonMappingid);
+            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft, epersonToEpersonMappingid,statusRejected);
             return count;
         } catch (Exception e) {
             System.out.println("error inboxInProgressFile" +e.getMessage());
             return 0;
         }
     }
-    public int inboxMostImmediateFile(Context context, UUID epersonToEpersonMappingid) {
+    public int sentInProgressTapal(Context context, UUID epersonToEpersonMappingid,HashMap<String, String> perameter) {
         try {
-            UUID statuscloseid = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
-            UUID statusdraftid = null;
-            if (workFlowProcessMaster != null) {
-                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
-            }
-            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statuscloseid, statusdraftid, statusdraft, epersonToEpersonMappingid);
-            return count;
+            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusid1 = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
+            int counts = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1, workflowtypeid, statusidclose, epersonToEpersonMappingid,perameter);
+            return counts;
+        } catch (Exception e) {
+            System.out.println("error inboxInProgressFile" +e.getMessage());
+            return 0;
+        }
+    }
+    public int sentInProgressFile(Context context, UUID epersonToEpersonMappingid,HashMap<String, String> perameter) {
+        try {
+            UUID statusidclose1 = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusid1a = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            UUID workflowtypeid1 = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            int sent_InProgress = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1a, workflowtypeid1, statusidclose1, epersonToEpersonMappingid,perameter);
+            return sent_InProgress;
         } catch (Exception e) {
             System.out.println("error inboxInProgressFile" +e.getMessage());
             return 0;
         }
     }
 
-    public int sentInProgressTapal(Context context, UUID epersonToEpersonMappingid) {
+    public int duedatecount(Context context, UUID epersonToEpersonMappingid) {
         try {
-            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusid1 = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
-            int counts = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1, workflowtypeid, statusidclose, epersonToEpersonMappingid);
-           return counts;
-        } catch (Exception e) {
-            System.out.println("error inboxInProgressFile" +e.getMessage());
-            return 0;
-        }
-    }
-    public int sentInProgressFile(Context context, UUID epersonToEpersonMappingid) {
-        try {
-            UUID statusidclose1 = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusid1a = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID workflowtypeid1 = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            int sent_InProgress = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1a, workflowtypeid1, statusidclose1, epersonToEpersonMappingid);
-            return sent_InProgress;
+            UUID statusinpogress = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Draft", workFlowProcessMaster).getID();
+            }
+            int count = workflowProcessService.countfindFilePendingDueDate(context, context.getCurrentUser().getID(), statusinpogress, statusdraftid, statusdraft,epersonToEpersonMappingid);
+
+            return count;
         } catch (Exception e) {
             System.out.println("error inboxInProgressFile" +e.getMessage());
             return 0;
@@ -909,8 +965,6 @@ public class WorkflowProcessFilterController {
         Set<Object> seen = ConcurrentHashMap.newKeySet();
         return t -> seen.add(keyExtractor.apply(t));
     }
-
-
     @RequestMapping(method = RequestMethod.GET, value = "/getEpersonByDepartmentAndOfficeAndDesignation")
     public List<UsersDTO> getEpersonByDepartmentAndOfficeAndDesignation(HttpServletRequest request
             , @Parameter(value = "officeid", required = false) String officeid
@@ -970,7 +1024,6 @@ public class WorkflowProcessFilterController {
         } catch (Exception e) {
             // Log the error for debugging
             System.err.println("Error processing request: " + e.getMessage());
-            e.printStackTrace();
         }
 
         if (usersList != null) {
@@ -1109,6 +1162,27 @@ public class WorkflowProcessFilterController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/startJBPM")
+    public ResponseEntity<String> startJBPM(@RequestBody JBPMProcess request) {
+        try {
+            String response = jbpmServer.startProcess1(request);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error occurred while starting JBPM process: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @RequestMapping(method = RequestMethod.POST, value = "/forwardJBPM")
+    public ResponseEntity<String> forwardJBPM(@RequestBody JBPMProcess request) {
+        try {
+            String response = jbpmServer.forwardTask1(request);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error occurred while starting JBPM process: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getAllCountries")

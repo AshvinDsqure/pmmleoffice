@@ -93,10 +93,11 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
             if (obj.getDraftdate() != null) {
                 rest.setDraftdate(obj.getDraftdate());
             }
-            if (!DateUtils.isNullOrEmptyOrBlank(obj.getID().toString())) {
+            if (obj.getID()!=null&&!DateUtils.isNullOrEmptyOrBlank(obj.getID().toString())) {
                 rest.setUuid(obj.getID().toString());
             }
             if (obj.getIssinglatter() != null) {
+                System.out.println(":::obj.getIssinglatter():::"+obj.getIssinglatter());
                 rest.setIssinglatter(obj.getIssinglatter());
             }
             if (obj.getIsdispatchbyself() != null) {
@@ -123,6 +124,7 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
             }
             return rest;
         }catch (Exception e){
+            e.printStackTrace();
             System.out.println("error:::"+e.getMessage());
             return null;
         }
@@ -184,7 +186,6 @@ public class WorkFlowProcessDraftDetailsConverter extends DSpaceObjectConverter<
         if(rest.getSapdocumenttypeRest()!=null){
             obj.setSapdocumenttype(workFlowProcessMasterValueConverter.convert(context, rest.getSapdocumenttypeRest()));
         }
-
         if(rest.getEpersonToEpersonMappingRest()!=null&&rest.getEpersonToEpersonMappingRest().getId()!=null&&!rest.getEpersonToEpersonMappingRest().getId().isEmpty()){
             obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersonToEpersonMappingRest()));
         }

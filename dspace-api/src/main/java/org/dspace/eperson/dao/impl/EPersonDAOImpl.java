@@ -211,7 +211,12 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
 
     @Override
     public int countRows(Context context) throws SQLException {
-        return count(createQuery(context, "SELECT count(*) FROM EPerson"));
+        try {
+            return count(createQuery(context, "SELECT count(*) FROM EPerson"));
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
@@ -290,5 +295,17 @@ public class EPersonDAOImpl extends AbstractHibernateDSODAO<EPerson> implements 
             query.setMaxResults(limit);
         }
         return query.getResultList();
+    }
+
+    @Override
+    public int activeUsercount(Context context) throws SQLException {
+        try {
+            String sqlQuery = "select count(DISTINCT e) from eperson as e\n" +
+                    "join workflowprocesseperson as ep on e.uuid=ep.eperson;";
+            return Integer.parseInt(createSQLQuery(context, sqlQuery).uniqueResult().toString());
+        }catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
     }
 }

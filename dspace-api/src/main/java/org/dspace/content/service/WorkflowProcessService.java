@@ -88,8 +88,13 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
      */
     public   void   storeWorkFlowMataDataTOBitsream(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc,Item item) throws SQLException, AuthorizeException ;
     public  void  storeWorkFlowMataDataTOBitsream(Context context,WorkflowProcessReferenceDoc workflowProcessReferenceDoc) throws SQLException, AuthorizeException ;
-    List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,UUID epersontoepersonmapid,HashMap<String, String> perameter,Integer offset, Integer limit) throws SQLException;
-    int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,UUID epersontoepersonmapid) throws SQLException;
+    List<WorkflowProcess> findDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,UUID epersontoepersonmapid,HashMap<String, String> perameter,UUID statusReject,Integer offset, Integer limit) throws SQLException;
+    int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft,UUID epersontoepersonmapid,UUID statusReject) throws SQLException;
+
+
+    List<WorkflowProcess> findFilePendingDueDate(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapping,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+
+    int countfindFilePendingDueDate(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapping) throws SQLException;
 
     WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException;
     int getCountByType(Context context,UUID typeid,Integer version) throws SQLException;
@@ -101,7 +106,12 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
 
     int countByTypeAndPriorityNotDraft(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
     int countByTypeAndPriorityCreted(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
-    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
+    int countByTypeAndPriorityClose(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid,UUID statusdraft,UUID statusdispatch,UUID usertype) throws SQLException;
+    int countByTypeAndPriorityCloseTapal(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid,UUID statusdraft,UUID statusdispatch,UUID usertype) throws SQLException;
+    int countByTypeAndPriorityDraftTapal(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
+
+    int countByTypeAndPriorityCloseSignLatter(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid,UUID statusdraft,UUID statusdispatch,UUID usertype) throws SQLException;
+    int countByTypeAndPriorityPark(Context context, UUID typeid, UUID priorityid, UUID epersonid,UUID statusid,UUID epersontoepersonmapid,UUID statusdraftid) throws SQLException;
 
     int countByTypeAndPriority(Context context,UUID typeid,UUID priorityid,UUID epersonid,UUID statusid,UUID epersontoepersonmapid) throws SQLException;
     public void sendEmail(Context context, HttpServletRequest request, String recipientEmail, String recipientName,String subject, List<Bitstream> bitstream,List<String> recipientEmails,String body) throws IOException, MessagingException, SQLException, AuthorizeException;
@@ -113,7 +123,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     List<WorkflowProcess> searchByFilenumberOrTapaleNumber(Context context, HashMap<String,String> perameter ,Integer offset, Integer limit) throws SQLException;
 
     List<WorkflowProcess> sentTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid,HashMap<String, String> perameter,  Integer offset, Integer limit) throws SQLException;
-    int countTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid) throws SQLException;
+    int countTapal(Context context, UUID eperson, UUID statusid,UUID workflowtypeid,UUID statuscloseid,UUID epersontoepersonmapid,HashMap<String, String> perameter) throws SQLException;
     List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid,UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype, HashMap<String, String> perameter,  Integer offset, Integer limit) throws SQLException;
     int countCloseTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid,UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype) throws SQLException;
     List<WorkflowProcess> acknowledgementTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID workflowtypeid,  Integer offset, Integer limit) throws SQLException;
@@ -130,4 +140,16 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     public List<Object[]> filterDepartmentWiseCountDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
     public int getNextInwardNumber(Context context) throws SQLException;
     public int getNextFileNumber(Context context) throws SQLException;
+    public List<Object[]> withinDepartmentDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public List<Object[]> outerDepartmentDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public List<Object[]> stagewithinDepartmentDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public List<Object[]> stageouterDepartmentDownload(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public List<Object[]> NoOfFileCreatedAndClose(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public List<Object[]> NoOfTapalCreatedAndClose(Context context, HashMap<String, String> parameter,String startdate,String endDate) throws SQLException;
+    public int countTapalPrkedDateRange(Context context, String startdate, String enddate) throws SQLException;
+    public int countTapalStageWISE(Context context, String startdate, String enddate) throws SQLException;
+    public List<Object[]> getActiveAndDActiveUsers(Context context, String flag) throws SQLException;
+    public List<Object[]> getFileByDayTakenAndDepartment(Context context, Integer daytaken,String flag,String startdate, String enddate) throws SQLException;
+    public List<String> getDraftMigration(Context context, Integer limit) throws SQLException;
+
 }

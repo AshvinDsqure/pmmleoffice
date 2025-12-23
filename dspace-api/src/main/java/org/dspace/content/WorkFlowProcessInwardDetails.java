@@ -76,6 +76,17 @@ WorkFlowProcessInwardDetails extends DSpaceObject implements DSpaceObjectLegacyS
     @JoinColumn(name = "language")
     private WorkFlowProcessMasterValue language = null;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "documenttype")
+    private WorkFlowProcessMasterValue documenttype = null;
+
+    public WorkFlowProcessMasterValue getDocumenttype() {
+        return documenttype;
+    }
+
+    public void setDocumenttype(WorkFlowProcessMasterValue documenttype) {
+        this.documenttype = documenttype;
+    }
 
     public String getInwardNumber() {
         return inwardNumber;

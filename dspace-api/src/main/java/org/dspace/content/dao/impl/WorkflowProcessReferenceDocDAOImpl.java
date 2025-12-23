@@ -37,7 +37,7 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
     public int countDocumentByType(Context context, UUID drafttypeid) throws SQLException {
         Query query = createQuery(context, "SELECT count(d) FROM WorkflowProcessReferenceDoc as d join d.drafttype as df where df.id=:drafttypeid");
         query.setParameter("drafttypeid",drafttypeid);
-    return count(query);
+        return count(query);
     }
 
     @Override
@@ -73,6 +73,17 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
         return query.getResultList();
     }
 
+    //    @Override
+//    public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context, UUID drafttypeid, UUID workflowProcess) throws SQLException {
+//        Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d " +
+//                "left join d.drafttype as df " +
+//                "left join d.workflowProcess as wp " +
+//                "where wp.id=:workflowProcess " +
+//                " and df.id=:drafttypeid and d.workflowprocessnote.id IS NOT NULL");
+//        query.setParameter("drafttypeid",drafttypeid);
+//        query.setParameter("workflowProcess",workflowProcess);
+//        return query.getResultList();
+//    }
     @Override
     public List<WorkflowProcessReferenceDoc> getDocumentByItemid(Context context, UUID drafttypeid, UUID itemid) throws SQLException {
         Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d " +
@@ -86,7 +97,6 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
         query.setParameter("itemid",itemid);
         return query.getResultList();
     }
-
     @Override
     public List<WorkflowProcessReferenceDoc> getDocumentByworkflowprocessid(Context context, UUID workflowprocessid) throws SQLException {
         Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d join d.workflowProcess as wp wp.id=:workflowprocessid");
@@ -174,24 +184,43 @@ public class WorkflowProcessReferenceDocDAOImpl extends AbstractHibernateDSODAO<
         query.setParameter("drafttypeid",drafttypeid);
         return (WorkflowProcessReferenceDoc) query.getSingleResult();
     }
-
     @Override
     public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
-       try {
-           Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
-                   " left join d.drafttype as dt " +
-                   " left join d.workflowProcess wp " +
-                   "left join wp.item as i " +
-                   " where dt.id=:drafttypeid " +
-                   " and wp.id=:workflowprocess " +
-                   " and i.id=:item");
-           query.setParameter("drafttypeid", drafttypeid);
-           query.setParameter("workflowprocess", workflowprocess);
-           query.setParameter("item", item);
-           return (WorkflowProcessReferenceDoc) query.getSingleResult();
-       }catch (Exception e){
-           e.printStackTrace();
-           return null;
-       }
+        try {
+            Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+                    " left join d.drafttype as dt " +
+                    " left join d.workflowProcess wp " +
+                    "left join wp.item as i " +
+                    " where dt.id=:drafttypeid " +
+                    " and wp.id=:workflowprocess " +
+                    " and i.id=:item and d.bitstream.id IS NOT NULL");
+            query.setParameter("drafttypeid", drafttypeid);
+            query.setParameter("workflowprocess", workflowprocess);
+            query.setParameter("item", item);
+            query.setMaxResults(1);
+            return (WorkflowProcessReferenceDoc) query.getSingleResult();
+        }catch (Exception e){
+            System.out.println("No entity found for query"+e.getMessage());
+            return null;
+        }
+
+//    @Override
+//    public WorkflowProcessReferenceDoc findbydrafttypeandworkflowprocessAndItem(Context context, UUID item, UUID workflowprocess, UUID drafttypeid) throws SQLException {
+//       try {
+//           Query query = createQuery(context, "SELECT d FROM WorkflowProcessReferenceDoc as d" +
+//                   " left join d.drafttype as dt " +
+//                   " left join d.workflowProcess wp " +
+//                   " where dt.id=:drafttypeid " +
+//                   " and wp.id=:workflowprocess " +
+//                   " and d.bitstream.id IS NOT NULL");
+//           query.setParameter("drafttypeid", drafttypeid);
+//           query.setParameter("workflowprocess", workflowprocess);
+//           //query.setParameter("item", item);
+//           return (WorkflowProcessReferenceDoc) query.getSingleResult();
+//       }catch (Exception e){
+//           e.printStackTrace();
+//           return null;
+//       }
+
     }
 }

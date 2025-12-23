@@ -31,6 +31,8 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
     private Date draftdate=new Date();
     //drafttype means notesheet or document
     private WorkFlowProcessMasterValueRest drafttypeRest;
+    private WorkFlowProcessMasterValueRest documenttypeRest;
+
     private EPersonRest documentsignatorRest;
 
     @JsonProperty
@@ -201,5 +203,13 @@ public class WorkFlowProcessDraftDetailsRest extends  DSpaceObjectRest{
 
     public void setEpersonToEpersonMappingRest(EpersonToEpersonMappingRest epersonToEpersonMappingRest) {
         this.epersonToEpersonMappingRest = epersonToEpersonMappingRest;
+    }
+
+    public WorkFlowProcessMasterValueRest getDocumenttypeRest() {
+        return documenttypeRest;
+    }
+
+    public void setDocumenttypeRest(WorkFlowProcessMasterValueRest documenttypeRest) {
+        this.documenttypeRest = documenttypeRest;
     }
 }

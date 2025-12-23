@@ -476,56 +476,6 @@ public class WorkflowProcessItemReportController {
         }
     }
 
-
-    @RequestMapping(method = RequestMethod.GET, value = "/margedDocumentanddownload")
-    public String margedDocumentanddownload(HttpServletRequest request,
-                                            @Parameter(value = "itemid", required = true) String itemid) {
-        try {
-            System.out.println("generateRandomText(6);:::::::::" + generateRandomText(6));
-            System.out.println("::::::::::::::::::::::::::::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
-            Context context = ContextUtil.obtainContext(request);
-            String filename = "AllDoc.pdf";
-            Item item = itemService.find(context, UUID.fromString(itemid));
-            List<Bundle> bundles = item.getBundles("ORIGINAL");
-            List<Bitstream> listofcorrospondenceBitstream = new ArrayList<>();
-            List<Bitstream> listofnotesheetsBitsream = new ArrayList<>();
-            if (bundles.size() != 0) {
-                listofcorrospondenceBitstream = bundles.stream().findFirst().get().getBitstreams();
-            }
-            //corrospondence bitstream list
-            listofcorrospondenceBitstream = listofcorrospondenceBitstream.stream().filter(f -> !f.getName().contains("Note#")).collect(Collectors.toList());
-            //NoteSheet Doc List
-            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
-            List<WorkflowProcessNote> listofnotesheets = workflowProcessNoteService.getDocumentByItemid(context, UUID.fromString(itemid), statusid, 0, 50);
-            System.out.println("listofnotesheets::::::::::::::::" + listofnotesheets.size());
-            for (WorkflowProcessNote workflowProcessNote : listofnotesheets) {
-                if (workflowProcessNote.getWorkflowProcessReferenceDocs() != null) {
-                    for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : workflowProcessNote.getWorkflowProcessReferenceDocs()) {
-                        if (workflowProcessReferenceDoc.getDrafttype() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note")) {
-                            if (workflowProcessReferenceDoc.getBitstream() != null) {
-                                listofnotesheetsBitsream.add(workflowProcessReferenceDoc.getBitstream());
-                            }
-                        } else {
-                        }
-                    }
-                }
-            }
-            System.out.println("::listofnotesheetsBitsream::size" + listofnotesheetsBitsream.size());
-            System.out.println("::listofcorrospondenceBitstream::size" + listofcorrospondenceBitstream.size());
-           /* ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listDTo);
-            InputStreamResource file = new InputStreamResource(in);
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
-                    .body(file);*/
-            System.out.println("::::done::::mrgrd ::::::corrospondence::::::::and :::::notesheet");
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-        return generateRandomText(6);
-    }
-
     public static boolean isNullOrEmptyOrBlank(String str) {
         return str == null || str.trim().isEmpty();
     }

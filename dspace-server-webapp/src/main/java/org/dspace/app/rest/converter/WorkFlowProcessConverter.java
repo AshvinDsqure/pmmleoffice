@@ -41,6 +41,9 @@ import java.util.stream.Collectors;
 public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProcess, WorkFlowProcessRest> {
     @Autowired
     ItemConverter itemConverter;
+
+    @Autowired
+    ItemService itemService;
     @Autowired
     GroupService groupService;
     @Autowired
@@ -397,7 +400,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             workflowProcess.setItem(itemConverter.convert(obj.getItemRest(), context));
         }
 
-        if(obj.getEligibleForFilingRest()!=null){
+        if (obj.getEligibleForFilingRest() != null) {
             workflowProcess.setEligibleForFiling(workFlowProcessMasterValueConverter.convert(context, obj.getEligibleForFilingRest()));
         }
 
@@ -426,15 +429,34 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getRemark() != null) {
             workflowProcess.setRemark(obj.getRemark());
         }
+        //sender diry
+
+        WorkflowProcess workflowProcess1 =workflowProcess;
+        if (obj.getWorkflowProcessSenderDiaryRests() != null && !obj.getWorkflowProcessSenderDiaryRests().isEmpty()) {
+            System.out.println("sender diry save as draft::::::::::");
+
+            // Clear and reuse existing collection
+            List<WorkflowProcessSenderDiary> existingList = workflowProcess.getWorkflowProcessSenderDiaries();
+            if (existingList == null) {
+                existingList = new ArrayList<>();
+                workflowProcess.setWorkflowProcessSenderDiaries(existingList);
+            } else {
+                existingList.clear(); // Important to remove orphans properly
+            }
+            for (WorkflowProcessSenderDiaryRest d : obj.getWorkflowProcessSenderDiaryRests()) {
+                WorkflowProcessSenderDiary diary = workflowProcessSenderDiaryConverter.convert(context, d);
+                diary.setWorkflowProcess(workflowProcess1);
+                existingList.add(diary);
+            }
+        }
+
         // Handle WorkflowProcessSenderDiaryEpeople
         if (obj.getWorkflowProcessSenderDiaryEpersonRests() != null && !obj.getWorkflowProcessSenderDiaryEpersonRests().isEmpty()) {
             System.out.println("save getWorkflowProcessSenderDiaryEpersonRests::::::::::::::");
-
             List<WorkflowProcessSenderDiaryEperson> existingList = workflowProcess.getWorkflowProcessSenderDiaryEpeople();
             if (existingList != null) {
                 existingList.clear(); // Important: clear the existing list to avoid orphan issues
             }
-
             for (WorkflowProcessSenderDiaryEpersonRest we : obj.getWorkflowProcessSenderDiaryEpersonRests()) {
                 if (we != null) {
                     try {
@@ -455,11 +477,17 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             if (existingList != null) {
                 existingList.clear(); // Clear old items
             }
-
             for (WorkflowProcessEpersonRest we : obj.getWorkflowProcessEpersonRests()) {
                 if (we != null) {
                     try {
+                        we.setSequence(we.getIndex());
+                        Optional<WorkFlowProcessMasterValue> userTypeOption = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
                         WorkflowProcessEperson converted = workFlowProcessEpersonConverter.convert(context, we);
+                        if (userTypeOption.isPresent()) {
+                            converted.setUsertype(userTypeOption.get());
+                        }
+                        converted.setOwner(false);
+                        converted.setSender(false);
                         converted.setWorkflowProcess(workflowProcess);
                         existingList.add(converted); // Add to same list
                     } catch (SQLException e) {
@@ -468,125 +496,378 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 }
             }
         }
+
+
         workflowProcess.setIsinternal(obj.getIsinternal());
         workflowProcess.setIssignatorysame(obj.getIssignatorysame());
         return workflowProcess;
     }
 
+//    public WorkFlowProcessRest convertByDashbord(Context context, WorkflowProcess obj, Projection projection) {
+//        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
+//        if (obj.getWorkflowType() != null && obj.getWorkflowType().getPrimaryvalue() != null) {
+//            workFlowProcessRest.setWorkflowtype(obj.getWorkflowType().getPrimaryvalue());
+//            workFlowProcessRest.setWorkflowType(workFlowProcessMasterValueConverter.convert(obj.getWorkflowType(), projection));
+//        }
+//        if (obj.getWorkflowStatus() != null && obj.getWorkflowStatus().getPrimaryvalue() != null) {
+//            workFlowProcessRest.setWorkflowStatus(workFlowProcessMasterValueConverter.convert(obj.getWorkflowStatus(), projection));
+//            workFlowProcessRest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
+//        }
+//        if (obj.getSubject() != null) {
+//            workFlowProcessRest.setSubject(obj.getSubject());
+//        }
+//        if (obj.getInitDate() != null) {
+//            workFlowProcessRest.setInitDate(obj.getInitDate());
+//        }
+//        if (obj.getPriority() != null && obj.getPriority().getPrimaryvalue() != null) {
+//            workFlowProcessRest.setPriorityRest(workFlowProcessMasterValueConverter.convert(obj.getPriority(), projection));
+//            workFlowProcessRest.setPriority(obj.getPriority().getPrimaryvalue());
+//        }
+//        try {
+//            if (!obj.getWorkFlowProcessHistory().isEmpty()) {
+//                workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessHistory().get(0).getActionDate());
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        Optional<WorkflowProcessEperson> ownerRest = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).findFirst();
+//        if (ownerRest.isPresent() && ownerRest.get().getAssignDate() != null) {
+//            workFlowProcessRest.setDueDate(ownerRest.get().getAssignDate());
+//            workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
+//        }
+//        if (ownerRest.isPresent() && ownerRest.get() != null && ownerRest.get().getePerson() != null && ownerRest.get().getePerson().getFullName() != null) {
+//            List<WorkflowProcessEperson> ownerlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).collect(Collectors.toList());
+//            StringBuffer sb = new StringBuffer();
+//            int i = 0;
+//            for (WorkflowProcessEperson ownerRest1 : ownerlist) {
+//                if (ownerRest1.getePerson() != null && ownerRest1.getePerson().getFullName() != null) {
+//                    String currentrecipent = null;
+//                    if (ownerRest1.getUsertype() != null && ownerRest1.getUsertype().getPrimaryvalue() != null && ownerRest1.getUsertype().getPrimaryvalue().equalsIgnoreCase("cc")) {
+//                        currentrecipent = ownerRest1.getePerson().getFullName() + "(cc)";
+//                    } else {
+//                        currentrecipent = ownerRest1.getePerson().getFullName();
+//                    }
+//                    if (i == 0) {
+//                        sb.append(currentrecipent);
+//                    } else {
+//                        sb.append("," + currentrecipent);
+//                    }
+//                }
+//                i++;
+//            }
+//            workFlowProcessRest.setCurrentrecipient(sb.toString());
+//        }
+//        try {
+//            Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
+//            if (senderRest != null && senderRest.isPresent() && senderRest.get() != null && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
+//                workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
+//                List<WorkflowProcessEperson> senderlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getSender() != null).filter(w -> w.getSender()).collect(Collectors.toList());
+//                StringBuffer sb = new StringBuffer();
+//                int i = 0;
+//                for (WorkflowProcessEperson sender : senderlist) {
+//                    if (sender.getePerson() != null && sender.getePerson().getFullName() != null) {
+//                        if (i == 0) {
+//                            sb.append(sender.getePerson().getFullName());
+//                        } else {
+//                            sb.append("," + sender.getePerson().getFullName());
+//                        }
+//                    }
+//                    i++;
+//                }
+//                workFlowProcessRest.setSendername(sb.toString());
+//            }
+//        } catch (Exception e) {
+//            System.out.println("Errorr ::::" + e.getMessage());
+//        }
+//        if (obj.getWorkFlowProcessInwardDetails() != null && obj.getWorkFlowProcessInwardDetails().getInwardDate() != null) {
+//            // workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessInwardDetails().getInwardDate());
+//        }
+//        if (obj.getWorkFlowProcessInwardDetails() != null) {
+//            workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));
+//        }
+//        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardDate() != null) {
+//            workFlowProcessRest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(obj.getWorkFlowProcessOutwardDetails(), projection));
+//            //workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessOutwardDetails().getOutwardDate());
+//        }
+//        if (obj.getWorkFlowProcessDraftDetails() != null && obj.getWorkFlowProcessDraftDetails().getDraftdate() != null) {
+//            workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsConverter.convert(obj.getWorkFlowProcessDraftDetails(), projection));
+//            // workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessDraftDetails().getDraftdate());
+//        }
+//        if (obj.getDispatchmode() != null && obj.getDispatchmode().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
+//            workFlowProcessRest.setMode(obj.getDispatchmode().getPrimaryvalue());
+//        }
+//        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")) {
+//            workFlowProcessRest.setMode(obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue());
+//        }
+//        if (obj.getItem() != null) {
+//            try {
+//                workFlowProcessRest.setItemRest(itemConverter.convertNameOnly(obj.getItem(), projection));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        if (obj.getRemark() != null) {
+//            workFlowProcessRest.setRemark(obj.getRemark());
+//        }
+//        if (obj.getIsread() != null) {
+//            workFlowProcessRest.setIsread(obj.getIsread());
+//        }
+//        workFlowProcessRest.setUuid(obj.getID().toString());
+//        workFlowProcessRest.setIsmode(obj.getIsmode());
+//        workFlowProcessRest.setIsreplydraft(obj.getIsreplydraft());
+//        workFlowProcessRest.setIssignnote(obj.getIssignnote());
+//        workFlowProcessRest.setIsinternal(obj.getIsinternal());
+//        workFlowProcessRest.setIssignatorysame(obj.getIssignatorysame());
+//        return workFlowProcessRest;
+//    }
+
     public WorkFlowProcessRest convertByDashbord(Context context, WorkflowProcess obj, Projection projection) {
-        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
-        if (obj.getWorkflowType() != null && obj.getWorkflowType().getPrimaryvalue() != null) {
-            workFlowProcessRest.setWorkflowtype(obj.getWorkflowType().getPrimaryvalue());
-            workFlowProcessRest.setWorkflowType(workFlowProcessMasterValueConverter.convert(obj.getWorkflowType(), projection));
+        WorkFlowProcessRest rest = new WorkFlowProcessRest();
+        if (obj == null) return rest;
+
+        // --- Cache commonly used collections ---
+        List<WorkflowProcessEperson> epeople = Optional.ofNullable(obj.getWorkflowProcessEpeople()).orElse(Collections.emptyList());
+        List<WorkflowProcessEperson> owners = epeople.stream()
+                .filter(Objects::nonNull)
+                .filter(ep -> Boolean.TRUE.equals(ep.getOwner()))
+                .collect(Collectors.toList());
+        List<WorkflowProcessEperson> senders = epeople.stream()
+                .filter(Objects::nonNull)
+                .filter(ep -> Boolean.TRUE.equals(ep.getSender()))
+                .collect(Collectors.toList());
+
+        // --- WorkflowType, Status, Priority ---
+        if(obj.getWorkflowType()!=null&&obj.getWorkflowType().getPrimaryvalue()!=null){
+            rest.setWorkflowtype(obj.getWorkflowType().getPrimaryvalue());
         }
-        if (obj.getWorkflowStatus() != null && obj.getWorkflowStatus().getPrimaryvalue() != null) {
-            workFlowProcessRest.setWorkflowStatus(workFlowProcessMasterValueConverter.convert(obj.getWorkflowStatus(), projection));
-            workFlowProcessRest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
+        if(obj.getWorkflowStatus()!=null&&obj.getWorkflowStatus().getPrimaryvalue()!=null){
+            rest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
         }
-        if (obj.getSubject() != null) {
-            workFlowProcessRest.setSubject(obj.getSubject());
+        if(obj.getPriority()!=null&&obj.getPriority().getPrimaryvalue()!=null){
+            rest.setPriority(obj.getPriority().getPrimaryvalue());
         }
-        if (obj.getInitDate() != null) {
-            workFlowProcessRest.setInitDate(obj.getInitDate());
-        }
-        if (obj.getPriority() != null && obj.getPriority().getPrimaryvalue() != null) {
-            workFlowProcessRest.setPriorityRest(workFlowProcessMasterValueConverter.convert(obj.getPriority(), projection));
-            workFlowProcessRest.setPriority(obj.getPriority().getPrimaryvalue());
-        }
+        // --- Simple Field Mappings ---
+        rest.setSubject(obj.getSubject());
+        rest.setInitDate(obj.getInitDate());
+        rest.setRemark(obj.getRemark());
+        rest.setIsread(obj.getIsread());
+        rest.setUuid(String.valueOf(obj.getID()));
+        rest.setIsmode(obj.getIsmode());
+        rest.setIsreplydraft(obj.getIsreplydraft());
+        rest.setIssignnote(obj.getIssignnote());
+        rest.setIsinternal(obj.getIsinternal());
+        rest.setIssignatorysame(obj.getIssignatorysame());
+
+        // --- History ---
+        obj.getWorkFlowProcessHistory().stream()
+                .findFirst()
+                .map(WorkFlowProcessHistory::getActionDate)
+                .ifPresent(rest::setDateRecived);
+
+        // --- Owner Section ---
+        owners.stream().findFirst().ifPresent(owner -> {
+            rest.setDueDate(owner.getAssignDate());
+            // rest.setOwner(workFlowProcessEpersonConverter.convertByDashbord(owner, projection));
+
+            // Build current recipients string
+            String currentRecipients = owners.stream()
+                    .map(o -> {
+                        String name = Optional.ofNullable(o.getePerson()).map(EPerson::getFullName).orElse(null);
+                        if (name == null) return null;
+                        boolean isCC = Optional.ofNullable(o.getUsertype())
+                                .map(t -> "cc".equalsIgnoreCase(t.getPrimaryvalue()))
+                                .orElse(false);
+                        return isCC ? name + "(cc)" : name;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(","));
+            rest.setCurrentrecipient(currentRecipients);
+        });
+
+        // --- Department Name ---
         try {
-            if (!obj.getWorkFlowProcessHistory().isEmpty()) {
-                workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessHistory().get(0).getActionDate());
-            }
+            epeople.stream()
+                    .filter(w -> w.getIndex() == 0)
+                    .findFirst()
+                    .map(WorkflowProcessEperson::getEpersontoepersonmapping)
+                    .map(EpersonToEpersonMapping::getEpersonmapping)
+                    .map(EpersonMapping::getDepartment)
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresent(rest::setDepartmentname);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
         }
-        Optional<WorkflowProcessEperson> ownerRest = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).findFirst();
-        if (ownerRest.isPresent() && ownerRest.get().getAssignDate() != null) {
-            workFlowProcessRest.setDueDate(ownerRest.get().getAssignDate());
-            workFlowProcessRest.setOwner(workFlowProcessEpersonConverter.convert(ownerRest.get(), projection));
+
+        // --- Sender Section ---
+        senders.stream().findFirst().ifPresent(sender -> {
+            //rest.setSender(workFlowProcessEpersonConverter.convertByDashbord(sender, projection));
+
+            String senderNames = senders.stream().filter(d->d!=null&&d.getePerson()!=null)
+                    .map(s -> Optional.ofNullable(s.getePerson()).map(EPerson::getFullName).orElse(null))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(","));
+            rest.setSendername(senderNames);
+        });
+
+        if(obj.getWorkFlowProcessInwardDetails()!=null&&obj.getWorkFlowProcessInwardDetails().getInwardNumber()!=null){
+            rest.setInwardnumber(obj.getWorkFlowProcessInwardDetails().getInwardNumber());
         }
-        if (ownerRest.isPresent() && ownerRest.get() != null && ownerRest.get().getePerson() != null && ownerRest.get().getePerson().getFullName() != null) {
-            List<WorkflowProcessEperson> ownerlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getOwner() != null).filter(w -> w.getOwner()).collect(Collectors.toList());
-            StringBuffer sb = new StringBuffer();
-            int i = 0;
-            for (WorkflowProcessEperson ownerRest1 : ownerlist) {
-                if (ownerRest1.getePerson() != null && ownerRest1.getePerson().getFullName() != null) {
-                    String currentrecipent = null;
-                    if (ownerRest1.getUsertype() != null && ownerRest1.getUsertype().getPrimaryvalue() != null && ownerRest1.getUsertype().getPrimaryvalue().equalsIgnoreCase("cc")) {
-                        currentrecipent = ownerRest1.getePerson().getFullName() + "(cc)";
-                    } else {
-                        currentrecipent = ownerRest1.getePerson().getFullName();
-                    }
-                    if (i == 0) {
-                        sb.append(currentrecipent);
-                    } else {
-                        sb.append("," + currentrecipent);
-                    }
-                }
-                i++;
-            }
-            workFlowProcessRest.setCurrentrecipient(sb.toString());
+
+        // --- Dispatch Mode / Outward Medium ---
+        String workflowType = Optional.ofNullable(obj.getWorkflowType()).map(WorkFlowProcessMasterValue::getPrimaryvalue).orElse("");
+        if ("Inward".equalsIgnoreCase(workflowType)) {
+            Optional.ofNullable(obj.getDispatchmode())
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresent(rest::setMode);
+        } else if ("Outward".equalsIgnoreCase(workflowType)) {
+            Optional.ofNullable(obj.getWorkFlowProcessOutwardDetails())
+                    .map(WorkFlowProcessOutwardDetails::getOutwardmedium)
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresent(rest::setMode);
         }
-        try {
-            Optional<WorkflowProcessEperson> senderRest = obj.getWorkflowProcessEpeople().stream().filter(wn -> wn.getSender() != null).filter(w -> w.getSender()).findFirst();
-            if (senderRest != null && senderRest.isPresent() && senderRest.get() != null && senderRest.get().getePerson() != null && senderRest.get().getePerson().getFullName() != null) {
-                workFlowProcessRest.setSender(workFlowProcessEpersonConverter.convert(senderRest.get(), projection));
-                List<WorkflowProcessEperson> senderlist = obj.getWorkflowProcessEpeople().stream().filter(w -> w.getSender() != null).filter(w -> w.getSender()).collect(Collectors.toList());
-                StringBuffer sb = new StringBuffer();
-                int i = 0;
-                for (WorkflowProcessEperson sender : senderlist) {
-                    if (sender.getePerson() != null && sender.getePerson().getFullName() != null) {
-                        if (i == 0) {
-                            sb.append(sender.getePerson().getFullName());
-                        } else {
-                            sb.append("," + sender.getePerson().getFullName());
-                        }
-                    }
-                    i++;
-                }
-                workFlowProcessRest.setSendername(sb.toString());
-            }
-        } catch (Exception e) {
-            System.out.println("Errorr ::::" + e.getMessage());
-        }
-        if (obj.getWorkFlowProcessInwardDetails() != null && obj.getWorkFlowProcessInwardDetails().getInwardDate() != null) {
-            // workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessInwardDetails().getInwardDate());
-        }
-        if (obj.getWorkFlowProcessInwardDetails() != null) {
-            workFlowProcessRest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(obj.getWorkFlowProcessInwardDetails(), projection));
-        }
-        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardDate() != null) {
-            workFlowProcessRest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(obj.getWorkFlowProcessOutwardDetails(), projection));
-            //workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessOutwardDetails().getOutwardDate());
-        }
-        if (obj.getWorkFlowProcessDraftDetails() != null && obj.getWorkFlowProcessDraftDetails().getDraftdate() != null) {
-            workFlowProcessRest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsConverter.convert(obj.getWorkFlowProcessDraftDetails(), projection));
-            // workFlowProcessRest.setDateRecived(obj.getWorkFlowProcessDraftDetails().getDraftdate());
-        }
-        if (obj.getDispatchmode() != null && obj.getDispatchmode().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Inward")) {
-            workFlowProcessRest.setMode(obj.getDispatchmode().getPrimaryvalue());
-        }
-        if (obj.getWorkFlowProcessOutwardDetails() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium() != null && obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue() != null && obj.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Outward")) {
-            workFlowProcessRest.setMode(obj.getWorkFlowProcessOutwardDetails().getOutwardmedium().getPrimaryvalue());
-        }
-        if (obj.getItem() != null) {
+
+        // --- Item ---
+        Optional.ofNullable(obj.getItem()).ifPresent(item -> {
             try {
-                workFlowProcessRest.setItemRest(itemConverter.convertNameOnly(obj.getItem(), projection));
-            } catch (Exception e) {
-                e.printStackTrace();
+                rest.setFilenumber(obj.getItem().getName());
+                String subject = itemService.getMetadataFirstValue(obj.getItem(), "dc", "subject", null, null);
+                rest.setFilesubject(subject!=null?subject:"NA");
+            } catch (Exception ignored) {}
+        });
+
+        return rest;
+    }
+
+    public WorkFlowProcessRest convertByDashbordSentTo(Context context, WorkflowProcess obj, Projection projection) {
+        WorkFlowProcessRest rest = new WorkFlowProcessRest();
+
+        if (obj == null) return rest;
+
+        // Cache commonly used lists
+        List<WorkflowProcessEperson> epeople = Optional.ofNullable(obj.getWorkflowProcessEpeople()).orElse(Collections.emptyList());
+        List<WorkflowProcessEperson> owners = epeople.stream().filter(WorkflowProcessEperson::getOwner).collect(Collectors.toList());
+        List<WorkflowProcessEperson> senders = epeople.stream().filter(WorkflowProcessEperson::getSender).collect(Collectors.toList());
+
+        int totalUsers = Math.max(epeople.size() - 1, 0);
+        AtomicInteger currentOwnerIndex = new AtomicInteger(-1);
+
+        // --- Basic Master Conversions ---
+        // --- WorkflowType, Status, Priority ---
+        if(obj.getWorkflowType()!=null&&obj.getWorkflowType().getPrimaryvalue()!=null){
+            rest.setWorkflowtype(obj.getWorkflowType().getPrimaryvalue());
+        }
+        if(obj.getWorkflowStatus()!=null&&obj.getWorkflowStatus().getPrimaryvalue()!=null){
+            rest.setWorkflowstatus(obj.getWorkflowStatus().getPrimaryvalue());
+        }
+        if(obj.getPriority()!=null&&obj.getPriority().getPrimaryvalue()!=null){
+            rest.setPriority(obj.getPriority().getPrimaryvalue());
+        }
+        rest.setSubject(obj.getSubject());
+        rest.setInitDate(obj.getInitDate());
+        rest.setRemark(obj.getRemark());
+        rest.setIsread(obj.getIsread());
+        rest.setUuid(String.valueOf(obj.getID()));
+        rest.setIsmode(obj.getIsmode());
+        rest.setIsreplydraft(obj.getIsreplydraft());
+        rest.setIssignnote(obj.getIssignnote());
+        rest.setIsinternal(obj.getIsinternal());
+        rest.setIssignatorysame(obj.getIssignatorysame());
+
+        // --- History ---
+        obj.getWorkFlowProcessHistory().stream()
+                .findFirst()
+                .map(WorkFlowProcessHistory::getActionDate)
+                .ifPresent(rest::setDateRecived);
+
+        // --- Owner ---
+        owners.stream().findFirst().ifPresent(owner -> {
+            currentOwnerIndex.set(owner.getIndex());
+            rest.setDueDate(owner.getAssignDate());
+            //rest.setOwner(workFlowProcessEpersonConverter.convert(owner, projection));
+
+            String currentRecipients = owners.stream()
+                    .map(o -> {
+                        String name = o.getePerson() != null ? o.getePerson().getFullName() : null;
+                        if (name == null) return null;
+                        boolean isCC = Optional.ofNullable(o.getUsertype())
+                                .map(t -> "cc".equalsIgnoreCase(t.getPrimaryvalue()))
+                                .orElse(false);
+                        return isCC ? name + "(cc)" : name;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(","));
+            rest.setCurrentrecipient(currentRecipients);
+        });
+
+        // --- Sender ---
+        senders.stream().findFirst().ifPresent(sender -> {
+            int currentSenderIndex = sender.getIndex();
+
+            // Check callback logic
+            if ((currentOwnerIndex.get() > currentSenderIndex && epeople.stream().anyMatch(w -> w.getOwner() && w.getIndex() == currentSenderIndex + 1))
+                    || (currentSenderIndex == 0 && totalUsers == currentOwnerIndex.get())
+                    || (currentOwnerIndex.get() == 0 && currentSenderIndex > 0)) {
+                rest.setIscallback(true);
             }
+
+            // rest.setSender(workFlowProcessEpersonConverter.convert(sender, projection));
+
+            String senderNames = senders.stream()
+                    .map(s -> s.getePerson() != null ? s.getePerson().getFullName() : null)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(","));
+            rest.setSendername(senderNames);
+        });
+
+//        // --- Inward / Outward / Draft Details ---
+//        Optional.ofNullable(obj.getWorkFlowProcessInwardDetails())
+//                .ifPresent(d -> rest.setWorkFlowProcessInwardDetailsRest(workFlowProcessInwardDetailsConverter.convert(d, projection)));
+//
+//        Optional.ofNullable(obj.getWorkFlowProcessOutwardDetails())
+//                .ifPresent(d -> rest.setWorkFlowProcessOutwardDetailsRest(workFlowProcessOutwardDetailsConverter.convert(d, projection)));
+//
+//        Optional.ofNullable(obj.getWorkFlowProcessDraftDetails())
+//                .ifPresent(d -> rest.setWorkFlowProcessDraftDetailsRest(workFlowProcessDraftDetailsConverter.convert(d, projection)));
+
+        if(obj.getWorkFlowProcessInwardDetails()!=null&&obj.getWorkFlowProcessInwardDetails().getInwardNumber()!=null){
+            rest.setInwardnumber(obj.getWorkFlowProcessInwardDetails().getInwardNumber());
         }
-        if (obj.getRemark() != null) {
-            workFlowProcessRest.setRemark(obj.getRemark());
+        // --- Dispatch / Mode ---
+        if ("Inward".equalsIgnoreCase(Optional.ofNullable(obj.getWorkflowType()).map(WorkFlowProcessMasterValue::getPrimaryvalue).orElse(""))) {
+            Optional.ofNullable(obj.getDispatchmode())
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresent(rest::setMode);
+        } else if ("Outward".equalsIgnoreCase(Optional.ofNullable(obj.getWorkflowType()).map(WorkFlowProcessMasterValue::getPrimaryvalue).orElse(""))) {
+            Optional.ofNullable(obj.getWorkFlowProcessOutwardDetails())
+                    .map(WorkFlowProcessOutwardDetails::getOutwardmedium)
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresent(rest::setMode);
         }
-        workFlowProcessRest.setUuid(obj.getID().toString());
-        workFlowProcessRest.setIsmode(obj.getIsmode());
-        workFlowProcessRest.setIsread(obj.getIsread());
-        workFlowProcessRest.setIsreplydraft(obj.getIsreplydraft());
-        workFlowProcessRest.setIssignnote(obj.getIssignnote());
-        workFlowProcessRest.setIsinternal(obj.getIsinternal());
-        workFlowProcessRest.setIssignatorysame(obj.getIssignatorysame());
-        return workFlowProcessRest;
+
+        // --- Item ---
+        Optional.ofNullable(obj.getItem()).ifPresent(item -> {
+            try {
+                rest.setFilenumber(obj.getItem().getName());
+                String subject = itemService.getMetadataFirstValue(obj.getItem(), "dc", "subject", null, null);
+                rest.setFilesubject(subject!=null?subject:"NA");
+            } catch (Exception ignored) {}
+        });
+
+        // --- Department Name ---
+        try {
+            obj.getWorkflowProcessEpeople().stream()
+                    .filter(w -> w.getIndex() == 0)
+                    .findFirst()
+                    .map(WorkflowProcessEperson::getEpersontoepersonmapping)
+                    .map(EpersonToEpersonMapping::getEpersonmapping)
+                    .map(EpersonMapping::getDepartment)
+                    .map(WorkFlowProcessMasterValue::getPrimaryvalue)
+                    .ifPresentOrElse(rest::setDepartmentname, () -> rest.setDepartmentname("NA"));
+        } catch (Exception e) {
+            rest.setDepartmentname("NA");
+        }
+
+        return rest;
     }
 
     public WorkFlowProcessRest convertsearchBySubject(WorkflowProcess obj) {

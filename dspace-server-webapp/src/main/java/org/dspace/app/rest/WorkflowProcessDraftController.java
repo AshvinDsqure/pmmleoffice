@@ -211,11 +211,11 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 }
                 if(workFlowProcessRest1.getItemRest()!=null&&workFlowProcessRest1.getItemRest().getUuid()!=null){
                     System.out.println("Item :::::::::::version :::::::::::::update.");
-                 Item i=  itemConverter.convert(workFlowProcessRest1.getItemRest(),context);
-                 if(i!=null) {
-                     i.setVersion(DateUtils.getVersion());
-                     itemService.update(context, i);
-                 }
+                    Item i=  itemConverter.convert(workFlowProcessRest1.getItemRest(),context);
+                    if(i!=null) {
+                        i.setVersion(DateUtils.getVersion());
+                        itemService.update(context, i);
+                    }
                 }
 //comment add old flow
 //                WorkflowProcessReferenceDoc d=saveComment(context, workflowProcess1, workFlowProcessRest1, request);
@@ -224,10 +224,10 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
 //                }
 
                 System.out.println("done!");
-            context.commit();
-            create.setComment(null);
-            create.setWorkflowProcessReferenceDocs(null);
-            create.setInitiator(false);
+                context.commit();
+                create.setComment(null);
+                create.setWorkflowProcessReferenceDocs(null);
+                create.setInitiator(false);
             }
         } catch (FieldBlankOrNullException e) {
             e.printStackTrace();
@@ -265,7 +265,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 WorkFlowProcessComment workFlowProcessComment = workFlowProcessCommentConverter.convert(context, c, workFlowProcessRest.getWorkFlowProcessCommentRest());
                 workFlowProcessComment.setWorkFlowProcess(workflowProcess);
                 workFlowProcessComment.setSubmitter(context.getCurrentUser());
-              //  WorkFlowProcessComment workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
+                //  WorkFlowProcessComment workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
                 System.out.println("SAVE NOTE AS DRAFT DONE ");
                 WorkFlowProcessComment workFlowProcessComment2 = workFlowProcessComment;
                 if (workFlowProcessRest.getWorkFlowProcessCommentRest() != null && workFlowProcessRest.getWorkFlowProcessCommentRest().getWorkflowProcessReferenceDocRest() != null) {
@@ -342,7 +342,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 }).collect(Collectors.toList());
 
                 List<Bitstream>bitstreams=workflowProcessReferenceDocs.stream().filter(d->d.getBitstream()!=null)
-                                .map(d->d.getBitstream()).collect(Collectors.toList());
+                        .map(d->d.getBitstream()).collect(Collectors.toList());
 
 
 
@@ -369,7 +369,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                                 e.printStackTrace();
                             }
                         }
-                         notedoc = createFinalNoteComment(context, workflowProcess1, tempFile1html,bitstreams);
+                        notedoc = createFinalNoteComment(context, workflowProcess1, tempFile1html,bitstreams);
                         notedoc.setWorkflowprocesscomment(workFlowProcessComment2);
                         workflowProcessReferenceDocs.add(notedoc);
                         if (workflowProcessReferenceDocs != null && workflowProcessReferenceDocs.size() != 0) {
@@ -393,8 +393,8 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
     public ResponseEntity draft(@RequestBody WorkFlowProcessRest workFlowProcessRest, HttpServletRequest request) throws Exception {
         try {
             System.out.println("workFlowProcessRest::" + new Gson().toJson(workFlowProcessRest));
-                //  HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
-                Context context = ContextUtil.obtainContext(request);
+            //  HttpServletRequest request = getRequestService().getCurrentRequest().getHttpServletRequest();
+            Context context = ContextUtil.obtainContext(request);
             context.turnOffAuthorisationSystem();
             WorkflowProcess workflowProcess=null;
             WorkFlowProcessRest workFlowProcessRest2=workFlowProcessRest;
@@ -426,7 +426,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             //perfome and stor to db
             workFlowProcessRest = workFlowType.storeWorkFlowProcessDraft(context, workFlowProcessRest);
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
-            System.out.println("size ep "+workflowProcess1.getWorkflowProcessEpeople().size());
+            System.out.println(" ::::   size ep  :::::"+workflowProcess1.getWorkflowProcessEpeople().size());
             context.commit();
             if (workFlowProcessRest1 != null && workFlowProcessRest1.getWorkFlowProcessCommentRest() != null) {
                 System.out.println("in savedraft");
@@ -513,7 +513,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                                 workflowProcessService.update(context12,wp1);
                             }
                         }
-                         context12.commit();
+                        context12.commit();
                         System.out.println("in Doc and sender diry save done!");
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -578,8 +578,8 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             if(workflowProcess.getWorkFlowProcessDraftDetails().getIssapdoc() && workflowProcess.getWorkFlowProcessDraftDetails().getSapdocumentno()!=null && workflowProcess.getWorkFlowProcessDraftDetails().getSapdocumenttype()!=null&& workflowProcess.getWorkFlowProcessDraftDetails().getSapdocumenttype().getPrimaryvalue()!=null) {
                 sb.append("<p> <b>SAP Document Type :  " + workflowProcess.getWorkFlowProcessDraftDetails().getSapdocumenttype().getPrimaryvalue() + "</b></p>");
                 sb.append("<p> <b>SAP Document Number : " + workflowProcess.getWorkFlowProcessDraftDetails().getSapdocumentno() + "</b></p>");
-              }
             }
+        }
         isTextEditorFlow = true;
         List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
         int i = 1;
@@ -597,13 +597,13 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             System.out.println("omment.getWorkflowProcessReferenceDoc().size():::"+comment.getWorkflowProcessReferenceDoc().size());
             if (bitstreams.size()!= 0) {
                 for (Bitstream bitstream : bitstreams) {
-                   if (bitstream != null) {
-                            System.out.println("in Attachment");
-                            String baseurl = configurationService.getProperty("dspace.server.url");
-                            sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
-                           sb.append(bitstream.getName() + "</a></span>");
-                           // stroremetadate(bitstream, sb);
-                        }
+                    if (bitstream != null) {
+                        System.out.println("in Attachment");
+                        String baseurl = configurationService.getProperty("dspace.server.url");
+                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+                        sb.append(bitstream.getName() + "</a></span>");
+                        // stroremetadate(bitstream, sb);
+                    }
                 }
             }
             sb.append("</div>");
@@ -624,6 +624,9 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
             //System.out.println("HTML:::" + sb.toString());
             int ii= jbpmServer.htmltopdf(sb.toString(),files);
+            if(ii==0){
+                throw  new FieldBlankOrNullException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
+            }
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
             InputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));
@@ -645,7 +648,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             }
             margedoc.setWorkflowProcess(workflowProcess);
             WorkflowProcessReferenceDoc margedoc1 = workflowProcessReferenceDocService.create(context, margedoc);
-           //context.commit();
+            //context.commit();
             return margedoc1;
         }
         return null;
@@ -687,12 +690,12 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                 }
                 i++;
             }
-                if (bitstream.getName() != null) {
-                    System.out.println("store:::::::::name");
-                    sb.append(bitstream.getName() + "</a>");
-                } else {
-                    sb.append("-</a>");
-                }
+            if (bitstream.getName() != null) {
+                System.out.println("store:::::::::name");
+                sb.append(bitstream.getName() + "</a>");
+            } else {
+                sb.append("-</a>");
+            }
 
             if (refnumber != null) {
                 sb.append(" (" + refnumber + ")");

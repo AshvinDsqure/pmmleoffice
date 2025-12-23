@@ -63,8 +63,8 @@ public interface WorkflowProcessNoteService extends DSpaceObjectService<Workflow
     public List<WorkflowProcessNote> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public int getNoteCountNumber(Context context , UUID itemid,UUID workflowstatuscloseid) throws SQLException;
 
-    public int countDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid) throws SQLException;
-    public List<WorkflowProcessNote> getDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid, Integer offset, Integer limit) throws SQLException;
+    public int countDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid,UUID dspacecloseid) throws SQLException;
+    public List<WorkflowProcessNote> getDocumentByItemid(Context context , UUID itemid,UUID workflowstatuscloseid,UUID dspacecloseid, Integer offset, Integer limit) throws SQLException;
 
 
 }

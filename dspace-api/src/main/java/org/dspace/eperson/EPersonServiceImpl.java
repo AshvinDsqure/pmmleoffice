@@ -609,6 +609,11 @@ public class EPersonServiceImpl extends DSpaceObjectServiceImpl<EPerson> impleme
     }
 
     @Override
+    public int activeUsercount(Context context) throws SQLException {
+        return ePersonDAO.activeUsercount(context);
+    }
+
+    @Override
     public String getName(EPerson dso) {
         return dso.getName();
     }

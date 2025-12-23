@@ -60,4 +60,5 @@ public interface EPersonDAO extends DSpaceObjectDAO<EPerson>, DSpaceObjectLegacy
     public List<EPerson> getEpersonByDepartmentAndOffice(Context context, UUID department,UUID officeid) throws SQLException;
     public List<EPerson> getAllNotNull(Context context,int limit) throws SQLException;
     List<EPerson> findGroupMembers(Context  context,UUID groupId, int offset, int limit)throws SQLException;
+    public int activeUsercount(Context context) throws SQLException;
 }

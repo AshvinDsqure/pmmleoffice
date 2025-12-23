@@ -8,20 +8,13 @@
 package org.dspace.app.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoFunction;
 import com.sap.conn.jco.JCoParameterList;
 import com.sap.conn.jco.JCoTable;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.dspace.app.rest.converter.*;
 import org.dspace.app.rest.enums.WorkFlowAction;
@@ -29,6 +22,7 @@ import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowUserType;
 import org.dspace.app.rest.exception.*;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
+import org.dspace.app.rest.jbpm.models.JBPMResponse_;
 import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
@@ -207,7 +201,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
             Optional<WorkflowProcessEperson> e = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().equals(context.getCurrentUser().getID())).findFirst();
             if (e.isPresent()) {
-                System.out.println("remark added ");
                 WorkflowProcessEperson ee = e.get();
                 ee.setRemark(workFlowProcessRest.getRemark());
                 workflowProcessEpersonService.update(context, ee);
@@ -215,6 +208,10 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             if (workFlowProcessRest.getIsinternal() != null) {
                 System.out.println("in getIsinternal" + workFlowProcessRest.getIsinternal());
                 workFlowProcess.setIsinternal(workFlowProcessRest.getIsinternal());
+            }
+            if (workFlowProcessRest != null && workFlowProcessRest.getPriorityRest() != null) {
+                //System.out.println("set priority:::");
+                workFlowProcess.setPriority(workFlowProcessMasterValueConverter.convert(context, workFlowProcessRest.getPriorityRest()));
             }
             if (workFlowProcessRest.getRemark() != null && workFlowProcess != null) {
                 workFlowProcess.setRemark(workFlowProcessRest.getRemark());
@@ -318,7 +315,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
             //one flow completed after next time forward initiator to next user
             if (workFlowProcess.getWorkflowProcessEpeople() != null) {
-                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
+                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(dd->dd.getUsertype()!=null).filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
                 if (workflowPro.isPresent() && workflowPro.get().getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
                     System.out.println("::::::::::::::::::::::::::::setInitiatorForward::::::::true::::::::::::::::::::");
                     action.setInitiatorForward(true);
@@ -388,6 +385,104 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             res.sendError(406, "Exception " + e.getMessage());
             log.error("Exception" + e.getMessage(), HttpServletResponse.SC_NOT_ACCEPTABLE, e);
             throw new RuntimeException(e);
+        }
+    }
+
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "jbpmworkflow")
+    public WorkFlowProcessRest jbpmworkflow(@PathVariable UUID uuid, HttpServletRequest request, HttpServletResponse res) throws IOException, SQLException, AuthorizeException {
+        log.info("in received Action start!");
+        WorkFlowProcessRest workFlowProcessRest = null;
+        workflowDTO workflowProcessEpersonRest=null;
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
+            ObjectMapper mapper = new ObjectMapper();
+            workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), workflowDTO.class);
+            if(workflowProcessEpersonRest.getWorkflowlist()!=null){
+                for (String  r:workflowProcessEpersonRest.getWorkflowlist() ) {
+                    WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(r));
+                    if (workflowProcess.getWorkflowProcessEpeople() != null && workflowProcess.getWorkflowProcessEpeople().size() != 0) {
+                        List<WorkflowProcessEperson> epersonList = workflowProcess.getWorkflowProcessEpeople();
+                        if (epersonList != null && epersonList.size() != 0) {
+                            updateindex(context,workflowProcess);
+                            workFlowProcessRest = workFlowProcessConverter.convert(workflowProcess, utils.obtainProjection());
+                            Optional<WorkflowProcessEpersonRest> optionalWorkflowProcessEpersonRest = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() == 1).findFirst();
+                            if (optionalWorkflowProcessEpersonRest.isPresent()) {
+                                List<String> forwarduserides = new ArrayList<>();
+                                forwarduserides.add(optionalWorkflowProcessEpersonRest.get().getId());
+                                List<Object> usersUuid = new ArrayList<>(forwarduserides);
+                                String jbpmResponce = jbpmServer.startProcess(workFlowProcessRest, usersUuid);
+                                JBPMResponse_ jbpmResponse = new Gson().fromJson(jbpmResponce, JBPMResponse_.class);
+                                if (jbpmResponse.getType().equalsIgnoreCase("failure")) {
+                                    throw new RuntimeException(jbpmResponse.getMessage());
+                                } else {
+                                    boolean inittforword = false;
+                                    boolean issender = false;
+                                    Optional<WorkflowProcessEperson> sortedListforew = workflowProcess.getWorkflowProcessEpeople().stream()
+                                            .filter(dd -> dd.getIssequence())
+                                            .filter(d -> d.getIndex() == 0)
+                                            .filter(d -> d.getOwner()).findFirst();
+
+                                    if (sortedListforew.isPresent()) {
+                                        inittforword = true;
+                                    }
+                                    List<WorkflowProcessEperson> sortedList = workflowProcess.getWorkflowProcessEpeople().stream()
+                                            .filter(dd -> dd.getIssequence())
+                                            .filter(d -> d.getIndex() != 0)
+                                            .sorted(Comparator.comparingInt(WorkflowProcessEperson::getIndex)) // order by index
+                                            .collect(Collectors.toList());
+
+                                    System.out.println("total workflow ep:"+sortedList.size());
+
+                                    int i = 1;
+                                    for (WorkflowProcessEperson ep : sortedList) {
+                                        if (!ep.getOwner()) {
+                                            List<Object> usersUuids = removeInitiatorgetUserList2Forward(i, workFlowProcessRest);
+                                            String forwardResponce = jbpmServer.forwardTask(workFlowProcessRest, usersUuids);
+                                            System.out.println("forward jbpm responce create" + forwardResponce);
+                                            JBPMResponse_ jbpmResponsef = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+                                            if(ep.getSender()){
+                                                issender=true;
+                                                System.out.println("breaking..............."+i);
+                                                break;
+                                            }
+                                            i++;
+                                        } else {
+                                            System.out.println("getOwner index::" + ep.getID());
+                                        }
+                                    }
+//                                    if (inittforword&&issender) {
+//                                        System.out.println("ini forword::::::");
+//                                        List<Object> usersUuida = new ArrayList<Object>();
+//                                        String forwardResponce = jbpmServer.forwardTask(workFlowProcessRest, usersUuida);
+//                                        System.out.println("forward jbpm responce create" + forwardResponce);
+//                                        JBPMResponse_ jbpmResponsef = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+//                                    }
+                                }
+                            } else {
+                                System.out.println("ep not found::");
+                            }
+                        } else {
+                            System.out.println("ep :not Found:");
+                        }
+                    }
+                }
+
+            };
+            context.commit();
+            log.info("in received Action stop!");
+            return workFlowProcessRest;
+        } catch (JBPMServerExpetion e) {
+            res.sendError(406, "JBPM Server Expetion!");
+            log.error("JBPM Server Expetion!", HttpServletResponse.SC_NOT_ACCEPTABLE, e);
+            throw new JBPMServerExpetion("JBPM Server Expetion " + e.getMessage());
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+            log.error("in received Action Error" + e.getMessage());
+            throw new UnprocessableEntityException("error in forwardTask Server..");
         }
     }
 
@@ -1711,7 +1806,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         sb.append("</body></html>");
         //System.out.println("::::::::::IN isTextEditorFlow :::::::::");
         FileOutputStream files = new FileOutputStream(new File(acknowledgementfile.getAbsolutePath()));
-        System.out.println("HTML:::" + sb.toString());
+      //  System.out.println("HTML:::" + sb.toString());
         int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
         if (result == 1) {
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + acknowledgementfile.getAbsolutePath());
@@ -1758,7 +1853,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         sb.append("</body></html>");
         System.out.println("::::::::::IN isTextEditorFlow :::::::::");
         FileOutputStream files = new FileOutputStream(new File(acknowledgementfile.getAbsolutePath()));
-        System.out.println("HTML:::" + sb.toString());
+       // System.out.println("HTML:::" + sb.toString());
         int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
         if (result == 1) {
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + acknowledgementfile.getAbsolutePath());
@@ -2407,7 +2502,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         List<Bitstream> bitstreams = null;
         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         // System.out.println("start.......createFinalNote");
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}.sign {\n" +
+        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
+                ".sign {\n" +
                 "        text-align: left; margin: 1px; margin-top: -31px;\n" +
                 "    }\n" +
                 "    .sign i {\n" +
@@ -2417,7 +2513,9 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                 "    }\n" +
                 "\t.img{height: 75px;\n" +
                 "    width: 128px;\n" +
-                "    margin-bottom: -75px;}</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
+                "    margin-bottom: -75px;" +
+                "}" +
+                "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
         long notecount = 0;
         if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
             UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
@@ -2952,85 +3050,85 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         return null;
     }
 
-    public void stroremetadateinmap(Bitstream bitstream, Map<String, String> map) throws ParseException {
-        if (bitstream.getMetadata() != null) {
-            int i = 0;
-            String refnumber = null;
-            String doctype = null;
-            String date = null;
-            String lettercategory = null;
-            String lettercategoryhindi = null;
-            String description = null;
-            StringBuffer doctyperefnumber = new StringBuffer();
-            StringBuffer datelettercategory = new StringBuffer();
-
-            for (MetadataValue metadataValue : bitstream.getMetadata()) {
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_doc_type")) {
-                    doctype = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_ref_number")) {
-                    refnumber = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_date")) {
-                    date = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_category")) {
-                    lettercategory = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_categoryhi")) {
-                    lettercategoryhindi = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_description")) {
-                    description = metadataValue.getValue();
-                }
-                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_title")) {
-                }
-                i++;
-            }
-
-            if (doctype != null) {
-
-                doctyperefnumber.append(doctype);
-            } else {
-                if (bitstream.getName() != null) {
-
-                } else {
-
-                }
-            }
-            if (refnumber != null) {
-
-                doctyperefnumber.append("(" + refnumber + ")");
-            } else {
-
-            }
-            if (date != null) {
-                try {
-                    datelettercategory.append(DateUtils.strDateToString(date));
-                } catch (Exception e) {
-                    e.getMessage();
-                }
-            } else {
-
-            }
-            if (lettercategory != null && lettercategoryhindi != null) {
-
-                datelettercategory.append(" (" + lettercategory + "|" + lettercategoryhindi + ")");
-            } else {
-
-            }
-            if (description != null) {
-
-                map.put("description", description);
-            } else {
-
-            }
-            map.put("datelettercategory", datelettercategory.toString() != null ? datelettercategory.toString() : "-");
-            map.put("doctyperefnumber", doctyperefnumber.toString() != null ? doctyperefnumber.toString() : "-");
-
-        }
-
-    }
+//    public void stroremetadateinmap(Bitstream bitstream, Map<String, String> map) throws ParseException {
+//        if (bitstream.getMetadata() != null) {
+//            int i = 0;
+//            String refnumber = null;
+//            String doctype = null;
+//            String date = null;
+//            String lettercategory = null;
+//            String lettercategoryhindi = null;
+//            String description = null;
+//            StringBuffer doctyperefnumber = new StringBuffer();
+//            StringBuffer datelettercategory = new StringBuffer();
+//
+//            for (MetadataValue metadataValue : bitstream.getMetadata()) {
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_doc_type")) {
+//                    doctype = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_ref_number")) {
+//                    refnumber = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_date")) {
+//                    date = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_category")) {
+//                    lettercategory = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_letter_categoryhi")) {
+//                    lettercategoryhindi = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_description")) {
+//                    description = metadataValue.getValue();
+//                }
+//                if (metadataValue.getMetadataField() != null && metadataValue.getMetadataField().toString().equalsIgnoreCase("dc_title")) {
+//                }
+//                i++;
+//            }
+//
+//            if (doctype != null) {
+//
+//                doctyperefnumber.append(doctype);
+//            } else {
+//                if (bitstream.getName() != null) {
+//
+//                } else {
+//
+//                }
+//            }
+//            if (refnumber != null) {
+//
+//                doctyperefnumber.append("(" + refnumber + ")");
+//            } else {
+//
+//            }
+//            if (date != null) {
+//                try {
+//                    datelettercategory.append(DateUtils.strDateToString(date));
+//                } catch (Exception e) {
+//                    e.getMessage();
+//                }
+//            } else {
+//
+//            }
+//            if (lettercategory != null && lettercategoryhindi != null) {
+//
+//                datelettercategory.append(" (" + lettercategory + "|" + lettercategoryhindi + ")");
+//            } else {
+//
+//            }
+//            if (description != null) {
+//
+//                map.put("description", description);
+//            } else {
+//
+//            }
+//            map.put("datelettercategory", datelettercategory.toString() != null ? datelettercategory.toString() : "-");
+//            map.put("doctyperefnumber", doctyperefnumber.toString() != null ? doctyperefnumber.toString() : "-");
+//
+//        }
+//
+//    }
 
     public void storeWorkFlowHistoryForSignaturePanding(Context context, WorkflowProcessReferenceDoc doc) throws
             Exception {
@@ -3499,7 +3597,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                     String baseurl = configurationService.getProperty("dspace.server.url");
                     referencedocumentmap.put("name", FileUtils.getNameWithoutExtension(workflowProcessReferenceDoc.getBitstream().getName()));
                     referencedocumentmap.put("link", baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content");
-                    stroremetadateinmap(workflowProcessReferenceDoc.getBitstream(), referencedocumentmap);
+                   // stroremetadateinmap(workflowProcessReferenceDoc.getBitstream(), referencedocumentmap);
                     listreferenceReference.add(referencedocumentmap);
                 }
             }
@@ -3604,5 +3702,47 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         margedoc = workflowProcessReferenceDocService.create(context, margedoc);
         return margedoc;
     }
+    public List<Object> removeInitiatorgetUserList2Forward(int currentuserindex, WorkFlowProcessRest workFlowProcessRest) {
+        System.out.println("workFlowProcessRest.getWorkflowProcessEpersonRests() size" + workFlowProcessRest.getWorkflowProcessEpersonRests().size());
+        if (workFlowProcessRest.getWorkflowProcessEpersonRests() != null) {
+            List<String> currenttonext = new ArrayList<>();
+            // int currentuserindex = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getOwner()).filter(d -> d.getePersonRest() != null).filter(dd -> dd.getePersonRest().getId() != null).filter(dd -> dd.getePersonRest().getId().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get().getIndex();
+            System.out.println("current user index is : " + currentuserindex);
+            int seconuser = currentuserindex + 1;
+            System.out.println("curnextrent user index is : " + seconuser);
+            Optional<String> ee = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(dd -> dd.getIndex() == currentuserindex).map(d -> d.getUuid()).findFirst();
+            Optional<String> ee2 = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(dd -> dd.getIndex() == seconuser).map(d -> d.getUuid()).findFirst();
+            if (ee.isPresent() && ee2.isPresent()) {
+                currenttonext.add(ee.get());
+                currenttonext.add(ee2.get());
+            }
+            List<Object> userlist = new ArrayList<>(currenttonext);
+            return userlist;
+        } else {
+            System.out.println("user not found!");
+            return null;
+        }
+    }
+    public void updateindex(Context context, WorkflowProcess workflowProcess) throws SQLException, AuthorizeException {
+        if (workflowProcess.getWorkflowProcessEpeople() != null && workflowProcess.getWorkflowProcessEpeople().size() != 0) {
+            List<WorkflowProcessEperson> sortedList = workflowProcess.getWorkflowProcessEpeople().stream()
+                    .filter(d -> d.getIndex() != 0)
+                    .sorted(Comparator.comparingInt(WorkflowProcessEperson::getIndex)) // order by index
+                    .collect(Collectors.toList());
+            if (sortedList != null) {
+                int i = 1;
+                for (WorkflowProcessEperson ep :
+                        sortedList) {
 
+                    ep.setIndex(i);
+                    ep.setSequence(i);
+                    workflowProcessEpersonService.update(context, ep);
+                    i++;
+                }
+                System.out.println("inex update done!!!");
+            }
+        }
+
+
+    }
 }

@@ -80,6 +80,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
 
     @Autowired
     WorkflowProcessService workflowProcessService;
+
+    @Autowired
+    WorkFlowProcessDraftDetailsService workFlowProcessDraftDetailsService;
     @Autowired
     WorkFlowProcessConverter workFlowProcessConverter;
 
@@ -179,7 +182,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             if (!initiatorEpersion.isPresent()) {
                 return ResponseEntity.badRequest().body("no user found");
             }
-              WorkflowProcess workFlowProcess=null;
+            WorkflowProcess workFlowProcess=null;
             if (workFlowProcessRest != null && workFlowProcessRest.getId() != null) {
                 workFlowProcess=workFlowProcessConverter.convertByService(context,workFlowProcessRest);
                 if (workFlowProcess != null) {
@@ -594,6 +597,8 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         WorkflowProcessReferenceDocRest workflowProcessReferenceDocRest = null;
         String remark="";
+        UUID draftuuid=null;;
+        boolean issinlater=false;
         log.info("in Forward Action start");
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -602,9 +607,17 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             WorkflowProcess workFlowProcess = workflowProcessService.find(context, UUID.fromString(workFlowProcessRest.getUuid()));
             WorkflowProcess  workFlowProcessfinal=workFlowProcess;
             if (workFlowProcess != null) {
+                if(workFlowProcess.getWorkFlowProcessDraftDetails()!=null&&workFlowProcess.getWorkFlowProcessDraftDetails().getIssinglatter()==true){
+                    System.out.println("signlaterr true");
+                    issinlater=true;
+                    draftuuid=workFlowProcess.getWorkFlowProcessDraftDetails().getID();
+                    System.out.println("draftuuid:::"+draftuuid);
+                }else{
+                    System.out.println("signlaterr false");
+                }
+
                 Optional<WorkflowProcessEperson> e = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().equals(context.getCurrentUser().getID())).findFirst();
                 if (e.isPresent() &&workFlowProcessRest.getComment()!=null) {
-                    System.out.println("remark added ");
                     WorkflowProcessEperson ee = e.get();
                     ee.setRemark(workFlowProcessRest.getComment());
                     remark=workFlowProcessRest.getComment();
@@ -655,6 +668,10 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             }
             if (workFlowProcessRest.getDispatchModeRest() != null) {
                 workFlowProcess.setDispatchmode(workFlowProcessMasterValueConverter.convert(context, workFlowProcessRest.getDispatchModeRest()));
+            }
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
+            if (workFlowTypeStatus.isPresent()) {
+                workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }
 
             if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
@@ -765,6 +782,17 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
             }
             workFlowProcess.setIsread(false);
             action.perfomeAction(context, workFlowProcess, workFlowProcessRest);
+
+            if(issinlater) {
+                System.out.println("in truueee::::::::after::"+draftuuid);
+                WorkFlowProcessDraftDetails d = workFlowProcessDraftDetailsService.find(context, draftuuid);
+                if (d != null) {
+                    System.out.println("update done signflag::::  2 :::done:::::::::::");
+                    d.setIssinglatter(true);
+                    workFlowProcessDraftDetailsService.update(context, d);
+                    workFlowProcess.setWorkFlowProcessDraftDetails(d);
+                }
+            }
             workflowProcessService.create(context, workFlowProcess);
             context.commit();
             action.setComment(null);
@@ -791,6 +819,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 RuntimeException e) {
             e.printStackTrace();
             throw new UnprocessableEntityException("error in forwardTask Server..");
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -847,9 +878,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 WorkflowProcessReferenceDoc doc =null;
                 if(inwardDoc.isPresent()){
                     System.out.println("update doc::");
-                     doc=inwardDoc.get();
+                    doc=inwardDoc.get();
                     isupdate=true;
-                 }else{
+                }else{
                     System.out.println("new :::");
                     doc=new WorkflowProcessReferenceDoc();
                 }
@@ -880,9 +911,9 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 if (workFlowProcessRest != null && workFlowProcessRest.getId() != null) {
                     System.out.println("draft save inward doc save");
                     WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
-                   if(workflowProcess1!=null){
-                       doc.setWorkflowProcess(workflowProcess1);
-                   }
+                    if(workflowProcess1!=null){
+                        doc.setWorkflowProcess(workflowProcess1);
+                    }
                 }
                 if(isupdate){
                     workflowProcessReferenceDocService.update(context, doc);
@@ -900,7 +931,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 System.out.println("draft with id save");
                 workflowProcess = workFlowProcessConverter.convertDraftwithID(workFlowProcessRest, context, UUID.fromString(workFlowProcessRest.getId()));
                 WorkflowProcess finalWorkflowProcess=workflowProcess;
-               // WorkflowProcessSenderDiary s = processSenderDiaryService.find(context,workflowProcess.getWorkflowProcessSenderDiaries().get(0).getID());
+                // WorkflowProcessSenderDiary s = processSenderDiaryService.find(context,workflowProcess.getWorkflowProcessSenderDiaries().get(0).getID());
                 List<WorkflowProcessSenderDiary> oldDiaries = workflowProcess.getWorkflowProcessSenderDiaries();
                 if (oldDiaries != null && !oldDiaries.isEmpty()) {
                     oldDiaries.clear(); // Clear from memory as well

@@ -40,8 +40,14 @@ public enum WorkFlowAction {
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
             if (workflowProcess.getWorkflowType().getPrimaryvalue().equals("Inward")) {
                 if (workFlowProcessRest.getIspredefineuser()) {
-                    List<Object> usersUuid = this.removeInitiatorgetUserList2(context, workFlowProcessRest);
-                    if (usersUuid != null) {
+
+                    Optional<WorkflowProcessEpersonRest> optionalWorkflowProcessEpersonRest = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() == 1).findFirst();
+                    if (optionalWorkflowProcessEpersonRest.isPresent()) {
+                        List<String> forwarduserides = new ArrayList<>();
+                        forwarduserides.add(optionalWorkflowProcessEpersonRest.get().getId());
+                        List<Object> usersUuid = new ArrayList<>(forwarduserides);
+
+                        System.out.println("userides::"+usersUuid);
                         String jbpmResponce = this.getJbpmServer().startProcess(workFlowProcessRest, usersUuid);
                         JBPMResponse_ jbpmResponse = new Gson().fromJson(jbpmResponce, JBPMResponse_.class);
                         if (jbpmResponse.getType().equalsIgnoreCase("failure")) {
@@ -71,12 +77,16 @@ public enum WorkFlowAction {
                     WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
                     this.setComment(null);
                     workFlowProcessRest.setSendername(context.getCurrentUser().getFullName());
+
                     return this.storeWorkFlowHistoryforDocumentReference(context, workflowProcess, currentOwner, workFlowProcessRest);
                 }
             }
             //other creted like outward draft
-            List<Object> usersUuid = this.removeInitiatorgetUserList2(context, workFlowProcessRest);
-            if (usersUuid != null) {
+            Optional<WorkflowProcessEpersonRest> optionalWorkflowProcessEpersonRest = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getIndex() == 1).findFirst();
+            if (optionalWorkflowProcessEpersonRest.isPresent()) {
+                List<String> forwarduserides = new ArrayList<>();
+                forwarduserides.add(optionalWorkflowProcessEpersonRest.get().getId());
+                List<Object> usersUuid = new ArrayList<>(forwarduserides);
                 String comment = null;
                 String jbpmResponce = this.getJbpmServer().startProcess(workFlowProcessRest, usersUuid);
                 JBPMResponse_ jbpmResponse = new Gson().fromJson(jbpmResponce, JBPMResponse_.class);
@@ -109,7 +119,8 @@ public enum WorkFlowAction {
             List<Object> usersUuid = null;
             if (this.getInitiatorForward()) {
                 System.out.println("In InitiatorForward ");
-                usersUuid = this.getIsInitiatorForward(workFlowProcessRest);
+                usersUuid = this.getIsInitiatorForward(context,workflowProcess,workFlowProcessRest);
+                System.out.println("user InitiatorForward " + usersUuid);
             } else if (this.getInitiator()) {
                 System.out.println("In Initiator ");
                 usersUuid = new ArrayList<Object>();
@@ -121,6 +132,7 @@ public enum WorkFlowAction {
             String forwardResponce = this.getJbpmServer().forwardTask(workFlowProcessRest, usersUuid);
             System.out.println("forward jbpm responce create" + forwardResponce);
             JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+
             WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
             workFlowProcessRest.setSendername(context.getCurrentUser().getFullName());
             WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, currentOwner, workFlowProcessRest);
@@ -196,7 +208,17 @@ public enum WorkFlowAction {
     REJECTED("Rejected") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
-            WorkflowProcessEperson currentOwner = this.changeOwnerByReject(context, workflowProcess);
+            List<Object>usersUuid = new ArrayList<Object>();
+            System.out.println("user list " + usersUuid);
+            String forwardResponce = this.getJbpmServer().forwardTask(workFlowProcessRest, usersUuid);
+            System.out.println("forward jbpm responce create" + forwardResponce);
+            JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+            if (jbpmResponse.getType().equalsIgnoreCase("failure")) {
+                System.out.println("jbpmResponse.getMessage()::"+jbpmResponse.getMessage());
+                throw new RuntimeException(jbpmResponse.getMessage());
+            }
+            WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
+            workFlowProcessRest.setSendername(context.getCurrentUser().getFullName());
             System.out.println("Reject action " + this.getComment());
             WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, currentOwner, workFlowProcessRest);
             this.setComment(null);
@@ -234,7 +256,7 @@ public enum WorkFlowAction {
             List<Object> usersUuid = null;
             if (this.getInitiatorForward()) {
                 System.out.println("In InitiatorForward");
-                usersUuid = this.getIsInitiatorForward(workFlowProcessRest);
+                usersUuid = this.getIsInitiatorForwardCallback(workflowProcess,workFlowProcessRest);
             } else if (this.getInitiator()) {
                 System.out.println("In Initiator ");
                 usersUuid = new ArrayList<Object>();
@@ -243,6 +265,30 @@ public enum WorkFlowAction {
                 usersUuid = this.calbackuserset(context, workFlowProcessRest, workflowProcess);
             }
             System.out.println("user list " + usersUuid);
+            String forwardResponce = this.getJbpmServer().forwardTask(workFlowProcessRest, usersUuid);
+            System.out.println("forward jbpm responce create" + forwardResponce);
+            JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
+            WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
+            WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, currentOwner, workFlowProcessRest);
+            return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
+        }
+    },
+    CHANGDRAFT("ChangeDraft") {
+        @Override
+        public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException, JBPMServerExpetion {
+            this.setIscallback(true);
+            List<Object> usersUuid = null;
+            if (this.getInitiatorForward()) {
+                System.out.println("In InitiatorForward");
+                usersUuid = this.getIsInitiatorForwardCallback(workflowProcess,workFlowProcessRest);
+            } else if (this.getInitiator()) {
+                System.out.println("In Initiator ");
+                usersUuid = new ArrayList<Object>();
+            } else {
+                System.out.println(" normal flow");
+                usersUuid = this.chngeDraft(context, workFlowProcessRest, workflowProcess);
+            }
+            System.out.println("chngeDraft user list " + usersUuid);
             String forwardResponce = this.getJbpmServer().forwardTask(workFlowProcessRest, usersUuid);
             System.out.println("forward jbpm responce create" + forwardResponce);
             JBPMResponse_ jbpmResponse = new Gson().fromJson(forwardResponce, JBPMResponse_.class);
@@ -480,13 +526,40 @@ public enum WorkFlowAction {
                 .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).map(d -> d.getUuid()).collect(Collectors.toList());
     }
 
-    public List<Object> getIsInitiatorForward(WorkFlowProcessRest workFlowProcessRest) {
-        return workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
+    public List<Object> getIsInitiatorForward(Context context,WorkflowProcess workflowProcess,WorkFlowProcessRest workFlowProcessRest) {
+
+        List<String> currenttonext = new ArrayList<>();
+        for (WorkflowProcessEperson person : Optional.ofNullable(workflowProcess.getWorkflowProcessEpeople()).orElse(Collections.emptyList())) {
+            if(person!=null&&person.getIndex()!=null&&person.getIndex()!=0&&person.getOwner()!=null&&person.getOwner()==true)
+            {
+                System.out.println("found multi inisiter forword:::::::::::::::");
+                currenttonext.add(person.getID().toString());
+            }
+            else {
+                System.out.println("multi not found>>>>>>>>>>>>>>>>>>>>>>>");
+            }
+        }
+        Optional<WorkflowProcessEpersonRest> firstObject = workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
                 .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.INITIATOR.getAction()))
                 .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.DISPATCH.getAction()))
-                .filter(ww -> !ww.getIssequence() == true)
-                .filter(ss -> !ss.getIssequence())
-                .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).map(d -> d.getUuid()).collect(Collectors.toList());
+                .filter(wei -> !wei.getIssequence())
+                .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex))
+                .findFirst();
+        if(firstObject.isPresent()){
+            currenttonext.add(firstObject.get().getId());
+        }
+        List<Object> userlist = new ArrayList<>(currenttonext);
+        return userlist;
+    }
+    public List<Object> getIsInitiatorForwardCallback(WorkflowProcess workflowProcess,WorkFlowProcessRest workFlowProcessRest) {
+        List<Object> userlist = new ArrayList<>();
+        int index = workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getSender()).findFirst().get().getIndex();
+        System.out.println("index :call back new  user::"+index);
+        int index2 = index + 1;
+        System.out.println("index :call back new  user::"+index2);
+        String a = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(i -> i.getIndex() == index2).map(d -> d.getId()).findFirst().get();
+        userlist.add(a);
+        return userlist;
     }
 
     public List<Object> removeInitiatorgetUserList2(Context context, WorkFlowProcessRest workFlowProcessRest) {
@@ -499,7 +572,7 @@ public enum WorkFlowAction {
         List<Integer> indexAllEpersonList = removeInitiatorafterlist.stream().map(d -> d.getIndex()).collect(Collectors.toList());
         //this check how many time dublicate index
         Map<Integer, Long> multipleusersameindex = indexAllEpersonList.stream().collect(Collectors.groupingBy(i -> i, Collectors.counting()));
-       // System.out.println("::::::::::::::size::::::::::::::::::" + removeInitiatorafterlist.size());
+        // System.out.println("::::::::::::::size::::::::::::::::::" + removeInitiatorafterlist.size());
         for (int i = 1; i <= removeInitiatorafterlist.size(); i++) {
             //System.out.println("::::::test ::::::::count in loop");
             //check index one then more
@@ -507,12 +580,12 @@ public enum WorkFlowAction {
                 int finalIq = i;
                 if (tmplist.stream().filter(dd -> dd.getIndex() == finalIq).sorted(Comparator.comparing(WorkflowProcessEpersonRest::getSequence)).map(d -> d.getUuid()).collect(Collectors.toList()) != null) {
                     userlist.add(tmplist.stream().filter(dd -> dd.getIndex() == finalIq).sorted(Comparator.comparing(WorkflowProcessEpersonRest::getSequence)).map(d -> d.getUuid()).collect(Collectors.toList()));
-                  //  System.out.println("mltiuser list :" + removeInitiatorafterlist.stream().filter(dd -> dd.getIndex() == finalIq).map(d -> d.getUuid()).collect(Collectors.toList()));
+                    //  System.out.println("mltiuser list :" + removeInitiatorafterlist.stream().filter(dd -> dd.getIndex() == finalIq).map(d -> d.getUuid()).collect(Collectors.toList()));
                 }
             } else {
                 int finalI = i;
                 if (removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().isPresent()) {
-                   // System.out.println("::::::::::::::single::::::::::::" + removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().get().toString());
+                    // System.out.println("::::::::::::::single::::::::::::" + removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().get().toString());
                     userlist.add(removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().get().toString());
                 }
             }
@@ -521,48 +594,49 @@ public enum WorkFlowAction {
     }
 
     public List<Object> removeInitiatorgetUserList2Forward(Context context, WorkFlowProcessRest workFlowProcessRest) {
-        List<Object> userlist = new ArrayList<>();
-
-        List<WorkflowProcessEpersonRest> removeInitiatorafterlist = workFlowProcessRest.getWorkflowProcessEpersonRests().stream()
-                .filter(wei -> !wei.getUserType().getPrimaryvalue().equals(WorkFlowUserType.INITIATOR.getAction()))
-                .sorted(Comparator.comparing(WorkflowProcessEpersonRest::getIndex)).collect(Collectors.toList());
-        //remove Initiator after workflowEperson index list
-        List<WorkflowProcessEpersonRest> tmplist = removeInitiatorafterlist;
-
-        List<Integer> indexAllEpersonList = removeInitiatorafterlist.stream().map(d -> d.getIndex()).collect(Collectors.toList());
-        //this check how many time dublicate index
-        Map<Integer, Long> multipleusersameindex = indexAllEpersonList.stream().collect(Collectors.groupingBy(i -> i, Collectors.counting()));
-      //  System.out.println("::::::::::::::size::::::::::::::::::" + removeInitiatorafterlist.size());
-        int currentuserindex = removeInitiatorafterlist.stream().filter(d -> d.getePersonRest() != null).filter(dd -> dd.getePersonRest().getId() != null).filter(dd -> dd.getePersonRest().getId().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get().getIndex();
-        System.out.println("current user index is : " + currentuserindex);
-        for (int i = currentuserindex; i <= removeInitiatorafterlist.size(); i++) {
-         //   System.out.println("::::::test ::::::::count in loop");
-            //check index one then more in this if
-            if (indexAllEpersonList.contains(i) && multipleusersameindex.get(i) > 1) {
-                int finalIq = i;
-                if (tmplist.stream().filter(dd -> dd.getIndex() == finalIq).sorted(Comparator.comparing(WorkflowProcessEpersonRest::getSequence)).map(d -> d.getUuid()).collect(Collectors.toList()) != null) {
-                    userlist.add(tmplist.stream().filter(dd -> dd.getIndex() == finalIq).sorted(Comparator.comparing(WorkflowProcessEpersonRest::getSequence)).map(d -> d.getUuid()).collect(Collectors.toList()));
-                   // System.out.println("::::::::::::::multiuser::::::::::::" + tmplist.stream().filter(dd -> dd.getIndex() == finalIq).sorted(Comparator.comparing(WorkflowProcessEpersonRest::getSequence)).map(d -> d.getUuid()).collect(Collectors.toList()));
-                }
-            } else {
-                int finalI = i;
-                if (removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().isPresent()) {
-                  //  System.out.println("::::::::::::::single::::::::::::" + removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().get().toString());
-                    userlist.add(removeInitiatorafterlist.stream().filter(d -> d.getIndex().equals(finalI)).map(d -> d.getId()).findFirst().get().toString());
-                }
+        System.out.println("workFlowProcessRest.getWorkflowProcessEpersonRests() size"+workFlowProcessRest.getWorkflowProcessEpersonRests().size());
+        if(workFlowProcessRest.getWorkflowProcessEpersonRests()!=null) {
+            List<String> currenttonext = new ArrayList<>();
+            int currentuserindex = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d -> d.getOwner()).filter(d -> d.getePersonRest() != null).filter(dd -> dd.getePersonRest().getId() != null).filter(dd -> dd.getePersonRest().getId().equalsIgnoreCase(context.getCurrentUser().getID().toString())).findFirst().get().getIndex();
+            System.out.println("current user index is : " + currentuserindex);
+            int seconuser = currentuserindex + 1;
+            System.out.println("curnextrent user index is : " + seconuser);
+            Optional<String> ee = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(dd -> dd.getIndex() == currentuserindex).map(d -> d.getUuid()).findFirst();
+            Optional<String> ee2 = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(dd -> dd.getIndex() == seconuser).map(d -> d.getUuid()).findFirst();
+            if (ee.isPresent() && ee2.isPresent()) {
+                currenttonext.add(ee.get());
+                currenttonext.add(ee2.get());
             }
+            List<Object> userlist = new ArrayList<>(currenttonext);
+            return userlist;
+        }else {
+            System.out.println("user not found!");
+            return null;
         }
-        return userlist;
     }
 
     public List<Object> calbackuserset(Context context, WorkFlowProcessRest workFlowProcessRest, WorkflowProcess workflowProcess) {
         List<Object> userlist = new ArrayList<>();
-        int index = workFlowProcessRest.getWorkflowProcessEpersonRests().size() - 1;
-        int index2 = index - 1;
+        int index = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(d->d.getOwner()).findFirst().get().getIndex();
+        System.out.println("index :::"+index);
+        int index2 = index + 1;
         String a = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(i -> i.getIndex() == index2).map(d -> d.getId()).findFirst().get();
         String ab = workFlowProcessRest.getWorkflowProcessEpersonRests().stream().filter(i -> i.getIndex() == index).map(d -> d.getId()).findFirst().get();
-        userlist.add(a);
+        System.out.println("a::"+a);
+        System.out.println("b::"+ab);
         userlist.add(ab);
+        userlist.add(a);
+        return userlist;
+    }
+
+    public List<Object> chngeDraft(Context context, WorkFlowProcessRest workFlowProcessRest, WorkflowProcess workflowProcess) {
+        List<Object> userlist = new ArrayList<>();
+        int lastuser=workflowProcess.getWorkflowProcessEpeople().size()-1;
+        System.out.println("lastuser index :::"+lastuser);
+        Optional<String> currentuserindex = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())).map(d -> d.getID().toString()).findFirst();
+        Optional<String> seconduser = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getIndex()==lastuser).map(d -> d.getID().toString()).findFirst();
+        userlist.add(currentuserindex.get());
+        userlist.add(seconduser.get());
         return userlist;
     }
 
@@ -631,12 +705,13 @@ public enum WorkFlowAction {
             return workFlowAction;
         }
         if (!DateUtils.isNullOrEmptyOrBlank(workFlowProcessRest.getRemark())) {
-            System.out.println("remark t :" + workFlowProcessRest.getRemark());
+            // System.out.println("remark t :" + workFlowProcessRest.getRemark());
             workFlowAction.setComment(workFlowProcessRest.getRemark());
         }
         System.out.println("::::::OUT :storeWorkFlowHistory:::::::::: ");
         return workFlowAction;
     }
+
     public WorkFlowProcessHistory storeWorkFlowHistoryREVIEW(Context context, WorkflowProcess workflowProcess, WorkflowProcessEperson workflowProcessEperson, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
         System.out.println("::::::IN :storeWorkFlowHistoryREVIEW:::::::::: ");
         WorkFlowProcessHistory workFlowAction = null;
@@ -656,7 +731,7 @@ public enum WorkFlowAction {
             workFlowAction.setSentbyname(workflowProcessEperson.getePerson().getFullName());
         }
         if (!DateUtils.isNullOrEmptyOrBlank(workFlowProcessRest.getRemark())) {
-            System.out.println("remark t :" + workFlowProcessRest.getRemark());
+            //System.out.println("remark t :" + workFlowProcessRest.getRemark());
             workFlowAction.setComment(workFlowProcessRest.getRemark());
         }
         System.out.println("::::::OUT :storeWorkFlowHistoryREVIEW:::::::::: ");
@@ -715,7 +790,6 @@ public enum WorkFlowAction {
                 System.out.println("::::::IN :storeWorkFlowHistory::::DocumentReference:::::: ");
                 Comparator<WorkflowProcessReferenceDoc> c = (a, b) -> a.getCreatedate().compareTo(b.getCreatedate());
                 List<WorkflowProcessReferenceDoc> list = workflowProcess.getWorkflowProcessReferenceDocs().stream().sorted(c).collect(Collectors.toList());
-                System.out.println("size:::::::::::::::" + list.size());
                 if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
                     for (WorkflowProcessReferenceDoc doc : list) {
                         if (doc.getDrafttype() != null && doc.getDrafttype().getPrimaryvalue() != null && doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")) {
@@ -778,7 +852,7 @@ public enum WorkFlowAction {
                                 if(sento.get().getePerson()!=null&&sento.get().getePerson().getFullName()!=null) {
                                     workFlowAction.setSenttoname(sento.get().getePerson().getFullName());
                                 }
-                                }
+                            }
                         }
                         if (doc.getDrafttype() != null && doc.getDrafttype().getPrimaryvalue() != null && doc.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet")) {
                             //add Notsheet  Histoy
@@ -991,7 +1065,7 @@ public enum WorkFlowAction {
                     System.out.println("call back getPerformed_by: user update done!:::::::::::::");
                     this.getWorkflowProcessEpersonService().update(context, currentOwner);
                 }
-                System.out.println("send done:::::::::::::::::");
+
                 this.getWorkflowProcessEpersonService().update(context, currentOwner);
             }
             if (jbpmResponse.getPerformed_by_group() != null && jbpmResponse.getPerformed_by_group().size() != 0) {

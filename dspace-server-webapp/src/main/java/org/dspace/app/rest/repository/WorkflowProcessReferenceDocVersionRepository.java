@@ -15,13 +15,15 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocVersionConverter;
+import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocVersionRest;
 import org.dspace.app.rest.model.WorkflowProcessSenderDiaryRest;
 import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.content.WorkflowProcessReferenceDoc;
-import org.dspace.content.WorkflowProcessReferenceDocVersion;
+import org.dspace.content.*;
+import org.dspace.content.service.WorkFlowProcessHistoryService;
+import org.dspace.content.service.WorkFlowProcessMasterValueService;
 import org.dspace.content.service.WorkflowProcessReferenceDocService;
 import org.dspace.content.service.WorkflowProcessReferenceDocVersionService;
 import org.dspace.core.Context;
@@ -36,10 +38,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -51,6 +50,14 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
             .getLogger(WorkflowProcessReferenceDocVersionRepository.class);
     @Autowired
     WorkflowProcessReferenceDocVersionService WorkflowProcessReferenceDocVersionService;
+
+
+    @Autowired
+    private WorkFlowProcessHistoryService workFlowProcessHistoryService;
+
+    @Autowired
+    private WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
 
     @Autowired
     WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
@@ -179,12 +186,13 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
     }
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "updateVersion")
-        public WorkflowProcessReferenceDocVersionRest updateVersion(@Parameter(value = "versionid", required = true) UUID versionid) {
+    public WorkflowProcessReferenceDocVersionRest updateVersion(@Parameter(value = "versionid", required = true) UUID versionid) {
+        WorkflowProcessReferenceDoc doc=null;
         try {
             System.out.println("in update version id:"+versionid);
             Context context = obtainContext();
             WorkflowProcessReferenceDocVersion v=  WorkflowProcessReferenceDocVersionService.find(context, versionid);
-            WorkflowProcessReferenceDoc doc=  workflowProcessReferenceDocService.find(context,v.getWorkflowProcessReferenceDoc().getID());
+            doc=  workflowProcessReferenceDocService.find(context,v.getWorkflowProcessReferenceDoc().getID());
             for (WorkflowProcessReferenceDocVersion vv:doc.getWorkflowProcessReferenceDocVersion()) {
                 WorkflowProcessReferenceDocVersion dd=  WorkflowProcessReferenceDocVersionService.find(context, vv.getID());
                 dd.setIsactive(false);
@@ -197,16 +205,40 @@ public class WorkflowProcessReferenceDocVersionRepository extends DSpaceObjectRe
                 v.setIsactive(true);
             }
             WorkflowProcessReferenceDocVersionService.update(context,v);
-             System.out.println("is done :"+v.getIsactive());
-            WorkflowProcessReferenceDocVersionRest workflowProcessReferenceDocVersionRest= converter.toRest(v, utils.obtainProjection());
+            System.out.println("is done :"+v.getIsactive());
+            WorkflowProcessReferenceDocVersionRest workflowProcessReferenceDocVersionRest= workflowProcessReferenceDocVersionConverter.convert(v, utils.obtainProjection());
+            storeWorkFlowHistoryDraftActivition(context,doc,v.getVersionnumber());
             context.commit();
-           return workflowProcessReferenceDocVersionRest;
+            return workflowProcessReferenceDocVersionRest;
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
         } catch (AuthorizeException e) {
             throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
+
+    public void storeWorkFlowHistoryDraftActivition(Context context, WorkflowProcessReferenceDoc doc,Double version) throws Exception {
+        System.out.println("::::::IN :storeWorkFlowHistory::delete::Document:::::: ");
+        try {
+            WorkflowProcess workflowProcess = doc.getWorkflowProcess();
+            WorkFlowProcessHistory workFlowAction = null;
+            workFlowAction = new WorkFlowProcessHistory();
+            WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+            workFlowAction.setWorkflowProcessEpeople(workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() != null).filter(d -> d.getOwner()).findFirst().get());
+            WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.UPDATE.getAction(), workFlowProcessMaster);
+            workFlowAction.setActionDate(new Date());
+            workFlowAction.setAction(workFlowProcessMasterValue);
+            workFlowAction.setWorkflowProcess(workflowProcess);
+            workFlowAction.setComment("Draft  Version "+version+" Activeted By"+context.getCurrentUser().getFullName());
+            workFlowProcessHistoryService.create(context, workFlowAction);
+            System.out.println("::::::OUT :storeWorkFlowHistory: delete :Document:::::::: ");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public Class<WorkflowProcessReferenceDocVersionRest> getDomainClass() {
         return null;

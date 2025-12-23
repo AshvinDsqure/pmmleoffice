@@ -52,6 +52,7 @@ public class WorkflowProcessReferenceDocConverter extends DSpaceObjectConverter<
     @Autowired
     WorkflowProcessReferenceDocService workflowProcessReferenceDocService;
     public WorkflowProcessReferenceDocRest convert(WorkflowProcessReferenceDoc obj, Projection projection) {
+        //zz
         WorkflowProcessReferenceDocRest workflowProcessDefinitionRest = new WorkflowProcessReferenceDocRest();
         if (obj.getBitstream() != null) {
             workflowProcessDefinitionRest.setBitstreamRest(bitstreamConverter.convertFoWorkFLowRefDoc(obj.getBitstream(), projection));
