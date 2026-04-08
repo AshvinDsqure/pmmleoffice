@@ -36,6 +36,10 @@ import org.dspace.core.Context;
 import org.dspace.services.ConfigurationService;
 import org.dspace.storage.bitstore.DSBitStoreService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -86,6 +90,9 @@ public class WorkflowProcessDigitalSignController {
     @Autowired
     PdfOprationServerImpl pdfOprationServer;
 
+    @Autowired
+    JbpmServerImpl jbpmServer;
+
 
     @Autowired
     public WorkflowProcessInwardController workflowProcessInwardController;
@@ -95,10 +102,6 @@ public class WorkflowProcessDigitalSignController {
     public WorkflowProcessReferenceDocConverter workflowProcessReferenceDocConverter;
     @Autowired
     ConfigurationService configurationService;
-
-
-    @Autowired
-    JbpmServerImpl jbpmServer;
 
     @Autowired
     DSBitStoreService dsBitStoreService;
@@ -287,7 +290,10 @@ public class WorkflowProcessDigitalSignController {
                     Random random = new Random();
                     // Generate a random 4-digit number
                     int randomNumber = random.nextInt(9000) + 1000;
-                    File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + randomNumber + ".pdf");
+//                    File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + randomNumber + ".pdf");
+                    File tempFile1html = new File(TEMP_DIRECTORY, "approvaldraft_" + UUID.randomUUID() +randomNumber+".pdf");
+
+
                     if (!tempFile1html.exists()) {
                         try {
                             tempFile1html.createNewFile();
@@ -606,7 +612,6 @@ public class WorkflowProcessDigitalSignController {
             ResponseDataPKCSBulkSign apiResponse = bridge.decPKCSBulkSign(request.getEncryptedRequest(), request.getTempfilepath());
             // //Genearate pdf file from Base64 and delete temp file
             Bitstream sign = generatePDFFile(context, apiResponse, request);
-
             if (sign != null) {
                 req.setBitstreampid(sign.getID().toString());
             }
@@ -620,23 +625,12 @@ public class WorkflowProcessDigitalSignController {
         }
     }
 
-    //    public static String getFolderTmp(String foldername){
-//        final String TEMP_DIRECTORY1 = System.getProperty("java.io.tmpdir");
-//        Date now = new Date(System.currentTimeMillis() + 3 * 60 * 1000);
-//        String sdf = new SimpleDateFormat("ddMMMyyyyHHmmss").format(now);
-//        File theDir = new File(TEMP_DIRECTORY1+"\\"+foldername+"_"+sdf);
-//        if (!theDir.exists()){
-//            theDir.mkdirs();
-//        }
-//        return theDir.getAbsoluteFile().getAbsolutePath();
-//    }
-
-
     public static String getFolderTmp(String folderName) {
         final String tempDirectory = System.getProperty("java.io.tmpdir");
         String timestamp = java.time.format.DateTimeFormatter.ofPattern("ddMMMyyyyHHmmss")
                 .format(java.time.LocalDateTime.now().plusMinutes(3));
-        File directory = new File(tempDirectory + File.separator + folderName + "_" + timestamp);
+        String uniqueId = java.util.UUID.randomUUID().toString(); // ✅ IMPORTANT
+        File directory = new File(tempDirectory + File.separator + folderName + "_" + timestamp+"_" + uniqueId);
         if (!directory.exists() && !directory.mkdirs()) {
             throw new RuntimeException("Failed to create temporary directory: " + directory.getAbsolutePath());
         }
@@ -676,7 +670,7 @@ public class WorkflowProcessDigitalSignController {
                 // Generate a random 4-digit number
                 int randomNumber = random.nextInt(9000) + 1000;
                 byte[] signedDocBytes = Base64.decodeBase64(doc.getSignedData());
-                File file = new File(TEMP_DIRECTORY1, "signed_" + name + "_" + randomNumber + ".pdf");
+                File file = new File(TEMP_DIRECTORY1, "signed_" + name + "_"+UUID.randomUUID()+randomNumber + ".pdf");
                 System.out.println("sing doc" + file.getAbsolutePath());
                 OutputStream os = new FileOutputStream(file);
                 os.write(signedDocBytes);
@@ -874,8 +868,12 @@ public class WorkflowProcessDigitalSignController {
         sb.append("</body></html>");
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
-            final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-            File replyDraft = new File(TEMP_DIRECTORY, "ReplyDraft.pdf");
+            final String TEMP_DIRECTORY = getFolderTmp("MargeDOC");
+            Random random = new Random();
+            // Generate a random 4-digit number
+            int randomNumber = random.nextInt(9000) + 1000;
+            File replyDraft = new File(TEMP_DIRECTORY, "ReplyDraft_" + UUID.randomUUID() +randomNumber+".pdf");
+
             if (!replyDraft.exists()) {
                 try {
                     replyDraft.createNewFile();
@@ -1003,9 +1001,9 @@ public class WorkflowProcessDigitalSignController {
 
             UUID draftsigndocument = getInwardDocument(context, workflowProcess);
             UUID dispatchModeuuid = getByMasterNameAndValue(context, "Dispatch Mode", "Electronic");
-            UUID confidentialUuid = getByMasterNameAndValue(context, "Eligible for filing", "Yes");
+            UUID confidentialUuid = getByMasterNameAndValue(context, "Eligible for filing", "No");
             UUID documenttypeuuid = getByMasterNameAndValue(context, "Document Type", "Contracts");
-            UUID languageMarathi = getByMasterNameAndValue(context, "Language", "Marathi");
+            UUID languageMarathi = getByMasterNameAndValue(context, "Language", "English");
             String categoruuids = getcategoruuids(context);
             String subject = getSubjectDraft(workflowProcess);
             String designation = "";
@@ -1022,10 +1020,10 @@ public class WorkflowProcessDigitalSignController {
                     .append("  \"Subject\": \"").append(escapeJson(subject)).append("\",\n")
                     .append("  \"workFlowProcessInwardDetailsRest\": {\n")
                     .append("    \"inwardNumber\": \"\",\n")
-                    .append("    \"inwardDate\": \"").append(DateUtils.DateFormateMMDDYYYY(new Date())).append("\",\n")
+                    .append("    \"inwardDate\": \"").append(DateUtils.DateFormateDDMMYYYY(new Date())).append("\",\n")
                     .append("    \"filereferencenumber\": \"\",\n")
-                    .append("    \"receivedDate\": \"").append(DateUtils.DateFormateMMDDYYYY(new Date())).append("\",\n")
-                    .append("    \"latterDate\": \"").append(DateUtils.DateFormateMMDDYYYY(new Date())).append("\",\n")
+                    .append("    \"receivedDate\": \"").append(DateUtils.DateFormateDDMMYYYY(new Date())).append("\",\n")
+                    .append("    \"latterDate\": \"").append(DateUtils.DateFormateDDMMYYYY(new Date())).append("\",\n")
                     .append("    \"vipRest\": \"\",\n")
                     .append("    \"vipnameRest\": \"\",\n")
                     .append("    \"subcategoryRest\": \"\",\n")
@@ -1064,9 +1062,9 @@ public class WorkflowProcessDigitalSignController {
                     .append("      \"email\": \"").append(context.getCurrentUser().getEmail()).append("\",\n")
                     .append("      \"organization\": \"\",\n")
                     .append("      \"address\": \"\",\n")
-                    .append("      \"city\": \"\",\n")
-                    .append("      \"state\": \"\",\n")
-                    .append("      \"country\": \"\",\n")
+                    .append("      \"city\": \"").append("Delhi").append("\",\n")
+                    .append("      \"state\": \"").append("Delhi").append("\",\n")
+                    .append("      \"country\": \"").append("India").append("\",\n")
                     .append("      \"sendername\": \"").append(context.getCurrentUser().getFullName()).append("\",\n")
                     .append("      \"fax\": \"\",\n")
                     .append("      \"landline\": \"\",\n")
@@ -1200,6 +1198,122 @@ public class WorkflowProcessDigitalSignController {
             return outputfile;
 
         }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'WRITE')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getPreviewpdf")
+    public ResponseEntity<byte[]> getPreviewpdf(
+            @Parameter("uuid") String uuid,
+            @Parameter("draftid") String draftid,
+            HttpServletRequest request) {
+
+        System.out.println(":::: uuid ::::"+uuid);
+       System.out.println("draftid:::: " + draftid);
+
+        Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
+
+        try {
+            // ------------------ Step 1: Get Reference Document ------------------
+            WorkflowProcessReferenceDoc refDoc =
+                    workflowProcessReferenceDocService.find(context, UUID.fromString(uuid));
+
+            if (refDoc == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            WorkflowProcess workflowProcess = refDoc.getWorkflowProcess();
+
+            // ------------------ Step 2: Load Active Version ------------------
+            WorkflowProcessReferenceDocVersion version =
+                    refDoc.getWorkflowProcessReferenceDocVersion().stream()
+                            .filter(WorkflowProcessReferenceDocVersion::getIsactive)
+                            .findFirst()
+                            .orElse(null);
+
+            if (version == null || version.getEditortext() == null) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            }
+
+            // ------------------ Step 3: Load Draft Details ------------------
+            WorkFlowProcessMasterValue draft =
+                    workFlowProcessMasterValueService.find(context, UUID.fromString(draftid));
+
+            if (draft == null || draft.getPrimaryvalue() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+            String draftType = draft.getPrimaryvalue();
+            if (draftType == null || draftType.isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+            //String kaviNo = draft.getKavino() != null ? draft.getKavino() : "";
+            //String fileNumber = (fileno != null && !fileno.isEmpty()) ? fileno : "NA";
+
+            // ------------------ Step 4: Map Draft Type to Template ------------------
+            String templateType = "";
+            if (draftType.equalsIgnoreCase("Transfer Letter")) {
+                templateType = "Transfer Letter1";
+            } else if (draftType.equalsIgnoreCase("Fresh Draft")) {
+                templateType = "Fresh Draft1";
+            }
+            System.out.println("type::::" + templateType);
+
+            if (templateType == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+
+            System.out.println("Mapped Template Type ::: " + templateType);
+
+            // ------------------ Step 5: Load HTML Template ------------------
+            String htmlTemplate = pdfOprationServer.getHtmlTamplateByType(templateType);
+
+            // ------------------ Step 6: Prepare Dynamic Values ------------------
+            Map<String, String> placeholderMap =
+                    pdfOprationServer.getMapDataByPreview(templateType, context, version.getEditortext());
+
+            System.out.println("Placeholder Map: " + placeholderMap);
+
+            // ------------------ Step 7: Generate PDF ------------------
+            byte[] pdfBytes = pdfgenratorPrivew(placeholderMap, htmlTemplate);
+
+            if (pdfBytes == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+
+            // ------------------ Step 8: Return PDF Response ------------------
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("inline", "preview.pdf");
+            headers.setContentLength(pdfBytes.length);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+
+        } finally {
+            System.out.println(":::: finally getPreviewpdf ::::");
+            // deleteFolderTmp(TEMP_DIRECTORY);
+        }
+    }
+
+    public byte[] pdfgenratorPrivew(Map<String, String> map, String templateFullpath) throws IOException, SQLException, AuthorizeException, FieldBlankOrNullException {
+        System.out.println("::::pdfgenrator::::");
+        try {
+            PDfObject pDfObject = new PDfObject(new String());
+            String htmlContent = PdfUtils.readHtmlFile(templateFullpath);
+            String replacedHtml = PdfUtils.replacePlaceholders(htmlContent, map);
+            pDfObject.setHtmlContent(replacedHtml);
+            return jbpmServer.htmltopdfPrivew(replacedHtml);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

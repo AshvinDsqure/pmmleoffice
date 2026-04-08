@@ -46,5 +46,5 @@ public interface WorkFlowProcessMasterValueService extends DSpaceObjectService<W
     List<WorkFlowProcessMasterValue> findByType(Context context,String type,Integer offset,Integer limit)throws SQLException;
     WorkFlowProcessMasterValue findByName(Context context, String name, WorkFlowProcessMaster workFlowProcessMaster)throws SQLException;
     public int  countfindByType(Context context,String type)throws SQLException;
-
+    public int  countfindByMasterID(Context context,UUID masterid)throws SQLException;
 }

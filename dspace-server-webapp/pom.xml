@@ -29,7 +29,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <attachClasses>true</attachClasses>
-                    <warName>serverpmmleoffice</warName>
+                    <warName>server</warName>
                     <!-- Filter the web.xml (needed for IDE compatibility/debugging) -->
                     <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
                     <outputDirectory>E:\tomcate\tomcat\apache-tomcat-9.0.72\apache-tomcat-9.0.72\webapps\</outputDirectory>
@@ -242,6 +242,7 @@
                 <artifactId>spring-expression</artifactId>
                 <version>${spring.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -386,6 +387,27 @@
             <version>4.6.1</version>
         </dependency>
 
+
+        <!-- Source: https://mvnrepository.com/artifact/redis.clients/jedis -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.7.0</version>
+            <scope>compile</scope>
+
+            <exclusions>
+                <!-- Later version provided by dspace-api -->
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
+                </exclusion>
+            </exclusions>
+
+        </dependency>
         <!-- Add in Spring Security for AuthN and AuthZ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -430,6 +452,11 @@
                 <exclusion>
                     <groupId>org.apache.poi</groupId>
                     <artifactId>poi-ooxml</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

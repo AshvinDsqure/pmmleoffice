@@ -275,6 +275,8 @@ public class JbpmServerImpl {
            String url = configurationService.getProperty("html.to.pdf");
             System.out.println("URL: " + url);
             // Prepare the request model
+
+            //System.out.println("HTML content to convert: " + htmlcontent);
             HtmltppdfModel jbpmCallbackRequest = new HtmltppdfModel();
             jbpmCallbackRequest.setHtmlContent(htmlcontent);
             //System.out.println("jbpm json: " + new Gson().toJson(jbpmCallbackRequest));
@@ -334,6 +336,48 @@ public class JbpmServerImpl {
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(uuid, headers);
         return restTemplate.exchange(baseurl + JBPM.GETTASKLIST + "/" + uuid, HttpMethod.GET, entity, String.class).getBody();
+    }
+
+    public byte[] htmltopdfPrivew(String htmlcontent) throws RuntimeException ,JBPMServerExpetion{
+        try {
+            // String url = "http://localhost:5000/htmltopdf";
+            String url = configurationService.getProperty("html.to.pdf");
+            System.out.println("URL: " + url);
+            // Prepare the request model
+            HtmltppdfModel jbpmCallbackRequest = new HtmltppdfModel();
+            jbpmCallbackRequest.setHtmlContent(htmlcontent);
+            //System.out.println("jbpm json: " + new Gson().toJson(jbpmCallbackRequest));
+            // Set headers and create the request entity
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            HttpEntity<HtmltppdfModel> entity = new HttpEntity<>(jbpmCallbackRequest, headers);
+            // Make the POST request
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+
+            // Check the response status
+            if (response.getStatusCode() == HttpStatus.OK) {
+                byte[] pdfBytes = response.getBody();
+
+                // Write the PDF bytes to the provided FileOutputStream
+                if (pdfBytes != null) {
+
+                    return pdfBytes;
+                } else {
+                    System.out.println("Error: Response body is null.");
+                    return null;
+                    //       throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
+                }
+            } else {
+                System.out.println("Error: Received response status " + response.getStatusCode());
+                return null;
+                //throw new RuntimeException("Error: Received response status for HTML TO PDF "+response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error during HTML to PDF conversion: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+            //  throw  new RuntimeException("Error: Response body is after HTML TO PDF CONVERT!");
+        }
     }
 }
 

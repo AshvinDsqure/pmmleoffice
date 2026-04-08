@@ -99,6 +99,9 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private Boolean ismode = false;
 
     @JsonProperty
+    private Boolean issameuser = false;
+
+    @JsonProperty
     private Boolean isread = false;
 
     @JsonProperty
@@ -805,5 +808,13 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setIscallback(Boolean iscallback) {
         this.iscallback = iscallback;
+    }
+
+    public Boolean getIssameuser() {
+        return issameuser;
+    }
+
+    public void setIssameuser(Boolean issameuser) {
+        this.issameuser = issameuser;
     }
 }

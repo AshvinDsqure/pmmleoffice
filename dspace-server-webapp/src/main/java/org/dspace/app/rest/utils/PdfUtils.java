@@ -199,7 +199,6 @@ public class PdfUtils {
                 template = template.replace(replacekey, entry.getValue());
                 template = template.replace(displaykey, "");
             }else{
-
                 template = template.replace(displaykey, "display: none;");
                 //System.out.println("=================================="+template +entry.getKey()+".display");
             }

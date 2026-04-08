@@ -23,7 +23,7 @@ public interface WorkFlowProcessMasterValueDAO extends DSpaceObjectLegacySupport
 
     WorkFlowProcessMasterValue findByName(Context context, String name, WorkFlowProcessMaster workFlowProcessMaster)throws SQLException;
     public int  countfindByType(Context context,String type)throws SQLException;
-
+    public int  countfindByMasterID(Context context,UUID masterid)throws SQLException;
     public List<WorkFlowProcessMasterValue> searchByDepartment(Context context,UUID masterid, String search) throws SQLException;
 
 }

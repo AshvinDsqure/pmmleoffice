@@ -9,6 +9,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Locale;
 
 public class DateUtils {
 
@@ -38,7 +39,7 @@ public class DateUtils {
        // deleteFolder("E:\\tomcate\\tomcat\\apache-tomcat-9.0.72\\apache-tomcat-9.0.72\\temp\\UnSign_17Dec2024162705");
 
 
-       // System.out.println("test::"+strDateToString("2023-06-17 16:09:41.481"))
+        System.out.println("test::"+getFinancialYear());
     }
 
     public static Date getyyyyMMdd(String dateString){
@@ -141,20 +142,17 @@ public class DateUtils {
         return initials.toString();
     }
 
-    public static String getFinancialYear (){
+    public static String getFinancialYear() {
         LocalDate today = LocalDate.now();
         int year = today.getYear();
         int month = today.getMonthValue();
-        String financialYear;
-        String financialYears;
-        if (month <= 1) {
-            financialYear = String.format("%d-%d", year - 1, year);
+
+        // Financial year in India starts from April (month 4)
+        if (month < 4) {
+            return (year - 1) + "-" + year;
         } else {
-            financialYear = String.format("%d-%d", year, year + 1);
+            return year + "-" + (year + 1);
         }
-        String s[]=financialYear.split("-");
-        financialYears=s[0].toString().substring(2)+"-"+s[1].toString().substring(2);
-        return  financialYears;
     }
     public static String DateToSTRDDMMYYYHHMMSS(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
@@ -186,16 +184,18 @@ public class DateUtils {
     }
 
     public static String DateSTRToDateFormatedd_mm_yyyy(String inputDate) {
-
         try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+            // Correct input format
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+
             Date date = inputFormat.parse(inputDate);
-            // Format the Date object into the desired format
+
+            // Output format
             SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy");
-            String formattedDate = outputFormat.format(date);
-            System.out.println("Formatted Date: " + formattedDate);
-            return formattedDate;
-        }catch (Exception e){
+
+            return outputFormat.format(date);
+
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }

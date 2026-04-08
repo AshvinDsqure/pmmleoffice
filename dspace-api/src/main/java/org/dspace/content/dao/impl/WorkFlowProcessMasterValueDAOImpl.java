@@ -73,6 +73,21 @@ public class WorkFlowProcessMasterValueDAOImpl  extends AbstractHibernateDAO<Wor
             return 0;
         }
     }
+
+    @Override
+    public int countfindByMasterID(Context context, UUID masterid) throws SQLException {
+        try {
+            Query query = createQuery(context, "SELECT count(mv) from  WorkFlowProcessMasterValue as mv inner join mv.workflowprocessmaster as  mm where mm.id=:masterid");
+            query.setParameter("masterid", masterid);
+            return count(query);
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return 0;
+        }
+    }
+
+
+
     @Override
     public List<WorkFlowProcessMasterValue> searchByDepartment(Context context,UUID masterid, String search) throws SQLException {
         try {

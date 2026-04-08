@@ -22,6 +22,7 @@ import org.dspace.app.rest.model.WorkFlowProcessCommentRest;
 import org.dspace.app.rest.model.WorkFlowProcessHistoryRest;
 import org.dspace.app.rest.model.WorkFlowProcessMasterValueRest;
 import org.dspace.app.rest.model.WorkFlowProcessRest;
+import org.dspace.app.rest.utils.DateUtils;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
 import org.dspace.content.service.*;
@@ -135,8 +136,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         return workFlowProcessCommentRest;
     }
 
-
-    private WorkFlowProcessComment createWorkFlowProcessCommentFromRestObject(Context context, WorkFlowProcessCommentRest workFlowProcessCommentRest) throws AuthorizeException {
+    private WorkFlowProcessComment createWorkFlowProcessCommentFromRestObject(Context context, WorkFlowProcessCommentRest workFlowProcessCommentRest) throws AuthorizeException, FieldBlankOrNullException {
         log.info("::::::start::::createWorkFlowProcessCommentFromRestObject::::::::::");
         WorkFlowProcessComment workFlowProcessComment = null;
         WorkFlowProcessComment workFlowProcessComment1 = null;
@@ -145,7 +145,6 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
             if (workFlowProcessCommentRest.getId() != null) {
                 System.out.println("update::");
                 workFlowProcessComment = workFlowProcessCommentConverter.convertByService(context, workFlowProcessCommentRest);
-
                 Optional<WorkflowProcessReferenceDoc> workflowProcessReferenceDoc = workFlowProcessComment.getWorkflowProcessReferenceDoc().stream().filter(d -> d.getDrafttype() != null)
                         .filter(d -> d.getDrafttype().getPrimaryvalue() != null)
                         .filter(d -> d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
@@ -157,11 +156,12 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 workFlowProcessComment = workFlowProcessCommentConverter.convertupdate(context, workFlowProcessComment, workFlowProcessCommentRest);
                 workFlowProcessComment1 = workFlowProcessComment;
             } else {
-                System.out.println("create:::");
+                //System.out.println("create:::");
                 workFlowProcessComment = workFlowProcessCommentConverter.convert(context, workFlowProcessCommentRest);
                 workFlowProcessComment.setIsdraftsave(true);
                 workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
             }
+
             if (workFlowProcessCommentRest.getWorkflowProcessRest() != null && workFlowProcessCommentRest.getWorkflowProcessRest().getId() != null) {
                 WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
                 workFlowProcessComment1.setWorkFlowProcess(workflowProcess);
@@ -178,7 +178,6 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                         throw new RuntimeException(e);
                     }
                 }).collect(Collectors.toList());
-
                 List<Bitstream> bitstreams = workflowProcessReferenceDocs.stream().filter(d -> d.getDrafttype() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")).filter(d -> d.getBitstream() != null)
                         .map(d -> d.getBitstream()).collect(Collectors.toList());
 
@@ -199,30 +198,128 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                     }
                 }
                 workFlowProcessComment1 = finalWorkFlowProcessComment;
-
                 WorkflowProcessReferenceDoc notedoc = createFinalNoteComment(context, workFlowProcessComment1, tempFile1html, bitstreams, workFlowProcessCommentRest, workflowProcessReferenceDoc1);
+
+                if (notedoc == null) {
+                    throw new UnprocessableEntityException("Note document creation failed.");
+                }
                 workFlowProcessCommentRest.setMargeddocuuid(notedoc.getID().toString());
                 workFlowProcessComment1.setMargeddocuuid(notedoc.getID().toString());
                 notedoc.setWorkflowprocesscomment(workFlowProcessComment1);
                 workflowProcessReferenceDocs.add(notedoc);
                 if (workflowProcessReferenceDocs != null && workflowProcessReferenceDocs.size() != 0) {
-                    System.out.println("doc added to note:::");
                     workFlowProcessComment1.setWorkflowProcessReferenceDoc(workflowProcessReferenceDocs);
                 }
                 workFlowProcessCommentService.update(context, workFlowProcessComment1);
             }
-        }catch (UnprocessableEntityException e){
+        } catch (UnprocessableEntityException e) {
+            log.info("::::::error::::createWorkFlowProcessCommentFromRestObject::::::::::");
+            e.printStackTrace();
+            workFlowProcessComment = null;
             throw new UnprocessableEntityException(e.getMessage(), e);
-
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             log.info("::::::error::::createWorkFlowProcessCommentFromRestObject::::::::::");
+            workFlowProcessComment = null;
             throw new RuntimeException(e.getMessage(), e);
-
         }
+
         log.info("::::::complate::::createWorkFlowProcessCommentFromRestObject::::::::::");
         return workFlowProcessComment;
     }
+//    private WorkFlowProcessComment createWorkFlowProcessCommentFromRestObject(Context context, WorkFlowProcessCommentRest workFlowProcessCommentRest) throws AuthorizeException {
+//        log.info("::::::start::::createWorkFlowProcessCommentFromRestObject::::::::::");
+//        WorkFlowProcessComment workFlowProcessComment = null;
+//        WorkFlowProcessComment workFlowProcessComment1 = null;
+//        WorkflowProcessReferenceDoc workflowProcessReferenceDoc1 = null;
+//        try {
+//            if (workFlowProcessCommentRest.getId() != null) {
+//                System.out.println("update::");
+//                workFlowProcessComment = workFlowProcessCommentConverter.convertByService(context, workFlowProcessCommentRest);
+//
+//                Optional<WorkflowProcessReferenceDoc> workflowProcessReferenceDoc = workFlowProcessComment.getWorkflowProcessReferenceDoc().stream().filter(d -> d.getDrafttype() != null)
+//                        .filter(d -> d.getDrafttype().getPrimaryvalue() != null)
+//                        .filter(d -> d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+//                        .findFirst();
+//                if (workflowProcessReferenceDoc.isPresent()) {
+//                    System.out.println("IN UPDATE COMMENT DOC!:::>>>>>>>>>>>>>>:old present");
+//                    workflowProcessReferenceDoc1 = workflowProcessReferenceDocService.find(context, workflowProcessReferenceDoc.get().getID());
+//                }
+//                workFlowProcessComment = workFlowProcessCommentConverter.convertupdate(context, workFlowProcessComment, workFlowProcessCommentRest);
+//                workFlowProcessComment1 = workFlowProcessComment;
+//            } else {
+//                System.out.println("create:::");
+//                workFlowProcessComment = workFlowProcessCommentConverter.convert(context, workFlowProcessCommentRest);
+//                workFlowProcessComment.setIsdraftsave(true);
+//                workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
+//            }
+//            if (workFlowProcessCommentRest.getWorkflowProcessRest() != null && workFlowProcessCommentRest.getWorkflowProcessRest().getId() != null) {
+//                WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
+//                workFlowProcessComment1.setWorkFlowProcess(workflowProcess);
+//            }
+//            if (workFlowProcessCommentRest.getWorkflowProcessReferenceDocRest() != null) {
+//                WorkFlowProcessComment finalWorkFlowProcessComment = workFlowProcessComment1;
+//                List<WorkflowProcessReferenceDoc> workflowProcessReferenceDocs = workFlowProcessCommentRest.getWorkflowProcessReferenceDocRest().stream().filter(d -> d.getUuid() != null).filter(d -> d != null).map(d -> {
+//                    try {
+//                        WorkflowProcessReferenceDoc workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convertByService(context, d);
+//                        workflowProcessReferenceDoc.setWorkflowprocesscomment(finalWorkFlowProcessComment);
+//                        return workflowProcessReferenceDoc;
+//                    } catch (SQLException e) {
+//                        e.printStackTrace();
+//                        throw new RuntimeException(e);
+//                    }
+//                }).collect(Collectors.toList());
+//
+//                List<Bitstream> bitstreams = workflowProcessReferenceDocs.stream().filter(d -> d.getDrafttype() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")).filter(d -> d.getBitstream() != null)
+//                        .map(d -> d.getBitstream()).collect(Collectors.toList());
+//
+//                final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+//                long notecount = 0;
+//                if (workFlowProcessCommentRest.getItemRest() != null) {
+//                    UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+//                    notecount = workflowProcessNoteService.getNoteCountNumber(context, UUID.fromString(workFlowProcessCommentRest.getItemRest().getUuid()), statusid);
+//                }
+//                notecount = notecount + 1;
+//                File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//                if (!tempFile1html.exists()) {
+//                    try {
+//                        tempFile1html.createNewFile();
+//                    } catch (IOException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//                }
+//                workFlowProcessComment1 = finalWorkFlowProcessComment;
+//
+//                WorkflowProcessReferenceDoc notedoc = createFinalNoteComment(context, workFlowProcessComment1, tempFile1html, bitstreams, workFlowProcessCommentRest, workflowProcessReferenceDoc1);
+//                if(notedoc==null){
+//                    throw new UnprocessableEntityException("Note document creation failed.");
+//                }
+//                if(notedoc==null){
+//                    return null;
+//                }
+//                workFlowProcessCommentRest.setMargeddocuuid(notedoc.getID().toString());
+//                workFlowProcessComment1.setMargeddocuuid(notedoc.getID().toString());
+//                notedoc.setWorkflowprocesscomment(workFlowProcessComment1);
+//                workflowProcessReferenceDocs.add(notedoc);
+//                if (workflowProcessReferenceDocs != null && workflowProcessReferenceDocs.size() != 0) {
+//                    System.out.println("doc added to note:::");
+//                    workFlowProcessComment1.setWorkflowProcessReferenceDoc(workflowProcessReferenceDocs);
+//                }
+//                workFlowProcessCommentService.update(context, workFlowProcessComment1);
+//            }
+//        }catch (UnprocessableEntityException e){
+//            throw new UnprocessableEntityException(e.getMessage(), e);
+//
+//        }catch (Exception e) {
+//            e.printStackTrace();
+//            log.info("::::::error::::createWorkFlowProcessCommentFromRestObject::::::::::");
+//            throw new RuntimeException(e.getMessage(), e);
+//
+//        }
+//        log.info("::::::complate::::createWorkFlowProcessCommentFromRestObject::::::::::");
+//        return workFlowProcessComment;
+//    }
 
     @Override
     protected WorkFlowProcessCommentRest put(Context context, HttpServletRequest request, String apiCategory, String model, UUID id,
@@ -361,7 +458,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 "            left: 0;\n" +
                 "            right: 0;\n" +
                 "            padding: 0px;\n" +
-                "            /* background: #fff; Match body background color */\n" +
+                "            /* background: #c5e6c1; Match body background color */\n" +
                 "        }   body {\n" +
                 "      font-family: Georgia, serif;\n" +
                 "      line-height: 1.8;\n" +
@@ -378,8 +475,9 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 "    }\n" +
                 "\n" +
                 "    body {\n" +
-                "      background-color:#fff;font-family: Georgia, serif;\n" +
-                "      line-height: 1.8;\n" +
+                "      background-color:#c5e6c1;" +
+                "font-family: Georgia, serif;\n" +
+                "      line-height: 1.8;padding: 20px;min-height: 100%;\n" +
                 "      margin: 0;\n" +
                 "\t  text-align: justify; word-break: break-word;\n" +
                 "    }\n" +
@@ -405,18 +503,30 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 "    width: 128px;\n" +
                 "    margin-bottom: -75px;" +
                 "}" +
+                "@page { size: A4; margin: 0; }" +
+                "html { background-color: #c5e6c1; }" +
                 "  </style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body >");
         // System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
         //Items
 
-        if (notenumbe == 1 && workFlowProcessCommentRest.getSubject() != null) {
-            sb.append("<p> <b>Subject : " + workFlowProcessCommentRest.getSubject() + "</b></p>");
+        Item items = null;
+        if (workFlowProcessCommentRest.getItemRest() != null) {
+            items = itemConverter.convert(workFlowProcessCommentRest.getItemRest(), context);
         }
+        if (items != null && items.getName() != null) {
+            sb.append("<div style=\"float: right; width:65%\">");
+            sb.append("<span><b>FileNo : </b> " + items.getName() + "</span><br>");
+            sb.append("<span><b>Date : </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
+            sb.append("</div>");
+        }
+
+        sb.append("<br/><br/><br/><p><b>Subject : </b>" + workFlowProcessCommentRest.getSubject() + "</p>");
         if (workFlowProcessCommentRest.getSapdocumentno() != null && workFlowProcessCommentRest.getSapdocumenttypeRest() != null) {
             WorkFlowProcessMasterValue saptype = workFlowProcessMasterValueService.find(context, UUID.fromString(workFlowProcessCommentRest.getSapdocumenttypeRest().getUuid()));
             sb.append("<p> <b>SAP Document Type :  " + saptype.getPrimaryvalue() + "</b></p>");
             sb.append("<p> <b>SAP Document Number : " + workFlowProcessCommentRest.getSapdocumentno() + "</b></p>");
         }
+
         isTextEditorFlow = true;
         sb.append("<div style=\"text-align: justify; word-break: break-word;width:100% ;text-align: left; float:left;\">");
         //coment count
@@ -444,7 +554,22 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         if (!workFlowProcessCommentRest.getIsdosign()) {
             //this is normal
             String icon = configurationService.getProperty("digital.sign.icon");
-            String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+
+            // String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+
+            String base64Image = "";
+            try {
+                File file = new File(icon);
+                if (file.exists() && file.isFile()) {
+                    base64Image = java.util.Base64.getEncoder()
+                            .encodeToString(Files.readAllBytes(file.toPath()));
+                } else {
+                    System.out.println("Signature file not found: " + icon);
+                }
+            } catch (Exception e) {
+                System.out.println("Error loading signature: " + e.getMessage());
+            }
+
             sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
             sb.append("<B>");
             if (comment.getSubmitter() != null) {
@@ -466,25 +591,22 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 "</br>\n" +
                 "</br>\n" +
                 "</br>\n" +
-                "<p style=\"float:left;\">--------------------- This Note ends here. / ही नोंद इथे संपते. -------------------------- </p>\n</div>");
+                "</br>\n" +
+                "<p style=\"float:left;\">--------------------- This Note ends here. -------------------------- </p>\n</div>");
 
         sb.append("<div class=footer>");
-        Item i = null;
-
-        if (workFlowProcessCommentRest.getItemRest() != null) {
-            i = itemConverter.convert(workFlowProcessCommentRest.getItemRest(), context);
-            sb.append("[" + i.getName() + "], [" + workFlowProcessCommentRest.getSubject() + "], [Note #" + 1 + "]");
-
+        if (items != null) {
+            sb.append("[" + items.getName() + "], [" + workFlowProcessCommentRest.getSubject() + "], [Note #" +notenumbe+ "]");
         }
         sb.append("</div>");
         sb.append("  </body></html>");
         if (isTextEditorFlow) {
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-            //System.out.println("HTML:::" + sb.toString());
+            System.out.println("HTML:::" + sb.toString());
             int ii = jbpmServer.htmltopdf(sb.toString(), files);
             if (ii == 0) {
-                throw new FieldBlankOrNullException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
+                throw new UnprocessableEntityException("PDF conversion failed. This might be due to unsupported content or a system error. Please check your input and try again.");
             }
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
@@ -496,6 +618,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 try {
                     bitstreamService.delete(context, margedoc.getBitstream());
                     System.out.println("bitstreamService>>>>>>>>>>>>:old deleted");
+
                 } catch (Exception e) {
                     System.out.println("bitstreamService>>>>>>>>>>>>:old not deleted" + e.getMessage());
                 }
@@ -510,8 +633,8 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 margedoc.setSubject(workFlowProcessCommentRest.getSubject());
             }
             margedoc.setInitdate(new Date());
-            if (i != null && i.getName() != null) {
-                margedoc.setItemname(i.getName());
+            if (items != null && items.getName() != null) {
+                margedoc.setItemname(items.getName());
             }
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
             if (workFlowProcessMaster != null) {
@@ -547,6 +670,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         }
         return null;
     }
+
 
     private static String DateFormate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");

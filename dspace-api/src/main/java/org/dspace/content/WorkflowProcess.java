@@ -88,6 +88,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "issignnote")
     private  Boolean issignnote=false;
 
+    @Column(name = "issameuser")
+    private Boolean issameuser = false;
+
     @Column(name = "version")
     private  Integer version;
 

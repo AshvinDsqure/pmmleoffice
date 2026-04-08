@@ -8,11 +8,20 @@
 package org.dspace.app.rest.security;
 
 import java.io.IOException;
+import javax.mail.MessagingException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.dspace.app.rest.authn.OTPService;
+import org.dspace.app.rest.utils.ContextUtil;
+import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
+import org.dspace.eperson.service.EPersonService;
+import org.dspace.services.RequestService;
+import org.dspace.utils.DSpace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,10 +41,16 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  */
 public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter {
     private static final Logger log = LoggerFactory.getLogger(StatelessLoginFilter.class);
+    protected RequestService requestService = new DSpace().getRequestService();
 
+   // protected  AnalyticsServerImpl analyticsServerImp;
     protected AuthenticationManager authenticationManager;
 
     protected RestAuthenticationService restAuthenticationService;
+    private EPersonService epersonService;
+    private OTPService otpService;
+
+    private ObjectMapper objectMapper;
 
     @Override
     public void afterPropertiesSet() {
@@ -46,6 +61,19 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
         super(new AntPathRequestMatcher(url));
         this.authenticationManager = authenticationManager;
         this.restAuthenticationService = restAuthenticationService;
+    }
+
+    // ✅ ADD SETTERS
+    public void setOtpService(OTPService otpService) {
+        this.otpService = otpService;
+    }
+
+    public void setEpersonService(EPersonService epersonService) {
+        this.epersonService = epersonService;
+    }
+
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -67,6 +95,8 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
 
         String user = req.getParameter("user");
         String password = req.getParameter("password");
+
+
 
         // Attempt to authenticate by passing user & password (if provided) to AuthenticationProvider class(es)
         // NOTE: This method will check if the user was already authenticated by StatelessAuthenticationFilter,
@@ -96,10 +126,71 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
                                             FilterChain chain,
                                             Authentication auth) throws IOException, ServletException {
 
+
         DSpaceAuthentication dSpaceAuthentication = (DSpaceAuthentication) auth;
-        log.debug("Authentication successful for EPerson {}", dSpaceAuthentication.getName());
-        restAuthenticationService.addAuthenticationDataForUser(req, res, dSpaceAuthentication, false);
+        Context context=ContextUtil.obtainContext(req);
+        EPerson eperson;
+        String username = auth.getName();
+        try {
+            // 2️⃣ Create DSpace context to fetch EPerson
+            context = new Context();
+            eperson = epersonService.findByEmail(context, username);
+
+            if (eperson == null) {
+                res.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                        "User not found");
+                return;
+            }
+
+        } catch (Exception e) {
+            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "User lookup failed");
+            return;
+
+        } finally {
+            // 3️⃣ ALWAYS close context to avoid DB leaks
+            if (context != null && context.isValid()) {
+                context.abort();
+            }
+        }
+        // 4️⃣ Generate and send OTP (DO NOT log user in)
+        String otpSessionId = null;
+        try {
+            otpSessionId = otpService.createOtpSession(eperson,context);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+
+        // 5️⃣ Send OTP-required response
+        res.setStatus(HttpServletResponse.SC_OK);
+        res.setContentType("application/json;charset=UTF-8");
+
+        res.getWriter().write(
+                "{\"status\":\"OTP_REQUIRED\",\"otpSessionId\":\"" + otpSessionId + "\"}"
+        );
+        res.getWriter().flush();
+        // 6️⃣ CRITICAL: stop filter chain (no JWT, no session)
+//        try{
+//            trackDspaceEvent(context, Event.LOGIN,"Login",req);
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+        return;
     }
+//    public void trackDspaceEvent(Context context, int action, String title,HttpServletRequest req) {
+//        try {
+//            DspaceEventInfo dspaceEventInfo = analyticsServerImp.getDspaceEventInfo(action, null, Constants.LOGIN);
+//            if (context.getCurrentUser() != null) {
+//                dspaceEventInfo.setUserid(context.getCurrentUser().getID());
+//            }
+//            dspaceEventInfo.setTitle(title);
+//            dspaceEventInfo.setIp(req.getRemoteAddr());
+//            analyticsServerImp.storeEvent(dspaceEventInfo);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new ResourceNotFoundException("server unavailable");
+//        }
+//    }
 
     /**
      * If the above attemptAuthentication() call was unsuccessful, then ensure that the response is a 401 Unauthorized
@@ -117,11 +208,17 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
             throws IOException, ServletException {
 
         String authenticateHeaderValue = restAuthenticationService.getWwwAuthenticateHeaderValue(request, response);
-
         response.setHeader("WWW-Authenticate", authenticateHeaderValue);
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed!");
         log.error("Authentication failed (status:{})",
-                  HttpServletResponse.SC_UNAUTHORIZED, failed);
+                HttpServletResponse.SC_UNAUTHORIZED, failed);
     }
 
+//    public AnalyticsServerImpl getAnalyticsServerImp() {
+//        return analyticsServerImp;
+//    }
+//
+//    public void setAnalyticsServerImp(AnalyticsServerImpl analyticsServerImp) {
+//        this.analyticsServerImp = analyticsServerImp;
+//    }
 }

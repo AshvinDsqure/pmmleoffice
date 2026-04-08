@@ -68,6 +68,10 @@ public class PdfOprationServerImpl {
             htmlformatepath = configurationService.getProperty("transfer.latter");
         }else if(type.equalsIgnoreCase("Fresh Draft")){
             htmlformatepath = configurationService.getProperty("fresh.draft");
+        }else if(type.equalsIgnoreCase("Transfer Letter1")){
+            htmlformatepath = configurationService.getProperty("transfer.latter.preview");
+        }else if(type.equalsIgnoreCase("Fresh Draft1")){
+            htmlformatepath = configurationService.getProperty("fresh.draft.preview");
         }else if(type.equalsIgnoreCase("3")){
             System.out.println("with.connected.short.title");
             htmlformatepath = configurationService.getProperty("with.connected.short.title");
@@ -95,26 +99,28 @@ public class PdfOprationServerImpl {
         }
         return null;
     }
+    public  Map<String,String> getMapDataByPreview(String type,Context context, String editortext){
+        if(type.equalsIgnoreCase("Transfer Letter1")){
+            return getMapTransferLatterPreview(context,editortext);
+        }else if(type.equalsIgnoreCase("Fresh Draft1")){
+            return getMapFreshDraftPreview(context,editortext);
+        }else {
+            return null;
+        }
+    }
+
 
 
 
     public Map<String,String> getMapTransferLatter(Context context, String editortext, WorkflowProcess workflowProcess) throws RuntimeException {
         try {
-            String create_department1=null;
-            Optional<EpersonToEpersonMapping> maps= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
-            if (maps.isPresent()) {
-                create_department1=  maps.get().getEpersonmapping().getDepartment().getSecondaryvalue();
-            }
             String to_department = getToUserList(workflowProcess);
             String cc_department = getccUserList(workflowProcess);
             to_department=to_department!=null?to_department:"NA";
             cc_department=cc_department!=null?cc_department:"NA";
-            //create_department1=create_department1!=null?create_department1:"NA";
             Map<String, String> map = new HashMap<>();
-            //String d="पिंपरी चिंचवड महानगरपालिका<br>पिंपरी १८,"+create_department1;
-           // map.put("create.department", d);
-            map.put("to.department","प्रती -"+to_department);
-            map.put("cc.department","प्रत -"+cc_department);
+            map.put("to.department",""+to_department);
+            map.put("cc.department",""+cc_department);
             map.put("editor.text",editortext);
             return map;
         }catch (Exception e){
@@ -122,7 +128,36 @@ public class PdfOprationServerImpl {
             return null;
         }
     }
+
+    public Map<String,String> getMapTransferLatterPreview(Context context, String editortext) throws RuntimeException {
+        try {
+            Map<String, String> map = new HashMap<>();
+            map.put("editor.text",editortext);
+            return map;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public Map<String,String> getMapFreshDraft(Context context, String editortext, WorkflowProcess workflowProcess) throws RuntimeException {
+        try {
+            Map<String, String> map = new HashMap<>();
+            //String title="पिंपरी चिंचवड महानगरपालिका<br>पिंपरी,";
+            String logopath = configurationService.getProperty("pcmc.acknowledgement.logo");
+            String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(logopath)));
+            if(base64Image!=null) {
+                map.put("logo", base64Image);
+            }
+            //map.put("title", title);
+            map.put("editor.text",editortext);
+            return map;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public Map<String,String> getMapFreshDraftPreview(Context context, String editortext) throws RuntimeException {
         try {
             Map<String, String> map = new HashMap<>();
             String title="पिंपरी चिंचवड महानगरपालिका<br>पिंपरी,";

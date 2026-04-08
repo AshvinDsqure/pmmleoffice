@@ -73,7 +73,7 @@ public enum WorkFlowType {
                 if (draftDetails != null) {
                     if (workflowProcess.getWorkFlowProcessInwardDetails() != null) {
                         draftDetails.setReferencetapalnumber(workflowProcess.getWorkFlowProcessInwardDetails());
-                        if (workFlowProcessRest.getWorkFlowProcessDraftDetailsRest() != null) {
+                        if (workFlowProcessRest.getWorkflowProcessSenderDiaryRests() != null) {
                             System.out.println("size:::::::::" + workFlowProcessRest.getWorkflowProcessSenderDiaryRests().size());
                             List<WorkflowProcessSenderDiary> workflowProcessSenderDiaries = workFlowProcessRest.getWorkflowProcessSenderDiaryRests().stream().map(d -> {
                                 try {

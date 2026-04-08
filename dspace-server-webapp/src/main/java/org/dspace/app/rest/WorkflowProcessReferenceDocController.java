@@ -26,6 +26,7 @@ import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.ApprovedReplyDTO;
 import org.dspace.app.rest.model.DigitalSignRequet;
 import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
+import org.dspace.app.rest.model.WorkflowProcessReferenceDocVersionRest;
 import org.dspace.app.rest.repository.AbstractDSpaceRestRepository;
 import org.dspace.app.rest.repository.BundleRestRepository;
 import org.dspace.app.rest.utils.*;
@@ -1299,6 +1300,29 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
             return outputfile;
         }
         return null;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/updateDraftHTML")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    public Map<String,String> updateDraftHTML(@RequestBody WorkflowProcessReferenceDocVersionRest rest, HttpServletRequest request) {
+
+        Context context = ContextUtil.obtainContext(request);
+        Map<String,String> response=new HashMap<>();
+        context.turnOffAuthorisationSystem();
+        try {
+            WorkflowProcessReferenceDocVersion workflowProcessReferenceDocVersion=  workflowProcessReferenceDocVersionService.find(context, UUID.fromString(rest.getUuid()));
+            if(workflowProcessReferenceDocVersion!=null) {
+                workflowProcessReferenceDocVersion.setEditortext(rest.getEditortext());
+                workflowProcessReferenceDocVersionService.update(context, workflowProcessReferenceDocVersion);
+                response.put("status", "Success");
+                response.put("message", "Draft updated successfully");
+                context.commit();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("status", "Failed "+e.getMessage());
+        }
+        return response;
     }
 
 

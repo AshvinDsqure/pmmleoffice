@@ -271,6 +271,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         //aaaa
         System.out.println("object::::::" + obj.getIsinternal());
         WorkflowProcess workflowProcess = new WorkflowProcess();
+
         if (obj.getWorkflowProcessSenderDiaryRest() != null) {
             workflowProcess.setWorkflowProcessSenderDiary(workflowProcessSenderDiaryConverter.convert(context, obj.getWorkflowProcessSenderDiaryRest()));
         }
@@ -368,6 +369,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getIspredefineuser() != null) {
             workflowProcess.setIspredefineuser(obj.getIspredefineuser());
 
+        }
+        if (obj.getIssameuser() != null) {
+            workflowProcess.setIssameuser(obj.getIssameuser());
         }
         workflowProcess.setIsinternal(obj.getIsinternal());
         workflowProcess.setIssignatorysame(obj.getIssignatorysame());
@@ -497,7 +501,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
             }
         }
 
-
+        if (obj.getIssameuser() != null) {
+            workflowProcess.setIssameuser(obj.getIssameuser());
+        }
         workflowProcess.setIsinternal(obj.getIsinternal());
         workflowProcess.setIssignatorysame(obj.getIssignatorysame());
         return workflowProcess;
@@ -657,6 +663,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         rest.setIssignnote(obj.getIssignnote());
         rest.setIsinternal(obj.getIsinternal());
         rest.setIssignatorysame(obj.getIssignatorysame());
+        if (obj.getIssameuser() != null) {
+            rest.setIssameuser(obj.getIssameuser());
+        }
 
         // --- History ---
         obj.getWorkFlowProcessHistory().stream()
@@ -750,6 +759,7 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
 
         int totalUsers = Math.max(epeople.size() - 1, 0);
         AtomicInteger currentOwnerIndex = new AtomicInteger(-1);
+        AtomicInteger currentSenderIndex = new AtomicInteger(-1);
 
         // --- Basic Master Conversions ---
         // --- WorkflowType, Status, Priority ---
@@ -772,14 +782,20 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         rest.setIssignnote(obj.getIssignnote());
         rest.setIsinternal(obj.getIsinternal());
         rest.setIssignatorysame(obj.getIssignatorysame());
-
+        if(obj.getIssameuser()!=null) {
+            rest.setIssameuser(obj.getIssameuser());
+        }
         // --- History ---
         obj.getWorkFlowProcessHistory().stream()
                 .findFirst()
                 .map(WorkFlowProcessHistory::getActionDate)
                 .ifPresent(rest::setDateRecived);
 
+
+
         // --- Owner ---
+//StringBuffer currentRecipientsBuffer=new StringBuffer();
+
         owners.stream().findFirst().ifPresent(owner -> {
             currentOwnerIndex.set(owner.getIndex());
             rest.setDueDate(owner.getAssignDate());
@@ -796,18 +812,21 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(","));
-            rest.setCurrentrecipient(currentRecipients);
+           rest.setCurrentrecipient(currentRecipients);
+            // currentRecipientsBuffer.append(currentRecipients);
         });
+
+
+
 
         // --- Sender ---
         senders.stream().findFirst().ifPresent(sender -> {
-            int currentSenderIndex = sender.getIndex();
-
             // Check callback logic
-            if ((currentOwnerIndex.get() > currentSenderIndex && epeople.stream().anyMatch(w -> w.getOwner() && w.getIndex() == currentSenderIndex + 1))
-                    || (currentSenderIndex == 0 && totalUsers == currentOwnerIndex.get())
-                    || (currentOwnerIndex.get() == 0 && currentSenderIndex > 0)) {
+            if (sender.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                currentSenderIndex.set(sender.getIndex());
                 rest.setIscallback(true);
+            }else {
+                rest.setIscallback(false);
             }
 
             // rest.setSender(workFlowProcessEpersonConverter.convert(sender, projection));
@@ -817,7 +836,23 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(","));
             rest.setSendername(senderNames);
+
         });
+
+        //last sent to user name
+//        StringBuffer currentSenderName=new StringBuffer();
+//        System.out.println("currentSenderIndex::::"+currentSenderIndex.get());
+//        Integer secontdlastsenttouserindex=currentSenderIndex.get()+1;
+//
+//        epeople.stream()
+//                .filter(s -> s.getIndex() == secontdlastsenttouserindex)
+//                .map(WorkflowProcessEperson::getePerson).findFirst()
+//                .filter(Objects::nonNull)
+//                .map(EPerson::getFullName).map(name -> currentSenderName.append(name));
+//        currentSenderName.append(currentSenderName.toString()+"/"+currentRecipientsBuffer.toString());
+//
+//        rest.setCurrentrecipient(currentSenderName.toString());
+
 
 //        // --- Inward / Outward / Draft Details ---
 //        Optional.ofNullable(obj.getWorkFlowProcessInwardDetails())
