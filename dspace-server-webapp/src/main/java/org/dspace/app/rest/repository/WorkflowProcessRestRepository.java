@@ -117,7 +117,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         context.turnOffAuthorisationSystem();
         try {
-            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
             UUID statusdraftid = null;
             if (workFlowProcessMaster != null) {
@@ -395,7 +395,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
-            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID epersonToEpersonMappingid = null;
             Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
             if (map.isPresent()) {
@@ -457,7 +457,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
-            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusidclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             UUID epersonToEpersonMappingid = null;
@@ -521,7 +521,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
-            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusidclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
 
@@ -585,7 +585,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
 
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
@@ -646,7 +646,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusdspachclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
@@ -700,7 +700,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
             UUID statusdraft = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
-            UUID statusclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             int count = workflowProcessService.countacknowledgementTapal(context, context.getCurrentUser().getID(), statusdraft, statusclose, workflowtypeid);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.acknowledgementTapal(context, context.getCurrentUser().getID(), statusdraft, statusclose, workflowtypeid, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
@@ -1345,7 +1345,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         try {
             Context context = obtainContext();
             context.turnOffAuthorisationSystem();
-            UUID statuscloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statuscloseid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
             UUID statusdraftid = null;
             if (workFlowProcessMaster != null) {

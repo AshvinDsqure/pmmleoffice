@@ -101,6 +101,10 @@ public class EmasController{
         Context context = null;
         try {
             context = ContextUtil.obtainContext(request);
+
+            if(rest.getCommonname()==null){
+                return EmasResponse.buildBadRequestResponse("Commonname must not be null or empty.");
+            }
             if (rest.getKey() != null && !rest.getKey().isEmpty()&&rest.getEpersonid() != null && !rest.getEpersonid().isEmpty()) {
                 if(emasService.getEmasByEpersonANDKey(context,UUID.fromString(rest.getEpersonid()), rest.getKey())){
                     return EmasResponse.buildBadRequestResponse( "This Key & User already registered.");
@@ -114,6 +118,7 @@ public class EmasController{
                 }
                 Emas entity = new Emas();
                 entity.setKey(rest.getKey());
+                entity.setCommonname(rest.getCommonname());
                 entity.setEperson(context.getCurrentUser());
                 Emas savedEmas = emasService.create(context, entity);
                 EmasDTO responseDto = new EmasDTO();
@@ -168,7 +173,7 @@ public class EmasController{
             context = ContextUtil.obtainContext(request);
             Map<String, Object> response = new HashMap<>();
             if (checkDto.getKey() == null || checkDto.getKey().isEmpty()) {
-                return EmasResponse.buildBadRequestResponse("Key and EpersonId must not be null or empty.");
+                return EmasResponse.buildBadRequestResponse("Key  must not be null or empty.");
             }
             Boolean isexistEmasByEpersonANDKey = emasService.getEmasByKey(context,  checkDto.getKey());
             if(isexistEmasByEpersonANDKey){

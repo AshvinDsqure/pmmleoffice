@@ -157,6 +157,11 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 workFlowProcessComment1 = workFlowProcessComment;
             } else {
                 //System.out.println("create:::");
+                UUID epersonToEpersonMappingid = null;
+                Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+                if (map.isPresent()) {
+                    workFlowProcessCommentRest.setDesignation(map.get().getEpersonmapping().getDesignation().getPrimaryvalue());
+                }
                 workFlowProcessComment = workFlowProcessCommentConverter.convert(context, workFlowProcessCommentRest);
                 workFlowProcessComment.setIsdraftsave(true);
                 workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
@@ -184,7 +189,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
                 long notecount = 0;
                 if (workFlowProcessCommentRest.getItemRest() != null) {
-                    UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
                     notecount = workflowProcessNoteService.getNoteCountNumber(context, UUID.fromString(workFlowProcessCommentRest.getItemRest().getUuid()), statusid);
                 }
                 notecount = notecount + 1;
@@ -276,7 +281,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
 //                final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 //                long notecount = 0;
 //                if (workFlowProcessCommentRest.getItemRest() != null) {
-//                    UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+//                    UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
 //                    notecount = workflowProcessNoteService.getNoteCountNumber(context, UUID.fromString(workFlowProcessCommentRest.getItemRest().getUuid()), statusid);
 //                }
 //                notecount = notecount + 1;
@@ -570,18 +575,28 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 System.out.println("Error loading signature: " + e.getMessage());
             }
 
-            sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+            //sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+            sb.append("<div class=\"sign\">");
             sb.append("<B>");
-            if (comment.getSubmitter() != null) {
-                if (comment.getSubmitter().getFullName() != null) {
-                    sb.append("<br>Digital Sign By:" + comment.getSubmitter().getFullName());
+            if(comment.getIsdosign()&&comment.getCommonname()!=null){
+                sb.append("<br>Signed By : " + comment.getCommonname());
+
+            }else {
+                if (comment.getSubmitter() != null) {
+                    if (comment.getSubmitter().getFullName() != null) {
+                        sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
+                    }
                 }
             }
-            if (comment.getActionDate() != null) {
-                sb.append("<br>Date :" + DateFormate(comment.getActionDate()));
+            if (comment.getDesignation()!= null) {
+                sb.append("<br>Designation : " + comment.getDesignation());
             }
-            sb.append("<br>Reason :Digital Copy.");
-            sb.append("<br>Location :Location.");
+            if (comment.getActionDate() != null) {
+                sb.append("<br>Date : " + DateFormate(comment.getActionDate()));
+            }
+
+//            sb.append("<br>Reason :Digital Copy.");
+//            sb.append("<br>Location :Location.");
             sb.append("</B>");
             //end  normal sign
             sb.append("</div>");

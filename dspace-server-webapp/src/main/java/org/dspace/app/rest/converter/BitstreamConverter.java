@@ -56,6 +56,7 @@ public class BitstreamConverter extends DSpaceObjectConverter<Bitstream, Bitstre
         b.setCheckSum(checksum);
         b.setSizeBytes(obj.getSizeBytes());
         b.setName(FileUtils.getNameWithoutExtension(obj.getName()));
+        b.setCandelete(obj.getCandelete());
         return b;
     }
     public BitstreamRest convert1(org.dspace.content.Bitstream obj, Projection projection) {
@@ -77,6 +78,7 @@ public class BitstreamConverter extends DSpaceObjectConverter<Bitstream, Bitstre
         b.setCheckSum(checksum);
         b.setSizeBytes(obj.getSizeBytes());
         b.setName(FileUtils.getNameWithoutExtension(obj.getName()));
+        b.setCandelete(obj.getCandelete());
         return b;
     }
     public Bitstream convertByService(Context context, BitstreamRest rest) throws SQLException {
@@ -85,6 +87,7 @@ public class BitstreamConverter extends DSpaceObjectConverter<Bitstream, Bitstre
     public BitstreamRest convertFoWorkFLowRefDoc(org.dspace.content.Bitstream obj, Projection projection) {
         BitstreamRest b = super.convert(obj, projection);
         b.setName(FileUtils.getNameWithoutExtension(obj.getName()));
+        b.setCandelete(obj.getCandelete());
         return b;
     }
     @Override

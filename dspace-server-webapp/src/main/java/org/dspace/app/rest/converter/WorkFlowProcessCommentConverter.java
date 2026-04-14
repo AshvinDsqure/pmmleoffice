@@ -91,6 +91,15 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(obj.getMargeddocuuid()!=null){
             rest.setMargeddocuuid(obj.getMargeddocuuid());
         }
+        if(obj.getIsdosign()!=null){
+            rest.setIsdosign(obj.getIsdosign());
+        }
+        if(obj.getCommonname()!=null){
+            rest.setCommonname(obj.getCommonname());
+        }
+        if(obj.getDesignation()!=null){
+            rest.setDesignation(obj.getDesignation());
+        }
         rest.setIsdraftsave(obj.getIsdraftsave());
         rest.setUuid(obj.getID().toString());
         return rest;
@@ -130,6 +139,15 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getMargeddocuuid()!=null){
             obj.setMargeddocuuid(rest.getMargeddocuuid());
         }
+        if(rest.getIsdosign()!=null){
+            obj.setIsdosign(rest.getIsdosign());
+        }
+        if(rest.getCommonname()!=null){
+            obj.setCommonname(rest.getCommonname());
+        }
+        if(rest.getDesignation()!=null){
+            obj.setDesignation(rest.getDesignation());
+        }
         obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
@@ -167,6 +185,15 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         }
         if(rest.getMargeddocuuid()!=null){
             obj.setMargeddocuuid(rest.getMargeddocuuid());
+        }
+        if(rest.getIsdosign()!=null){
+            obj.setIsdosign(rest.getIsdosign());
+        }
+        if(rest.getCommonname()!=null){
+            obj.setCommonname(rest.getCommonname());
+        }
+        if(rest.getDesignation()!=null){
+            obj.setDesignation(rest.getDesignation());
         }
         obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
@@ -208,7 +235,12 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getMargeddocuuid()!=null){
             obj.setMargeddocuuid(rest.getMargeddocuuid());
         }
-
+        if(rest.getIsdosign()!=null){
+            obj.setIsdosign(rest.getIsdosign());
+        }
+        if(rest.getCommonname()!=null){
+            obj.setCommonname(rest.getCommonname());
+        }
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
     }

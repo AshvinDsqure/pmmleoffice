@@ -3,6 +3,7 @@ package org.dspace.app.rest.model;
 public class EmasDTO {
 
     private String key;
+    private String commonname;
     private String epersonid;
     private String uuid;
 
@@ -28,5 +29,13 @@ public class EmasDTO {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public String getCommonname() {
+        return commonname;
+    }
+
+    public void setCommonname(String commonname) {
+        this.commonname = commonname;
     }
 }

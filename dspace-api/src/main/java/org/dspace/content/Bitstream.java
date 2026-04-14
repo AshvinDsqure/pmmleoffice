@@ -62,6 +62,13 @@ public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport
 
     @Column(name = "store_number")
     private int storeNumber;
+    @Column(name = "candelete")
+    private Boolean  candelete = false;
+
+    @Column(name = "typename")
+    private String typename;
+
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bitstream_format_id")
@@ -435,4 +442,19 @@ public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport
             .setMetadataSingleValue(context, this, "dcterms", "accessRights", null, null, acceptanceDate.toString());
     }
 
+    public Boolean getCandelete() {
+        return candelete;
+    }
+
+    public void setCandelete(Boolean candelete) {
+        this.candelete = candelete;
+    }
+
+    public String getTypename() {
+        return typename;
+    }
+
+    public void setTypename(String typename) {
+        this.typename = typename;
+    }
 }

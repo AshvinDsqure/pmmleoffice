@@ -240,7 +240,7 @@ public class WorkflowProcessItemReportController {
     }
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber2")
     public Map<String, String> getFileNumber(HttpServletRequest request) throws Exception {
         String filenumber = null;
         try {
@@ -263,6 +263,62 @@ public class WorkflowProcessItemReportController {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error in getInwardNumber ");
+        }
+        Map<String, String> map = new HashMap<>();
+        map.put("filenumber", filenumber);
+        return map;
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getFileNumber")
+    public Map<String, String> getFileNumber2(HttpServletRequest request) throws Exception {
+        String filenumber = null;
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            EPerson currentuser = context.getCurrentUser();
+            String dep=null;
+            int count = 0;
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("F/PMML/");
+
+            WorkFlowProcessMasterValue department;
+            if (currentuser != null) {
+                Optional<EpersonToEpersonMapping> map = currentuser.getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+                if (map.isPresent()) {
+                    sb.append(map.get().getEpersonmapping().getDepartment().getPrimaryvalue());
+                }
+            }
+            sb.append("/" + DateUtils.getFinancialYear());
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Department Counts");
+            if(workFlowProcessMaster!=null) {
+                if (currentuser != null) {
+                    Optional<EpersonToEpersonMapping> map = currentuser.getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+                    if (map.isPresent()) {
+                        dep=map.get().getEpersonmapping().getDepartment().getPrimaryvalue();
+                    }
+                }
+                WorkFlowProcessMasterValue ss = workFlowProcessMasterValueService.findByName(context, dep, workFlowProcessMaster);
+                if (ss != null) {
+                    Integer t = Integer.valueOf(ss.getSecondaryvalue());
+                    count = t + 1;
+                    ss.setSecondaryvalue(String.valueOf(count));
+                    workFlowProcessMasterValueService.update(context, ss);
+                } else {
+                    WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
+                    workFlowProcessMasterValue.setWorkflowprocessmaster(workFlowProcessMaster);
+                    workFlowProcessMasterValue.setSecondaryvalue("1");
+                    workFlowProcessMasterValue.setPrimaryvalue(dep);
+                    workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
+                    count = 1;
+                }
+            }
+            sb.append("/0000" + count);
+            filenumber = sb.toString();
+            context.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // System.out.println("Error in getInwardNumber ");
         }
         Map<String, String> map = new HashMap<>();
         map.put("filenumber", filenumber);

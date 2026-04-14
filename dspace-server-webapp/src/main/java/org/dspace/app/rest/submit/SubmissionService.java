@@ -84,6 +84,9 @@ public class SubmissionService {
 
     @Autowired
     WorkFlowProcessMasterValueService workFlowProcessMasterValueService;
+
+    @Autowired
+    WorkFlowProcessMasterService workFlowProcessMasterService;
     @Autowired
     protected WorkspaceItemService workspaceItemService;
     @Autowired
@@ -144,8 +147,9 @@ public class SubmissionService {
             }
             wsi = workspaceItemService.create(context, collection, true);
             Item i = wsi.getItem();
-            if(getFileNumber(context)!=null) {
-                itemService.addMetadata(context, i, "dc", "title", null, null, getFileNumber(context));
+            String fileno=getFileNumber(context);
+            if(fileno!=null) {
+                itemService.addMetadata(context, i, "dc", "title", null, null, fileno);
             }else{
                 throw new  RuntimeException("FILE Number not Ganarate");
             }
@@ -183,7 +187,7 @@ public class SubmissionService {
         }
         return "-";
     }
-    public  String getFileNumber(Context context) {
+    public  String getFileNumber2(Context context) {
         {
             String filenumber = null;
             try {
@@ -210,6 +214,55 @@ public class SubmissionService {
             return filenumber;
         }
     }
+
+    public  String getFileNumber(Context context) {
+        {
+            String filenumber = null;
+            Integer count = 0;
+            String dep=null;
+            try {
+                EPerson currentuser = context.getCurrentUser();
+                StringBuffer sb = new StringBuffer();
+                sb.append("F/PMML/");
+                WorkFlowProcessMasterValue department;
+                if (currentuser != null) {
+                    Optional<EpersonToEpersonMapping> map= currentuser.getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
+                    if (map.isPresent()) {
+                        dep=map.get().getEpersonmapping().getDepartment().getPrimaryvalue();
+                        sb.append(dep);
+                    }
+                }
+                sb.append("/" + DateUtils.getFinancialYear());
+                WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Department Counts");
+                if(workFlowProcessMaster!=null) {
+                    WorkFlowProcessMasterValue ss = workFlowProcessMasterValueService.findByName(context, dep, workFlowProcessMaster);
+                    if (ss != null) {
+                        Integer t = Integer.valueOf(ss.getSecondaryvalue());
+                        count = t + 1;
+                        ss.setSecondaryvalue(String.valueOf(count));
+                        workFlowProcessMasterValueService.update(context, ss);
+                    } else {
+                        WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
+                        workFlowProcessMasterValue.setWorkflowprocessmaster(workFlowProcessMaster);
+                        workFlowProcessMasterValue.setSecondaryvalue("1");
+                        workFlowProcessMasterValue.setPrimaryvalue(dep);
+                        workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
+                        count = 1;
+                    }
+                }
+
+                sb.append("/0000" + count);
+                filenumber = sb.toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error in File number ");
+                return null;
+            }
+            return filenumber;
+        }
+    }
+
+
 
     public void saveWorkspaceItem(Context context, WorkspaceItem wsi) {
         try {

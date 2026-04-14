@@ -16,8 +16,11 @@ public class RequestData {
     public String tempfilepath;
     public String tempfolder;
     public String documentuuid;
+    public String commentuuid;
     public String bitstreampid;
+
     public String reason;
+
     public String location;
     public String errorMsg;
     public String status;
@@ -173,5 +176,13 @@ public class RequestData {
 
     public void setCommonName(String commonName) {
         this.commonName = commonName;
+    }
+
+    public String getCommentuuid() {
+        return commentuuid;
+    }
+
+    public void setCommentuuid(String commentuuid) {
+        this.commentuuid = commentuuid;
     }
 }

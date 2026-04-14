@@ -57,6 +57,8 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
     private String filetype;
     private Integer index;
 
+    private String itemuuid;
+
     @JsonProperty
     private WorkFlowProcessMasterValueRest workFlowProcessReferenceDocType;
     @JsonProperty
@@ -267,5 +269,13 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getItemuuid() {
+        return itemuuid;
+    }
+
+    public void setItemuuid(String itemuuid) {
+        this.itemuuid = itemuuid;
     }
 }

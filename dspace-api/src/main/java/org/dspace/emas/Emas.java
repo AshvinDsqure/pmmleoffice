@@ -36,12 +36,23 @@ public class Emas extends DSpaceObject implements DSpaceObjectLegacySupport {
     private Integer legacyId;
     @Column(name = "key")
     private String key;
+
+    @Column(name = "commonname")
+    private String commonname;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "eperson")
     private EPerson eperson = null;
     @Column(name = "actiondate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date actionDate = new Date();
+
+    public String getCommonname() {
+        return commonname;
+    }
+
+    public void setCommonname(String commonname) {
+        this.commonname = commonname;
+    }
 
     public void setLegacyId(Integer legacyId) {
         this.legacyId = legacyId;

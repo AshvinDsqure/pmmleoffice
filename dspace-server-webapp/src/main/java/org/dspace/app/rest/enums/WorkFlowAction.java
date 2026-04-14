@@ -701,7 +701,11 @@ public enum WorkFlowAction {
             return workFlowAction;
         }
         if (workFlowProcessMasterValue != null && workFlowProcessMasterValue.getPrimaryvalue() != null && workFlowProcessMasterValue.getPrimaryvalue().equalsIgnoreCase("CallBack")) {
-            workFlowAction.setComment(" Received.");
+            if(workFlowProcessRest.getComment()!=null){
+                workFlowAction.setComment(workFlowProcessRest.getComment());
+            }else {
+                workFlowAction.setComment(" Received.");
+            }
             return workFlowAction;
         }
         if (!DateUtils.isNullOrEmptyOrBlank(workFlowProcessRest.getRemark())) {

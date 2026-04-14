@@ -39,6 +39,8 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
     private String margeddocuuid;
 
     private String sapdocumentno;
+    private String commonname;
+    private String designation;
     private Boolean isdosign=false;
 
     private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
@@ -183,5 +185,21 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     public void setIsdosign(Boolean isdosign) {
         this.isdosign = isdosign;
+    }
+
+    public String getCommonname() {
+        return commonname;
+    }
+
+    public void setCommonname(String commonname) {
+        this.commonname = commonname;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
     }
 }

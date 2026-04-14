@@ -215,6 +215,30 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
         }
     }
 
+    @SearchRestMethod(name = "getReferenceBitstreamsByItemID")
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    public Page<BitstreamRest> getReferenceBitstreamsByItemID(@Parameter(value = "handle", required = true) UUID itemid
+            ,Pageable pageable ) {
+        if (itemid != null && StringUtils.isBlank(itemid.toString())) {
+            throw new IllegalArgumentException("The request should include a sequence or a filename");
+        }
+        try {
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            Item item = itemService.find(context, itemid);
+            List<Bundle> bundles = item.getBundles("REFERENCE_DOCUMENTS");
+            List<Bitstream> bitstreams=new ArrayList<>();
+            if (bundles.size() != 0) {
+                bitstreams=bundles.stream().findFirst().get().getBitstreams();
+            }
+            return  converter.toRestPage(bitstreams,pageable,bitstreams.size(),utils.obtainProjection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+
     private Bitstream getFirstMatchedBitstream(Item item, Integer sequence, String filename) {
         List<Bundle> bundles = item.getBundles();
         List<Bitstream> bitstreams = new LinkedList<>();

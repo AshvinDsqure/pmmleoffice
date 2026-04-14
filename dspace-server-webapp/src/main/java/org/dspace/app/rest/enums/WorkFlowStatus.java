@@ -27,7 +27,7 @@ public enum WorkFlowStatus {
     HOLD("Hold"),
     DRAFT("Draft"),
 
-    CLOSE("Close"),
+    COMPLETE("Complete"),
     REJECTED("Rejected"),
     REFER("Refer"),
     DISPATCH("Dispatch Ready"),

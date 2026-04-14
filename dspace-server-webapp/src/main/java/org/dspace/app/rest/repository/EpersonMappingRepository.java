@@ -177,7 +177,7 @@ public class EpersonMappingRepository extends DSpaceObjectRestRepository<Eperson
 //        try {
 //            Context context = obtainContext();
 //            context.turnOffAuthorisationSystem();
-//            UUID statusid= WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+//            UUID statusid= WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
 //            // System.out.println("status id:"+statusid);
 //            long total = epersonMappingService.countDocumentByItemid(context, itemid,statusid);
 //            List<EpersonMapping> witems = EpersonMappingService.getDocumentByItemid(context, itemid,statusid, Math.toIntExact(pageable.getOffset()),

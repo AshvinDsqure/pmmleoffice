@@ -202,6 +202,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             workFlowProcessRest = workFlowType.storeWorkFlowProcess(context, workFlowProcessRest);
 
             WorkflowProcess workflowProcess1 = workFlowProcessConverter.convertByService(context, workFlowProcessRest);
+            WorkflowProcess www=workflowProcess1;
             if (workFlowProcessRest1 != null && workFlowProcessRest1.getWorkFlowProcessCommentRest() != null) {
 //comment add new flow
                 if(workFlowProcessRest1.getWorkFlowProcessCommentRest().getId()!=null){
@@ -224,6 +225,12 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
 //                }
 
                 System.out.println("done!");
+
+                try {
+                    updateBitstream(context, www.getItem());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 context.commit();
                 create.setComment(null);
                 create.setWorkflowProcessReferenceDocs(null);
@@ -247,6 +254,27 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
             e.printStackTrace();
         }
         return ResponseEntity.ok(workFlowProcessRest);
+    }
+
+    public void updateBitstream(Context context, Item item) {
+        try {
+            List<Bundle> bundles = item.getBundles("REFERENCE_DOCUMENTS");
+            if (bundles == null || bundles.isEmpty()) return;
+            bundles.get(0).getBitstreams().stream()
+                    .filter(Bitstream::getCandelete)
+                    .forEach(bitstream -> {
+                        try {
+                            bitstream.setCandelete(false);
+                            bitstreamService.update(context, bitstream);
+                            System.out.println("Bitstream with id " + bitstream.getID() + " updated successfully.");
+                        } catch (SQLException | AuthorizeException e) {
+                            throw new RuntimeException("Error updating bitstream: " + bitstream.getID(), e);
+                        }
+                    });
+        }catch (Exception e){
+            System.out.println("Error in updateBitstream: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     public void saveCommentasDraft(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest, HttpServletRequest request) throws Exception {
@@ -356,7 +384,7 @@ public class WorkflowProcessDraftController extends AbstractDSpaceRestRepository
                         final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
                         long notecount = 0;
                         if (workflowProcess1.getItem() != null && workflowProcess1.getItem().getName() != null) {
-                            UUID statusid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
                             notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess1.getItem().getID(), statusid);
                         }
                         notecount = notecount + 1;

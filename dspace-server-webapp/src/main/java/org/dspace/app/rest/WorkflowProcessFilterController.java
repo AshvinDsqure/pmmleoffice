@@ -548,7 +548,7 @@ public class WorkflowProcessFilterController {
                     mapInward.put("draft_High", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, Highid, userid, createdid, epersonToEpersonMappingid));
                     mapInward.put("draft_MostImmediate", workflowProcessService.countByTypeAndPriorityDraftTapal(context, inwardid, mostimedeatlyid, userid, createdid, epersonToEpersonMappingid));
                 }else  if(tab!=null&&tab.equalsIgnoreCase("Closed")) {
-                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID tCloseid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
                     UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
                     UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
                     //close
@@ -614,7 +614,7 @@ public class WorkflowProcessFilterController {
                     mapDraft.put("park_MostImmediate", workflowProcessService.countByTypeAndPriorityPark(context, draftid, mostimedeatlyid, userid, tparkedid, epersonToEpersonMappingid, statusdraft));
                     mapDraft.put("pending_Sign", getPendingsign(context, epersonToEpersonMappingid));
                 }else if(tab!=null&&tab.equalsIgnoreCase("Closed")) {
-                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID tCloseid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
                     UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
                     UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
                     //close
@@ -633,7 +633,7 @@ public class WorkflowProcessFilterController {
                     mapDraft.put("sent_InProgress", sentInProgressFile(context, epersonToEpersonMappingid, perameter));
                     mapDraft.put("sent_Parked", workflowProcessService.countByTypeAndStatusandNotDraft(context, draftid, tparkedid, userid, createdid, epersonToEpersonMappingid));
                 }else if(tab!=null&&tab.equalsIgnoreCase("SignLetter")){
-                    UUID tCloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+                    UUID tCloseid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
                     UUID statusdispathcclose = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
                     UUID INITIATORid = WorkFlowUserType.INITIATOR.getUserTypeFromMasterValue(context).get().getID();
                     //sign Latter
@@ -671,7 +671,7 @@ public class WorkflowProcessFilterController {
     }
     public int sentInProgressTapal(Context context, UUID epersonToEpersonMappingid,HashMap<String, String> perameter) {
         try {
-            UUID statusidclose = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusidclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid1 = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid = WorkFlowType.INWARD.getUserTypeFromMasterValue(context).get().getID();
             int counts = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1, workflowtypeid, statusidclose, epersonToEpersonMappingid,perameter);
@@ -683,7 +683,7 @@ public class WorkflowProcessFilterController {
     }
     public int sentInProgressFile(Context context, UUID epersonToEpersonMappingid,HashMap<String, String> perameter) {
         try {
-            UUID statusidclose1 = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusidclose1 = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             UUID statusid1a = WorkFlowStatus.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             UUID workflowtypeid1 = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
             int sent_InProgress = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid1a, workflowtypeid1, statusidclose1, epersonToEpersonMappingid,perameter);
@@ -764,7 +764,7 @@ public class WorkflowProcessFilterController {
 
     public int getPendingsign(Context context, UUID epersonToEpersonMappingid) throws SQLException {
         try {
-            UUID statuscloseid = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context).get().getID();
+            UUID statuscloseid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Workflow Type");
             UUID statusdraftid = null;
             if (workFlowProcessMaster != null) {

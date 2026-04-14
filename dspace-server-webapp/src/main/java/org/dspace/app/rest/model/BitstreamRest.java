@@ -40,6 +40,8 @@ public class BitstreamRest extends DSpaceObjectRest {
 
     private String bundleName;
 
+    private Boolean  candelete = false;
+
     private Long sizeBytes;
     private CheckSumRest checkSum;
     // sequenceId is READ_ONLY because it is assigned by the ItemService (as it must be unique within an Item)
@@ -87,5 +89,13 @@ public class BitstreamRest extends DSpaceObjectRest {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public String getType() {
         return NAME;
+    }
+
+    public Boolean getCandelete() {
+        return candelete;
+    }
+
+    public void setCandelete(Boolean candelete) {
+        this.candelete = candelete;
     }
 }

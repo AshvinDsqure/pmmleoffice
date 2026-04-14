@@ -7,9 +7,13 @@
  */
 package org.dspace.app.rest.converter;
 
+import org.dspace.app.rest.model.WorkFlowProcessRest;
 import org.dspace.app.rest.model.WorkflowProcessNoteRest;
+import org.dspace.app.rest.model.WorkflowProcessReferenceDocRest;
 import org.dspace.app.rest.projection.Projection;
+import org.dspace.content.WorkflowProcess;
 import org.dspace.content.WorkflowProcessNote;
+import org.dspace.content.WorkflowProcessReferenceDoc;
 import org.dspace.content.service.WorkflowProcessNoteService;
 import org.dspace.core.Context;
 import org.modelmapper.ModelMapper;
@@ -48,7 +52,11 @@ public class WorkflowProcessNoteConverter extends DSpaceObjectConverter<Workflow
         try {
             if (obj.getWorkflowProcessReferenceDocs() != null) {
                 rest.setWorkflowProcessReferenceDocRests(obj.getWorkflowProcessReferenceDocs().stream().map(d -> {
-                    return workflowProcessReferenceDocConverter.convert(d, projection);
+                    WorkflowProcessReferenceDocRest restdoc= workflowProcessReferenceDocConverter.convert(d, projection);
+                    WorkFlowProcessRest workFlowProcessRest=new WorkFlowProcessRest();
+                    workFlowProcessRest.setUuid(d.getWorkflowProcess().getID().toString());
+                    restdoc.setWorkFlowProcessRest(workFlowProcessRest);
+                    return restdoc;
                 }).collect(Collectors.toList()));
             }
             if (obj.getDescription() != null) {

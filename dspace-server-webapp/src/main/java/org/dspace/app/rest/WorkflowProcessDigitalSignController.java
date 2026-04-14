@@ -24,6 +24,7 @@ import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.LoginCounterConverter;
 import org.dspace.app.rest.converter.WorkflowProcessReferenceDocConverter;
 import org.dspace.app.rest.enums.WorkFlowAction;
+import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
@@ -41,10 +42,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -104,6 +102,10 @@ public class WorkflowProcessDigitalSignController {
     ConfigurationService configurationService;
 
     @Autowired
+    WorkFlowProcessCommentService workFlowProcessCommentService;
+
+
+    @Autowired
     DSBitStoreService dsBitStoreService;
 
     @Autowired
@@ -141,6 +143,9 @@ public class WorkflowProcessDigitalSignController {
 
     @Autowired
     private WorkflowProcessService workflowProcessService;
+
+    @Autowired
+    private WorkflowProcessActionController workflowProcessActionController;
 
     @Autowired
     WorkflowProcessEpersonService workflowProcessEpersonService;
@@ -360,10 +365,10 @@ public class WorkflowProcessDigitalSignController {
                     String c = p + "-" + Cordinate;
 
                     System.out.println("Cordinate.....2" + Cordinate);
-                    String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
+                    //String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
                     // String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
                     emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
-                            c, "Name : " + commonName + "\nDesignation:" + designation + "\nLocation:" + location + ".\nDate :" + getDateCurrentDate() + "", false);
+                            c, "Signed By : " + commonName + "\nDesignation : " + designation + "\nDate : " + getDateCurrentDate() + "", false);
 
                     inputs.add(emSignerInputforMultipleSignature4);
                 } catch (IOException ioEx) {
@@ -522,10 +527,16 @@ public class WorkflowProcessDigitalSignController {
                 String commonName="";
                 if(request.getRequstedData()!=null&&request.getRequstedData().getCommonName()!=null){
                     commonName= request.getRequstedData().getCommonName();
+                    if(request.getRequstedData().getCommentuuid()!=null){
+                        WorkFlowProcessComment comment=workFlowProcessCommentService.find(context, UUID.fromString(request.getRequstedData().getCommentuuid()));
+                        if (comment != null) {
+                            comment.setCommonname(commonName);
+                            workFlowProcessCommentService.update(context, comment);
+                        }
+                    }
                 }else{
                     commonName=context.getCurrentUser().getFullName();
                 }
-
                 String designation = "";
                 Optional<EpersonToEpersonMapping> maps = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
                 if (maps.isPresent()) {
@@ -536,13 +547,13 @@ public class WorkflowProcessDigitalSignController {
                     }
                 }
 
-                String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
+                //String location = (request.getRequstedData().getLocation() != null ? request.getRequstedData().getLocation() : "-");
                 //  String reason = (request.getRequstedData().getReason() != null ? request.getRequstedData().getReason() : "-");
 //                emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
 //                        c, "Name:" + commonName + "\nLocation:" + location + "\nReason:" + reason + "", false);
 //
                 emBridgeSignerInput emSignerInputforMultipleSignature4 = new emBridgeSignerInput(pdfStr, "4", "", "", "", true,
-                        c, "Name : " + commonName + "\nDesignation:" + designation + "\nLocation:" + location + ".\nDate :" + getDateCurrentDate() + "", false);
+                        c, "Signed By : " + commonName + "\nDesignation : " + designation + "\nDate : " + getDateCurrentDate() + "", false);
 
 
                 inputs.add(emSignerInputforMultipleSignature4);
@@ -577,6 +588,7 @@ public class WorkflowProcessDigitalSignController {
             req.setTempfilepath(bulkPKCSSignRequest.getTempFilePath());
             req.setTempfolder(TEMP_DIRECTORY);
             //this.isdraftnotesin=true;
+            context.commit();
             return req;
         } catch (Exception e) {
             e.printStackTrace();
@@ -706,7 +718,7 @@ public class WorkflowProcessDigitalSignController {
                     workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
                 }
                 if (workflowProcess != null && workflowProcess.getWorkFlowProcessDraftDetails() != null && workflowProcess.getWorkFlowProcessDraftDetails().getIssinglatter() == false) {
-                    if (workflowProcess.getWorkflowStatus() != null && workflowProcess.getWorkflowStatus().getPrimaryvalue().equalsIgnoreCase("Close")) {
+                    if (workflowProcess.getWorkflowStatus() != null && workflowProcess.getWorkflowStatus().getPrimaryvalue().equalsIgnoreCase("Complete")) {
                         if (workflowProcess.getIsinternal() && workflowProcess.getWorkflowProcessSenderDiaryEpeople() != null) {
                             if (workflowProcess.getWorkflowType() != null && workflowProcess.getWorkflowType().getPrimaryvalue().equalsIgnoreCase("Draft")) {
                                 createTapal(context, workflowProcess);
@@ -1200,6 +1212,54 @@ public class WorkflowProcessDigitalSignController {
         }
     }
 
+    public  byte[]  getMargedPreveseNote(Context context,  List<Bitstream> prevesebitstrea, InputStream current) throws SQLException, AuthorizeException, IOException {
+        List<InputStream> preveseInputStream = new ArrayList<>();
+        try {
+            final String TEMP_DIRECTORY = getFolderTmp("PreveseMargeddoc");
+            File output = new File(TEMP_DIRECTORY, "replyTapalmarged.pdf");
+            if (!output.exists()) {
+                try {
+                    output.createNewFile();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            OutputStream out = new FileOutputStream(new File(output.getAbsolutePath()));
+            if (prevesebitstrea != null && !prevesebitstrea.isEmpty()) {
+                    for (Bitstream bitstream : prevesebitstrea) {
+                        InputStream inputStream = bitstreamService.retrieve(context, bitstream);
+                        preveseInputStream.add(inputStream);
+                    }
+                }
+                if (current != null) {
+                    preveseInputStream.add(current);
+                }
+                MargedDocUtils.mergePdfFiles(preveseInputStream, out);
+                FileInputStream outputfile = new FileInputStream(new File(output.getAbsolutePath()));
+                return convertToBytes(outputfile);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public  byte[] convertToBytes(InputStream is) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[1024];
+        int nRead;
+
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+
+        buffer.flush();
+        return buffer.toByteArray();
+    }
+
+
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'WRITE')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getPreviewpdf")
     public ResponseEntity<byte[]> getPreviewpdf(
@@ -1220,11 +1280,12 @@ public class WorkflowProcessDigitalSignController {
 
             if (refDoc == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
+                }
 
             WorkflowProcess workflowProcess = refDoc.getWorkflowProcess();
 
-            // ------------------ Step 2: Load Active Version ------------------
+            // ------------------ Step 2: Load Active Version------------------
+
             WorkflowProcessReferenceDocVersion version =
                     refDoc.getWorkflowProcessReferenceDocVersion().stream()
                             .filter(WorkflowProcessReferenceDocVersion::getIsactive)
@@ -1301,6 +1362,251 @@ public class WorkflowProcessDigitalSignController {
             // deleteFolderTmp(TEMP_DIRECTORY);
         }
     }
+
+//    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'WRITE')")
+//    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getPreveseNoteMarged")
+//    public ResponseEntity<byte[]> getPreveseNoteMarged(
+//            @Parameter("itemid") String itemid,
+//            @Parameter("uuid") String uuid,
+//            HttpServletRequest request) {
+//
+//        System.out.println(":::: uuid ::::"+uuid);
+//        System.out.println("itemid:::: " + itemid);
+//
+//        Context context = ContextUtil.obtainContext(request);
+//        context.turnOffAuthorisationSystem();
+//
+//        try {
+//
+//            UUID statusid= WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
+//            UUID DISPATCHCLOSE= WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context).get().getID();
+//
+//            // ------------------ Step 1: Get Reference Document ------------------
+//            List<WorkflowProcessNote> witems = workflowProcessNoteService.getDocumentByItemid(context, UUID.fromString(itemid),statusid,DISPATCHCLOSE, -1,-1);
+//
+//            List<Bitstream> bitstreams = witems.stream()
+//                    .flatMap(note -> note.getWorkflowProcessReferenceDocs().stream())
+//                    .map(WorkflowProcessReferenceDoc::getBitstream)
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//
+//
+//            if (witems == null) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//            }
+//
+//            WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
+//
+//            WorkflowProcessActionController s=new WorkflowProcessActionController();
+//            FileInputStream currentnote = s.createFinalNoteInpogresss(context, workflowProcess);
+//            // ------------------ Step 7: Generate PDF ------------------
+//
+//            byte[] pdfBytes = getMargedPreveseNote(context, bitstreams,currentnote);
+//            if (pdfBytes == null) {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//            }
+//            // ------------------ Step 8: Return PDF Response ------------------
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_PDF);
+//            headers.setContentDispositionFormData("inline", "prevesenotemargedpdf.pdf");
+//            headers.setContentLength(pdfBytes.length);
+//            return ResponseEntity.ok()
+//                    .headers(headers)
+//                    .body(pdfBytes);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//
+//        } finally {
+//            System.out.println(":::: finally getPreviewpdf ::::");
+//            // deleteFolderTmp(TEMP_DIRECTORY);
+//        }
+//    }
+
+
+//    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'WRITE')")
+//    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getPreveseNoteMarged")
+//    public ResponseEntity<byte[]> getPreveseNoteMarged(
+//            @RequestParam("itemid") String itemid,
+//            @RequestParam(value = "uuid", required = false) String uuid,
+//            HttpServletRequest request) {
+//
+//        Context context = ContextUtil.obtainContext(request);
+//        context.turnOffAuthorisationSystem();
+//
+//        try {
+//            // ✅ Step 1: Get Status IDs
+//            UUID statusId = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context)
+//                    .orElseThrow(() -> new RuntimeException("CLOSE status not found"))
+//                    .getID();
+//
+//            UUID dispatchCloseId = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context)
+//                    .orElseThrow(() -> new RuntimeException("DISPATCHCLOSE status not found"))
+//                    .getID();
+//
+//            // ✅ Step 2: Fetch Notes
+//            List<WorkflowProcessNote> witems = Optional.ofNullable(
+//                    workflowProcessNoteService.getDocumentByItemid(
+//                            context, UUID.fromString(itemid), statusId, dispatchCloseId, -1, -1)
+//            ).orElse(Collections.emptyList());
+//
+//            List<Bitstream> bitstreams=null;
+//            if (witems.isEmpty()) {
+//                System.out.println("No notes found for itemid: " + itemid + " with status CLOSE or DISPATCHCLOSE");
+//            }else {
+//
+//                // ✅ Step 3: Extract Bitstreams
+//                bitstreams = witems.stream()
+//                        .filter(Objects::nonNull)
+//                        .flatMap(note -> Optional.ofNullable(note.getWorkflowProcessReferenceDocs())
+//                                .orElse(Collections.emptySet()).stream())
+//                        .map(WorkflowProcessReferenceDoc::getBitstream)
+//                        .filter(Objects::nonNull)
+//                        .distinct()
+//                        .collect(Collectors.toList());
+//            }
+//            WorkflowProcess workflowProcess=null;
+//            if (uuid == null || uuid.isEmpty()){
+//                // ✅ Step 4: Get WorkflowProcess
+//                 workflowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
+//              }
+//
+//            // ✅ Step 5: Generate Current Note (use try-with-resources)
+//            byte[] pdfBytes;
+//            if(workflowProcess!=null){
+//
+//            try (FileInputStream currentNoteStream =
+//                         workflowProcessActionController.createFinalNoteInpogresss(context, workflowProcess)) {
+//
+//
+//                // ✅ Step 6: Merge PDF
+//                pdfBytes = getMargedPreveseNote(context, bitstreams, currentNoteStream);
+//            }
+//
+//            } else {
+//                pdfBytes = getMargedPreveseNote(context, bitstreams, null);
+//            }
+//
+//            if (pdfBytes == null || pdfBytes.length == 0) {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//            }
+//
+//            // ✅ Step 7: Response
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.APPLICATION_PDF)
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=prevesenotemargedpdf.pdf")
+//                    .contentLength(pdfBytes.length)
+//                    .body(pdfBytes);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//
+//        } finally {
+//            context.restoreAuthSystemState();
+//        }
+//    }
+
+
+    @PreAuthorize("(#uuid == null) || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'WRITE')")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getPreveseNoteMarged")
+    public ResponseEntity<byte[]> getPreveseNoteMarged(
+            @RequestParam("itemid") String itemid,
+            @RequestParam(value = "uuid", required = false) String uuid,
+            HttpServletRequest request) {
+
+        Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
+
+        try {
+            // ✅ Step 1: Status IDs
+            UUID statusId = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context)
+                    .orElseThrow(() -> new RuntimeException("CLOSE status not found"))
+                    .getID();
+
+            UUID dispatchCloseId = WorkFlowStatus.DISPATCHCLOSE.getUserTypeFromMasterValue(context)
+                    .orElseThrow(() -> new RuntimeException("DISPATCHCLOSE status not found"))
+                    .getID();
+
+            // ✅ Step 2: Fetch previous notes
+            List<WorkflowProcessNote> notes = Optional.ofNullable(
+                    workflowProcessNoteService.getDocumentByItemid(
+                            context, UUID.fromString(itemid), statusId, dispatchCloseId, -1, -1)
+            ).orElse(Collections.emptyList());
+
+            // ✅ Step 3: Extract bitstreams
+            List<Bitstream> bitstreams = notes.stream()
+                    .filter(Objects::nonNull)
+                    .flatMap(note -> Optional.ofNullable(note.getWorkflowProcessReferenceDocs())
+                            .orElse(Collections.emptySet()).stream())
+                    .map(WorkflowProcessReferenceDoc::getBitstream)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // ✅ Step 4: Get current workflow (ONLY if uuid present)
+            WorkflowProcess workflowProcess = null;
+            if (uuid != null && !uuid.isEmpty()) {
+                workflowProcess = workflowProcessService.find(context, UUID.fromString(uuid));
+            }
+
+            byte[] pdfBytes;
+
+            // ✅ Step 5: Case Handling
+
+            // 👉 Case 1: No previous + No current
+            if ((bitstreams == null || bitstreams.isEmpty()) && workflowProcess == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            // 👉 Case 2: Only current note available
+            if ((bitstreams == null || bitstreams.isEmpty()) && workflowProcess != null) {
+                try (FileInputStream currentNote =
+                             workflowProcessActionController.createFinalNoteInpogresss(context, workflowProcess)) {
+
+                    pdfBytes = currentNote.readAllBytes();
+                }
+            }
+
+            // 👉 Case 3: Only previous notes available
+            else if ((workflowProcess == null)) {
+
+                // single file → return directly
+                if (bitstreams.size() == 1) {
+                    InputStream inputStreams = bitstreamService.retrieve(context, bitstreams.get(0));
+                    pdfBytes = convertToBytes(inputStreams);
+                } else {
+                    // multiple → merge
+                    pdfBytes = getMargedPreveseNote(context, bitstreams, null);
+                }
+            }
+
+            // 👉 Case 4: Both current + previous
+            else {
+                try (FileInputStream currentNote =
+                             workflowProcessActionController.createFinalNoteInpogresss(context, workflowProcess)) {
+
+                    pdfBytes = getMargedPreveseNote(context, bitstreams, currentNote);
+                }
+            }
+
+            // ✅ Final response
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=prevesenotemargedpdf.pdf")
+                    .contentLength(pdfBytes.length)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } finally {
+            context.restoreAuthSystemState();
+        }
+    }
+
+
 
     public byte[] pdfgenratorPrivew(Map<String, String> map, String templateFullpath) throws IOException, SQLException, AuthorizeException, FieldBlankOrNullException {
         System.out.println("::::pdfgenrator::::");

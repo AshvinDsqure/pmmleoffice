@@ -494,7 +494,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 System.out.println("Item note selected");
             }
 
-            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.CLOSE.getUserTypeFromMasterValue(context);
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context);
             if (workFlowTypeStatus.isPresent()) {
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
             }

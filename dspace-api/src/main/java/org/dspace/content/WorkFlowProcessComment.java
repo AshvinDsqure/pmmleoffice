@@ -55,6 +55,8 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     @JoinColumn(name = "submitter_id")
     private EPerson submitter = null;
 
+
+
     @Column(name = "actiondate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
     private Date actionDate = new Date();
@@ -62,8 +64,18 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     @Column(name = "isdraftsave")
     private Boolean isdraftsave = true;
 
+    @Column(name = "isdosign")
+    private Boolean isdosign=false;
+
     @Column(name = "margeddocuuid")
     private String margeddocuuid;
+
+
+    @Column(name = "commonname")
+    private String commonname;
+
+    @Column(name = "designation")
+    private String designation;
     @Override
     public int getType() {
         return 0;
@@ -143,5 +155,29 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
 
     public void setMargeddocuuid(String margeddocuuid) {
         this.margeddocuuid = margeddocuuid;
+    }
+
+    public Boolean getIsdosign() {
+        return isdosign;
+    }
+
+    public void setIsdosign(Boolean isdosign) {
+        this.isdosign = isdosign;
+    }
+
+    public String getCommonname() {
+        return commonname;
+    }
+
+    public void setCommonname(String commonname) {
+        this.commonname = commonname;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
     }
 }

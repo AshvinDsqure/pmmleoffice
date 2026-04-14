@@ -207,6 +207,7 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc = null;
         WorkflowProcessReferenceDocRest workflowProcessReferenceDocRest = null;
         Bitstream bitstream = null;
+        WorkFlowProcessMasterValue draftTypeValue = null;
         File temppkcs12 = null;
         try {
             Context context = ContextUtil.obtainContext(request);
@@ -218,6 +219,12 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
             InputStream P12file = null;
             workflowProcessReferenceDocRest = mapper.readValue(workflowProcessReferenceDocRestStr, WorkflowProcessReferenceDocRest.class);
             workflowProcessReferenceDoc = workflowProcessReferenceDocConverter.convert(workflowProcessReferenceDocRest, context);
+
+            if (workflowProcessReferenceDocRest.getDrafttypeRest() != null) {
+                draftTypeValue = workFlowProcessMasterValueConverter
+                        .convert(context, workflowProcessReferenceDocRest.getDrafttypeRest());
+            }
+
             try {
                 if (file != null && file.getInputStream() != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isEmpty()) {
                     Optional<String> fileExtension = FileUtils.getExtensionByStringHandling(file.getOriginalFilename());
@@ -230,56 +237,36 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                         System.out.println("bitstream:doc to :pdf" + bitstream.getName());
                         workflowProcessReferenceDoc.setBitstream(bitstream);
                         workflowProcessReferenceDoc.setPage(FileUtils.getPageCountInPDF(pdfFileInputStream1));
-                    }
-//                    if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("p12")) {
-//                        P12file = file.getInputStream();
-//                        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-//                        long currentTimeMillis = System.currentTimeMillis();
-//                        // Create a date object with the current time
-//                        Date now = new Date(currentTimeMillis);
-//                        // Create a date format to include milliseconds
-//                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS");
-//                        // Format the date into a string
-//                        String formattedDate = sdf.format(now);
-//                        temppkcs12 = new File(TEMP_DIRECTORY, formattedDate + "_" + file.getOriginalFilename());
-//                        if (!temppkcs12.exists()) {
-//                            try {
-//                                temppkcs12.createNewFile();
-//                                System.out.println("File creted ::" + temppkcs12.getAbsolutePath());
-//                            } catch (IOException e) {
-//                                // TODO Auto-generated catch block
-//                                e.printStackTrace();
-//                            }
-//                        } else {
-//                            System.out.println("File name like  ::" + temppkcs12.getAbsolutePath());
-//                        }
-//
-//                        String filename = file.getOriginalFilename();
-//                        file.transferTo(new File(temppkcs12.getAbsolutePath()));
-//                        FileInputStream p12fileinputstream = new FileInputStream(new File(temppkcs12.getAbsolutePath()));
-//                        if (workflowProcessReferenceDocRest.getPassword() != null && !workflowProcessReferenceDocRest.getPassword().isEmpty() && p12fileinputstream != null) {
-//                            if (DigitalSingPDF.checkDigital(temppkcs12.getAbsolutePath(), workflowProcessReferenceDocRest.getPassword())) {
-//                                System.out.println("verifive Success fully Digital Credential");
-//                                bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, P12file, "", filename);
-//                                System.out.println(":::::bitstream:only p12 :::::" + bitstream.getName());
-//                                workflowProcessReferenceDoc.setBitstream(bitstream);
-//                            } else {
-//                                res.sendError(406, "Mismatched Certificate and Key!");
-//                                throw new InvalidDataException("Mismatched Certificate and Key!");
-//                            }
-//                        } else {
-//                            System.out.println("not found p12 and password!");
-//                        }
-//                    }
+                    }else if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("pdf")) {
 
-                    else if (fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase("pdf")) {
-                        fileInputStream = file.getInputStream();
-                        fileInputStream1 = file.getInputStream();
-                        bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
-                        System.out.println("bitstream:only pdf:" + bitstream.getName());
-                        workflowProcessReferenceDoc.setBitstream(bitstream);
-                        workflowProcessReferenceDoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
-                    } else {
+                        if (draftTypeValue != null  && "Reference Document".equalsIgnoreCase(draftTypeValue.getPrimaryvalue())) {
+                            Item item= itemService.find(context, UUID.fromString(workflowProcessReferenceDocRest.getItemuuid()));
+                            if(item!=null) {
+                                Bundle bundle = getOrCreateBundle(context, item, "REFERENCE_DOCUMENTS");
+                                if(bundle!=null) {
+                                    fileInputStream = file.getInputStream();
+                                    fileInputStream1 = file.getInputStream();
+                                    Integer page = FileUtils.getPageCountInPDF(fileInputStream1);
+                                    bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
+                                    bitstream.setCandelete(true);
+                                    workflowProcessReferenceDoc.setPage(page);
+                                    workflowProcessReferenceDoc.setBitstream(bitstream);
+                                    if (workflowProcessReferenceDocRest.getItemname() != null) {
+                                        bitstream.setCandelete(false);
+                                        bitstream.setTypename(workflowProcessReferenceDocRest.getItemname());
+                                    }
+                                    bundleService.addBitstream(context, bundle, bitstream);
+                                    System.out.println("bitstream:pdf:" + bitstream.getName());
+                                }
+                            }
+                        }else {
+                            fileInputStream = file.getInputStream();
+                            fileInputStream1 = file.getInputStream();
+                            bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, fileInputStream, "", file.getOriginalFilename());
+                            System.out.println("bitstream:only pdf:" + bitstream.getName());
+                            workflowProcessReferenceDoc.setBitstream(bitstream);
+                            workflowProcessReferenceDoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
+                        }} else {
                         throw  new RuntimeException("Not Support  File Extension "+fileExtension.get());
                     }
                 }
@@ -861,10 +848,12 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
                 context.commit();
                 return rest;
             } else {
-                if (workflowProcessReferenceDoc.getDrafttype() != null && workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null) {
-                    System.out.println("IN Other document " + workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue());
-                }
+                System.out.println("Other Document Create Fress! ");
                 workflowProcessReferenceDoc = workflowProcessReferenceDocService.create(context, workflowProcessReferenceDoc);
+                if (draftTypeValue != null  && "Reference Document".equalsIgnoreCase(draftTypeValue.getPrimaryvalue())) {
+                    workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
+                    System.out.println("Reference Document bitstream metadata ::stored ");
+                }
                 //  workflowProcessService.storeWorkFlowMataDataTOBitsream(context, workflowProcessReferenceDoc);
                 context.commit();
             }
@@ -1300,6 +1289,18 @@ public class WorkflowProcessReferenceDocController extends AbstractDSpaceRestRep
             return outputfile;
         }
         return null;
+    }
+
+    private Bundle getOrCreateBundle(Context context, Item item, String bundleName) throws Exception {
+
+        List<Bundle> bundles = item.getBundles(bundleName);
+
+        if (bundles.isEmpty()) {
+            System.out.println("Creating new bundle");
+            return bundleService.create(context, item, bundleName);
+        }
+
+        return bundles.get(0);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/updateDraftHTML")
