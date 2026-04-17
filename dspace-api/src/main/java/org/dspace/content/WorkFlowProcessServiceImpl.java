@@ -233,6 +233,9 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
                 bitstreamService.addMetadata(context, bitstream, "dc", "letter", "category", null, workflowProcessReferenceDoc.getLatterCategory().getPrimaryvalue());
                 bitstreamService.addMetadata(context, bitstream, "dc", "letter", "categoryhi", null, workflowProcessReferenceDoc.getLatterCategory().getSecondaryvalue());
             }
+            if(workflowProcessReferenceDoc.getOldfilenumber()!=null){
+                bitstreamService.addMetadata(context, bitstream, "dc", "oldfilenumber", null, null, workflowProcessReferenceDoc.getOldfilenumber());
+            }
             if (workflowProcessReferenceDoc.getInitdate() != null) {
                 bitstreamService.addMetadata(context, bitstream, "dc", "date", null, null, workflowProcessReferenceDoc.getInitdate().toString());
             }
@@ -271,6 +274,11 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     @Override
     public WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException {
         return workflowProcessDAO.getNoteByItemsid(context, itemid);
+    }
+
+    @Override
+    public int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid, List<UUID> statusIDs) throws SQLException {
+        return workflowProcessDAO.getInpogressWorkflowProcessByItemsid(context,itemid,statusIDs);
     }
 
     @Override
@@ -592,6 +600,17 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     public List<String> getDraftMigration(Context context, Integer limit) throws SQLException {
         return workflowProcessDAO.getDraftMigration(context,limit);
     }
+
+    @Override
+    public List<WorkflowProcess> searchByOldFileNumber(Context context, UUID drafttype, UUID epersontoepersonmapid, String oldfilenumber, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.searchByOldFileNumber(context,drafttype,epersontoepersonmapid,oldfilenumber,offset,limit);
+    }
+
+    @Override
+    public int countsearchByOldFileNumber(Context context, UUID drafttype, UUID epersontoepersonmapid, String oldfilenumber) throws SQLException {
+        return workflowProcessDAO.countsearchByOldFileNumber(context,drafttype,epersontoepersonmapid,oldfilenumber);
+    }
+
 
     public UUID getMastervalueData(Context context, String mastername, String mastervaluename) throws SQLException {
         WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterServicee.findByName(context, mastername);

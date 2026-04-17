@@ -2382,6 +2382,12 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
                 WorkflowProcessReferenceDoc notedoc = createFinalNoteSignPendingPDF(context, workFlowProcess);
 
+                if(notedoc.getBitstream()!=null){
+                    Bitstream b=  bitstreamService.find(context,notedoc.getBitstream().getID());
+                    bitstreamService.update(context,b);
+                    System.out.println("Bitstrem update index:>>>>>>>>>>>>>>>:");
+                }
+
             }
 
             System.out.println("in complete Action start! stop");
@@ -5194,7 +5200,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
         List<Bitstream> bitstreams = null;
 
-        final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
 
         // System.out.println("start.......createFinalNote");
 
@@ -5278,8 +5284,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
         // System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
 
-
-
         if(workflowProcess.getItem()!=null&&workflowProcess.getItem().getName()!=null) {
 
                 sb.append("<div style=\"float: right; width:65%\">");
@@ -5289,8 +5293,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                 sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
 
                 sb.append("</div>");
-
-
 
         }
 
@@ -5304,15 +5306,23 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
         List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
 
+
+        List<WorkFlowProcessComment> sortedcomment = comments.stream()
+                .sorted(Comparator.comparingInt(WorkFlowProcessComment::getNoteindex))
+                .collect(Collectors.toList());
         int i = 1;
 
-        for (WorkFlowProcessComment comment : comments) {
+        for (WorkFlowProcessComment comment : sortedcomment) {
 
             sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
 
             //coment count
 
-            sb.append("<p><u>Note# " + i + "</u></p>");
+            if(comment.getNoteindex()!=null) {
+                sb.append("<p><u>Note# " + comment.getNoteindex() + "</u></p>");
+            }else{
+                sb.append("<p><u>Note# " + i + "</u></p>");
+            }
 
             //comment text
 
@@ -5346,36 +5356,40 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             sb.append("<br><br><div style=\"width:100%;\"> ");
 
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Attachment :</b></p> ");
-
-            if (bitstreams.size() != 0) {
-
-                for (Bitstream bitstream : bitstreams) {
-
-                    if (bitstream != null) {
-
-                        System.out.println("in Attachment");
-
-                        String baseurl = configurationService.getProperty("dspace.server.url");
-
-                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
-
-                        sb.append(bitstream.getName() + "</a></span>");
-
-                        // stroremetadate(bitstream, sb);
-
-                    }
-
-                }
-
-            }
+            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+//
+//            if (bitstreams.size() != 0) {
+//
+//                for (Bitstream bitstream : bitstreams) {
+//
+//                    if (bitstream != null) {
+//
+//                        System.out.println("in Attachment");
+//
+//                        String baseurl = configurationService.getProperty("dspace.server.url");
+//
+//                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+//
+//                        sb.append(bitstream.getName() + "</a></span>");
+//
+//                        // stroremetadate(bitstream, sb);
+//
+//                    }
+//
+//                }
+//
+//            }
 
             sb.append("</div>");
 
             //start normal sign with HTML Cordinate
 
-            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + i + "_Name:</B> </p>");
+          if(comment.getNoteindex()!=null) {
+              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + comment.getNoteindex() + "_Name:</B> </p>");
+          }else{
+              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + i + "_Name:</B> </p>");
 
+          }
             //this is normal
 
             //String icon = configurationService.getProperty("digital.sign.icon");
@@ -5453,22 +5467,13 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             i++;
 
         }
-
         sb.append("</body></html>");
-
-
-
-
 
         if (isTextEditorFlow) {
 
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
 
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
-
-
-
-
 
             System.out.println("HTML:::" + sb.toString());
 
@@ -5515,7 +5520,8 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             fileInputStream1 = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
 
             Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", finalnotepath.getName());
-
+            int result = (int) notecount;
+            bitstream.setNoteindex(result);
             margedoc.setBitstream(bitstream);
 
             margedoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
@@ -5672,18 +5678,12 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
 
 
-    public FileInputStream createFinalNoteInpogresss(Context context, WorkflowProcess workflowProcess) throws
-
-            Exception {
+    public FileInputStream createFinalNoteInpogresss(Context context, WorkflowProcess workflowProcess) throws Exception {
 
         boolean isTextEditorFlow = false;
-
         Map<String, Object> map = new HashMap<String, Object>();
-
         InputStream input2 = null;
-
         DocToPdfConverter docToPdfConverter = null;
-
         List<Bitstream> bitstreams = null;
 
         final String TEMP_DIRECTORY = getFolderTmp("createFinalNoteInpogresss");
@@ -5691,31 +5691,18 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         // System.out.println("start.......createFinalNote");
 
         StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
-
                 ".sign {\n" +
-
                 "        text-align: left; margin: 1px; margin-top: -31px;\n" +
-
                 "    }\n" +
-
                 "    .sign i {\n" +
-
                 "        font-size: 24px; /* Adjust size as needed */\n" +
-
                 "        margin-bottom: 10px; /* Space between icon and text */\n" +
-
                 "        color: #000; /* Icon color */\n" +
-
                 "    }\n" +
-
                 "\t.img{height: 75px;\n" +
-
                 "    width: 128px;\n" +
-
                 "    margin-bottom: -75px;" +
-
                 "}" +
-
                 "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
 
         long notecount = 0;
@@ -5751,13 +5738,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             }
 
         }
-
-
-
-
-
-
-
         if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
 
             sb.append("<div style=\"float: right; width:65%\">");
@@ -5767,8 +5747,6 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
 
             sb.append("</div>");
-
-
 
         }
 
@@ -5832,29 +5810,29 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             sb.append("<br><br><div style=\"width:100%;\"> ");
 
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Attachment :</b></p> ");
-
-            if (bitstreams.size() != 0) {
-
-                for (Bitstream bitstream : bitstreams) {
-
-                    if (bitstream != null) {
-
-                        System.out.println("in Attachment");
-
-                        String baseurl = configurationService.getProperty("dspace.server.url");
-
-                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
-
-                        sb.append(bitstream.getName() + "</a></span>");
-
-                        // stroremetadate(bitstream, sb);
-
-                    }
-
-                }
-
-            }
+            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+//
+//            if (bitstreams.size() != 0) {
+//
+//                for (Bitstream bitstream : bitstreams) {
+//
+//                    if (bitstream != null) {
+//
+//                        System.out.println("in Attachment");
+//
+//                        String baseurl = configurationService.getProperty("dspace.server.url");
+//
+//                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+//
+//                        sb.append(bitstream.getName() + "</a></span>");
+//
+//                        // stroremetadate(bitstream, sb);
+//
+//                    }
+//
+//                }
+//
+//            }
 
             sb.append("</div>");
 
@@ -5885,9 +5863,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             } else {
 
                 if (comment.getSubmitter() != null) {
-
                     if (comment.getSubmitter().getFullName() != null) {
-
                         sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
 
                     }
@@ -5977,32 +5953,19 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
             WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
 
             if (workFlowProcessMaster != null) {
-
                 WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
-
                 if (workFlowProcessMasterValue != null) {
-
                     margedoc.setDrafttype(workFlowProcessMasterValue);
-
                 }
-
             }
 
             margedoc.setWorkflowProcess(workflowProcess);
-
             FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
-
             return outputfile;
-
         }
 
         return null;
-
     }
-
-
-
-
 
     public WorkflowProcessReferenceDoc createFinalNote(Context context, WorkflowProcess workflowProcess) throws
 
@@ -6166,29 +6129,29 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             sb.append("<br><br><div style=\"width:100%;\"> ");
 
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b>Attachment :</b></p> ");
-
-            if (comment.getWorkflowProcessReferenceDoc() != null && comment.getWorkflowProcessReferenceDoc().size() != 0) {
-
-                for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : comment.getWorkflowProcessReferenceDoc()) {
-
-                    if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && !workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("PKCS12")) {
-
-                        if (workflowProcessReferenceDoc.getBitstream() != null) {
-
-                            String baseurl = configurationService.getProperty("dspace.server.url");
-
-                            sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content>");
-
-                            stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
-
-                        }
-
-                    }
-
-                }
-
-            }
+            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+//
+//            if (comment.getWorkflowProcessReferenceDoc() != null && comment.getWorkflowProcessReferenceDoc().size() != 0) {
+//
+//                for (WorkflowProcessReferenceDoc workflowProcessReferenceDoc : comment.getWorkflowProcessReferenceDoc()) {
+//
+//                    if (workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue() != null && !workflowProcessReferenceDoc.getDrafttype().getPrimaryvalue().equals("PKCS12")) {
+//
+//                        if (workflowProcessReferenceDoc.getBitstream() != null) {
+//
+//                            String baseurl = configurationService.getProperty("dspace.server.url");
+//
+//                            sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + workflowProcessReferenceDoc.getBitstream().getID() + "/content>");
+//
+//                            stroremetadate(workflowProcessReferenceDoc.getBitstream(), sb);
+//
+//                        }
+//
+//                    }
+//
+//                }
+//
+//            }
 
             sb.append("</div>");
 
@@ -6350,7 +6313,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
 
-            // System.out.println("HTML:::" + sb.toString());
+             System.out.println("HTML:::" + sb.toString());
 
             int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
 

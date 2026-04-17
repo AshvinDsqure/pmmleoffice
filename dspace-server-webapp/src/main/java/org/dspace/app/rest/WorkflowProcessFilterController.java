@@ -40,10 +40,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -487,6 +489,67 @@ public class WorkflowProcessFilterController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getInProgressWorkflow")
+    public ResponseEntity<Map<String, Object>> getInProgressWorkflow(
+            @RequestParam(name = "item", required = true) String item,
+            HttpServletRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Context context = ContextUtil.obtainContext(request);
+            context.turnOffAuthorisationSystem();
+
+            // ✅ Validate input
+            if (item == null || item.isEmpty()) {
+                response.put("message", "Item ID is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            UUID itemId;
+            try {
+                itemId = UUID.fromString(item);
+            } catch (IllegalArgumentException e) {
+                response.put("message", "Invalid UUID format");
+                return ResponseEntity.badRequest().body(response);
+            }
+           List<UUID>statusids=new ArrayList<>();
+            // ✅ Get status ID
+            UUID inProgressId = WorkFlowStatus.INPROGRESS
+                    .getUserTypeFromMasterValue(context)
+                    .get()
+                    .getID();
+            UUID draft = WorkFlowStatus.DRAFT
+                    .getUserTypeFromMasterValue(context)
+                    .get()
+                    .getID();
+            UUID draftnote = WorkFlowStatus.DRAFTNOTE
+                    .getUserTypeFromMasterValue(context)
+                    .get()
+                    .getID();
+            statusids.add(inProgressId);
+            statusids.add(draft);
+            statusids.add(draftnote);
+
+
+
+            // ✅ Call service
+            int count = workflowProcessService
+                    .getInpogressWorkflowProcessByItemsid(context, itemId,statusids);
+
+            // ✅ Proper response
+            response.put("exists", count > 0);
+            response.put("count", count);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Internal Server Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
 

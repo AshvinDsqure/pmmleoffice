@@ -49,6 +49,7 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     int getCountByType(Context context, UUID typeid,Integer version) throws SQLException;
 
     WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException;
+    int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid,List<UUID> statusIDs) throws SQLException;
 
     List<WorkflowProcess> Filter(Context context, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
 
@@ -57,6 +58,8 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     int getCountWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid) throws SQLException;
 
     List<WorkflowProcess> searchByFileNumberOrTapalNumber(Context context,MetadataField metadataField,MetadataField metadataFieldsubject, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+
+
     int countfilterInwarAndOutWard(Context context,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, Integer offset, Integer limit) throws SQLException;
 
@@ -116,5 +119,7 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     public List<Object[]> getFileByDayTakenAndDepartment(Context context, Integer daytaken,String flag,String startdate, String enddate) throws SQLException;
 
     public List<String> getDraftMigration(Context context, Integer limit) throws SQLException;
+    List<WorkflowProcess> searchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber,Integer offset, Integer limit) throws SQLException;
+    int countsearchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber) throws SQLException;
 
 }

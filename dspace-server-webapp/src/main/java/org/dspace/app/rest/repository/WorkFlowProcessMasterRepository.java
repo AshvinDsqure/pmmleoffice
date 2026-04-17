@@ -116,7 +116,7 @@ public class WorkFlowProcessMasterRepository extends DSpaceObjectRestRepository<
     public Page<WorkFlowProcessMasterRest> findAll(Context context, Pageable pageable) throws SQLException {
         int total = workFlowProcessMasterService.countRows(context);
         List<WorkFlowProcessMaster> list = new ArrayList<>();
-        List<String> dontshowmasterlist = Arrays.asList("Workflow Status", "Workflow Type", "Action", "Workflow User Type","Draft Type");
+        List<String> dontshowmasterlist = Arrays.asList("Workflow Status", "Workflow Type", "Action", "Workflow User Type","Draft Type","Department Counts");
         List<WorkFlowProcessMaster> workFlowProcessMasters = workFlowProcessMasterService.findAll(context);
         list = workFlowProcessMasters.stream().filter(d -> !dontshowmasterlist.contains(d.getMastername())).collect(Collectors.toList());
         return converter.toRestPage(list, pageable, total, utils.obtainProjection());

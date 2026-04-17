@@ -57,6 +57,9 @@ public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport
     @Column(name = "deleted")
     private boolean deleted = false;
 
+    @Column(name = "noteindex")
+    private Integer noteindex;
+
     @Column(name = "internal_id", length = 256)
     private String internalId;
 
@@ -67,8 +70,6 @@ public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport
 
     @Column(name = "typename")
     private String typename;
-
-
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bitstream_format_id")
@@ -456,5 +457,13 @@ public class Bitstream extends DSpaceObject implements DSpaceObjectLegacySupport
 
     public void setTypename(String typename) {
         this.typename = typename;
+    }
+
+    public Integer getNoteindex() {
+        return noteindex;
+    }
+
+    public void setNoteindex(Integer noteindex) {
+        this.noteindex = noteindex;
     }
 }

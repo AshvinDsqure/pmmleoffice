@@ -43,6 +43,8 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
     private String designation;
     private Boolean isdosign=false;
 
+    private Integer noteindex;
+
     private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
 
     @JsonProperty
@@ -201,5 +203,13 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     public void setDesignation(String designation) {
         this.designation = designation;
+    }
+
+    public Integer getNoteindex() {
+        return noteindex;
+    }
+
+    public void setNoteindex(Integer noteindex) {
+        this.noteindex = noteindex;
     }
 }

@@ -1330,6 +1330,40 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
         }
     }
 
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "searchOldFilenumber")
+    public Page<WorkFlowProcessRest> searchOldFilenumber(@Parameter(value = "oldfilenumber", required = false) String oldfilenumber,
+                                                            Pageable pageable) {
+        log.info("in getDraftNotePendingWorkflow start");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
+            UUID statusdraftid = null;
+            if (workFlowProcessMaster != null) {
+                statusdraftid = workFlowProcessMasterValueService.findByName(context, "Reference Document", workFlowProcessMaster).getID();
+            }
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid = map.get().getID();
+            }
+            int count = workflowProcessService.countsearchByOldFileNumber(context, statusdraftid,epersonToEpersonMappingid, oldfilenumber);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.searchByOldFileNumber(context, statusdraftid, epersonToEpersonMappingid, oldfilenumber,  Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+
+            log.info("in getDraftNotePendingWorkflow stop!");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("in getDraftNotePendingWorkflow Error" + e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "getWorkflowAfterNoteApproved")

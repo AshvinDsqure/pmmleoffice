@@ -1212,37 +1212,59 @@ public class WorkflowProcessDigitalSignController {
         }
     }
 
-    public  byte[]  getMargedPreveseNote(Context context,  List<Bitstream> prevesebitstrea, InputStream current) throws SQLException, AuthorizeException, IOException {
-        List<InputStream> preveseInputStream = new ArrayList<>();
+    public byte[] getMargedPreveseNote(Context context, List<Bitstream> prevesebitstrea, InputStream current)
+            throws SQLException, AuthorizeException, IOException {
+
+        List<InputStream> inputStreams = new ArrayList<>();
+
+        final String TEMP_DIRECTORY = getFolderTmp("PreveseMargeddoc");
+        File output = new File(TEMP_DIRECTORY, "replyTapalmarged.pdf");
+
         try {
-            final String TEMP_DIRECTORY = getFolderTmp("PreveseMargeddoc");
-            File output = new File(TEMP_DIRECTORY, "replyTapalmarged.pdf");
             if (!output.exists()) {
-                try {
-                    output.createNewFile();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                output.createNewFile();
+            }
+
+            // ✅ SORT + FILTER (VERY IMPORTANT)
+            if (prevesebitstrea != null && !prevesebitstrea.isEmpty()) {
+
+                prevesebitstrea = prevesebitstrea.stream()
+                        .filter(Objects::nonNull)
+                        .filter(b -> b.getNoteindex() != null) // ❗ remove null index
+                        .sorted(Comparator.comparingInt(Bitstream::getNoteindex)) // ASC
+                        .collect(Collectors.toList());
+
+                // ✅ DEBUG (optional)
+                for (Bitstream b : prevesebitstrea) {
+                    System.out.println("Index: " + b.getNoteindex());
+                }
+
+                // ✅ ADD IN ORDER
+                for (Bitstream bitstream : prevesebitstrea) {
+                    InputStream is = bitstreamService.retrieve(context, bitstream);
+                    inputStreams.add(is);
                 }
             }
-            OutputStream out = new FileOutputStream(new File(output.getAbsolutePath()));
-            if (prevesebitstrea != null && !prevesebitstrea.isEmpty()) {
-                    for (Bitstream bitstream : prevesebitstrea) {
-                        InputStream inputStream = bitstreamService.retrieve(context, bitstream);
-                        preveseInputStream.add(inputStream);
-                    }
-                }
-                if (current != null) {
-                    preveseInputStream.add(current);
-                }
-                MargedDocUtils.mergePdfFiles(preveseInputStream, out);
-                FileInputStream outputfile = new FileInputStream(new File(output.getAbsolutePath()));
-                return convertToBytes(outputfile);
 
-        }catch (Exception e){
+            // ✅ Add current at last
+            if (current != null) {
+                inputStreams.add(current);
+            }
+
+            // ✅ MERGE (WITH SAFE STREAM HANDLING)
+            try (OutputStream out = new FileOutputStream(output)) {
+                MargedDocUtils.mergePdfFiles(inputStreams, out);
+            }
+
+            // ✅ RETURN BYTE[]
+            try (FileInputStream fis = new FileInputStream(output)) {
+                return convertToBytes(fis);
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException("Error while merging PDFs", e);
         }
-        return null;
     }
 
     public  byte[] convertToBytes(InputStream is) throws IOException {
@@ -1529,21 +1551,21 @@ public class WorkflowProcessDigitalSignController {
                     .orElseThrow(() -> new RuntimeException("DISPATCHCLOSE status not found"))
                     .getID();
 
-            // ✅ Step 2: Fetch previous notes
-            List<WorkflowProcessNote> notes = Optional.ofNullable(
-                    workflowProcessNoteService.getDocumentByItemid(
-                            context, UUID.fromString(itemid), statusId, dispatchCloseId, -1, -1)
-            ).orElse(Collections.emptyList());
 
             // ✅ Step 3: Extract bitstreams
-            List<Bitstream> bitstreams = notes.stream()
-                    .filter(Objects::nonNull)
-                    .flatMap(note -> Optional.ofNullable(note.getWorkflowProcessReferenceDocs())
-                            .orElse(Collections.emptySet()).stream())
-                    .map(WorkflowProcessReferenceDoc::getBitstream)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .collect(Collectors.toList());
+            List<Bitstream> bitstreams = bitstreamService.getNotBitstreamsbySatatus(context,UUID.fromString(itemid),statusId,dispatchCloseId,-1,-1);
+
+            System.out.println("size:::::"+bitstreams.size());
+
+            try {
+
+                for (Bitstream b : bitstreams) {
+                    System.out.println("Index: " + b.getNoteindex());
+                }
+            }catch (Exception e){
+                System.out.println("index   count..."+e.getMessage());
+            }
+
 
             // ✅ Step 4: Get current workflow (ONLY if uuid present)
             WorkflowProcess workflowProcess = null;

@@ -22,10 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.service.AuthorizeService;
 import org.dspace.content.dao.BitstreamDAO;
-import org.dspace.content.service.BitstreamFormatService;
-import org.dspace.content.service.BitstreamService;
-import org.dspace.content.service.BundleService;
-import org.dspace.content.service.ItemService;
+import org.dspace.content.service.*;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.LogHelper;
@@ -53,6 +50,11 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     protected BitstreamDAO bitstreamDAO;
     @Autowired(required = true)
     protected ItemService itemService;
+
+    @Autowired
+    WorkFlowProcessMasterService workFlowProcessMasterService;
+    @Autowired
+    WorkFlowProcessMasterValueService workFlowProcessMasterServicevalue;
 
 
     @Autowired(required = true)
@@ -288,7 +290,8 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
 
         // changed to a check on delete
         // Check authorisation
-        authorizeService.authorizeAction(context, bitstream, Constants.DELETE);
+        //authorizeService.authorizeAction(context, bitstream, Constants.DELETE);
+        context.turnOffAuthorisationSystem();
         log.info(LogHelper.getHeader(context, "delete_bitstream",
                                       "bitstream_id=" + bitstream.getID()));
 
@@ -309,7 +312,7 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
         bundles.clear();
 
         // Remove policies only after the bitstream has been updated (otherwise the current user has not WRITE rights)
-        authorizeService.removeAllPolicies(context, bitstream);
+         authorizeService.removeAllPolicies(context, bitstream);
     }
 
     @Override
@@ -498,6 +501,16 @@ public class BitstreamServiceImpl extends DSpaceObjectServiceImpl<Bitstream> imp
     @Override
     public List<Bitstream> getNotReferencedBitstreams(Context context) throws SQLException {
         return bitstreamDAO.getNotReferencedBitstreams(context);
+    }
+
+    @Override
+    public List<Bitstream> getNotBitstreamsbySatatus(Context context, UUID itemid, UUID workflowstatuscloseid, UUID dspaceclosecloseid, Integer offset, Integer limit) throws SQLException {
+        WorkFlowProcessMaster  workFlowProcessMaster= workFlowProcessMasterService.findByName(context,"Draft Type");
+        if(workFlowProcessMaster!=null){
+            WorkFlowProcessMasterValue note=workFlowProcessMasterServicevalue.findByName(context,"Note",workFlowProcessMaster);
+            return bitstreamDAO.getNotBitstreamsbySatatus(context,note.getID(),itemid,workflowstatuscloseid,dspaceclosecloseid,offset,limit);
+        }
+        return null;
     }
 
     @Nullable

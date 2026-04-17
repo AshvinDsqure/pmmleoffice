@@ -124,6 +124,8 @@ public class BitstreamRestRepository extends DSpaceObjectRestRepository<Bitstrea
 
     @Override
     protected void delete(Context context, UUID id) throws AuthorizeException {
+        context.turnOffAuthorisationSystem();
+        context.ignoreAuthorization();
         Bitstream bit = null;
         try {
             bit = bs.find(context, id);

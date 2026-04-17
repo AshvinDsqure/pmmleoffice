@@ -41,6 +41,7 @@ public class BitstreamRest extends DSpaceObjectRest {
     private String bundleName;
 
     private Boolean  candelete = false;
+    private Integer noteindex;
 
     private Long sizeBytes;
     private CheckSumRest checkSum;
@@ -97,5 +98,13 @@ public class BitstreamRest extends DSpaceObjectRest {
 
     public void setCandelete(Boolean candelete) {
         this.candelete = candelete;
+    }
+
+    public Integer getNoteindex() {
+        return noteindex;
+    }
+
+    public void setNoteindex(Integer noteindex) {
+        this.noteindex = noteindex;
     }
 }

@@ -141,10 +141,45 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         WorkFlowProcessComment workFlowProcessComment = null;
         WorkFlowProcessComment workFlowProcessComment1 = null;
         WorkflowProcessReferenceDoc workflowProcessReferenceDoc1 = null;
+        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
+        Integer notecount = 0;
         try {
             if (workFlowProcessCommentRest.getId() != null) {
                 System.out.println("update::");
                 workFlowProcessComment = workFlowProcessCommentConverter.convertByService(context, workFlowProcessCommentRest);
+                if(workFlowProcessComment.getNoteindex()!=null){
+                    notecount=workFlowProcessComment.getNoteindex();
+                    if(notecount==0){
+                        notecount=1;
+                    }
+                }else{
+                    if (workFlowProcessCommentRest.getItemRest() !=null &&workFlowProcessCommentRest.getItemRest().getId()!=null) {
+                        WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Department Counts");
+                        if(workFlowProcessMaster!=null){
+                            WorkFlowProcessMasterValue itemnotecountvalue = workFlowProcessMasterValueService.findByName(context, workFlowProcessCommentRest.getItemRest().getId(), workFlowProcessMaster);
+                            if (itemnotecountvalue != null) {
+                                Integer t = Integer.valueOf(itemnotecountvalue.getSecondaryvalue());
+                                notecount = t + 1;
+                                itemnotecountvalue.setSecondaryvalue(String.valueOf(notecount));
+                                workFlowProcessMasterValueService.update(context, itemnotecountvalue);
+                                System.out.println("new number update------.......");
+                            } else {
+                                System.out.println("new number create update........"+workFlowProcessCommentRest.getItemRest().getId());
+                                WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
+                                workFlowProcessMasterValue.setWorkflowprocessmaster(workFlowProcessMaster);
+                                workFlowProcessMasterValue.setSecondaryvalue("1");
+                                workFlowProcessMasterValue.setPrimaryvalue(workFlowProcessCommentRest.getItemRest().getId());
+                                workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
+                                notecount = 1;
+                            }
+
+                        }else {
+                            System.out.println("master not avalable");
+                        }
+                    }else {
+                        System.out.println("item not found!");
+                    }
+                }
                 Optional<WorkflowProcessReferenceDoc> workflowProcessReferenceDoc = workFlowProcessComment.getWorkflowProcessReferenceDoc().stream().filter(d -> d.getDrafttype() != null)
                         .filter(d -> d.getDrafttype().getPrimaryvalue() != null)
                         .filter(d -> d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
@@ -155,6 +190,8 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 }
                 workFlowProcessComment = workFlowProcessCommentConverter.convertupdate(context, workFlowProcessComment, workFlowProcessCommentRest);
                 workFlowProcessComment1 = workFlowProcessComment;
+
+
             } else {
                 //System.out.println("create:::");
                 UUID epersonToEpersonMappingid = null;
@@ -165,8 +202,41 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 workFlowProcessComment = workFlowProcessCommentConverter.convert(context, workFlowProcessCommentRest);
                 workFlowProcessComment.setIsdraftsave(true);
                 workFlowProcessComment1 = workFlowProcessCommentService.create(context, workFlowProcessComment);
+
+
+                if (workFlowProcessCommentRest.getItemRest() !=null &&workFlowProcessCommentRest.getItemRest().getId()!=null) {
+                    WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Department Counts");
+                    if(workFlowProcessMaster!=null){
+                        WorkFlowProcessMasterValue itemnotecountvalue = workFlowProcessMasterValueService.findByName(context, workFlowProcessCommentRest.getItemRest().getId(), workFlowProcessMaster);
+                        if (itemnotecountvalue != null) {
+                            Integer t = Integer.valueOf(itemnotecountvalue.getSecondaryvalue());
+                            notecount = t + 1;
+                            itemnotecountvalue.setSecondaryvalue(String.valueOf(notecount));
+                            workFlowProcessMasterValueService.update(context, itemnotecountvalue);
+                            System.out.println("new number update");
+                        } else {
+                            System.out.println("new number create "+workFlowProcessCommentRest.getItemRest().getId());
+                            WorkFlowProcessMasterValue workFlowProcessMasterValue = new WorkFlowProcessMasterValue();
+                            workFlowProcessMasterValue.setWorkflowprocessmaster(workFlowProcessMaster);
+                            workFlowProcessMasterValue.setSecondaryvalue("1");
+                            workFlowProcessMasterValue.setPrimaryvalue(workFlowProcessCommentRest.getItemRest().getId());
+                            workFlowProcessMasterValueService.create(context, workFlowProcessMasterValue);
+                            notecount = 1;
+                        }
+
+                    }else {
+                        System.out.println("master not avalable");
+                    }
+                }else {
+                    System.out.println("item not found!");
+                }
             }
 
+            if(notecount==0){
+                notecount=1;
+            }
+
+            System.out.println("count::::::::::::::"+notecount);
             if (workFlowProcessCommentRest.getWorkflowProcessRest() != null && workFlowProcessCommentRest.getWorkflowProcessRest().getId() != null) {
                 WorkflowProcess workflowProcess = workflowProcessService.find(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
                 workFlowProcessComment1.setWorkFlowProcess(workflowProcess);
@@ -186,13 +256,8 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                 List<Bitstream> bitstreams = workflowProcessReferenceDocs.stream().filter(d -> d.getDrafttype() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document")).filter(d -> d.getBitstream() != null)
                         .map(d -> d.getBitstream()).collect(Collectors.toList());
 
-                final String TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-                long notecount = 0;
-                if (workFlowProcessCommentRest.getItemRest() != null) {
-                    UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
-                    notecount = workflowProcessNoteService.getNoteCountNumber(context, UUID.fromString(workFlowProcessCommentRest.getItemRest().getUuid()), statusid);
-                }
-                notecount = notecount + 1;
+
+
                 File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
                 if (!tempFile1html.exists()) {
                     try {
@@ -203,18 +268,26 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
                     }
                 }
                 workFlowProcessComment1 = finalWorkFlowProcessComment;
-                WorkflowProcessReferenceDoc notedoc = createFinalNoteComment(context, workFlowProcessComment1, tempFile1html, bitstreams, workFlowProcessCommentRest, workflowProcessReferenceDoc1);
-
+                WorkflowProcessReferenceDoc notedoc = createFinalNoteComment(context, workFlowProcessComment1, tempFile1html, bitstreams, workFlowProcessCommentRest, workflowProcessReferenceDoc1,notecount);
                 if (notedoc == null) {
                     throw new UnprocessableEntityException("Note document creation failed.");
                 }
                 workFlowProcessCommentRest.setMargeddocuuid(notedoc.getID().toString());
                 workFlowProcessComment1.setMargeddocuuid(notedoc.getID().toString());
                 notedoc.setWorkflowprocesscomment(workFlowProcessComment1);
+
+                if(notedoc.getBitstream()!=null){
+                  Bitstream b=  bitstreamService.find(context,notedoc.getBitstream().getID());
+                  b.setNoteindex(notecount);
+                  bitstreamService.update(context,b);
+                    System.out.println("Bitstrem update index:>>>>>>>>>>>>>>>:");
+                }
                 workflowProcessReferenceDocs.add(notedoc);
                 if (workflowProcessReferenceDocs != null && workflowProcessReferenceDocs.size() != 0) {
                     workFlowProcessComment1.setWorkflowProcessReferenceDoc(workflowProcessReferenceDocs);
                 }
+                workFlowProcessComment1.setNoteindex(notecount);
+                workFlowProcessComment.setNoteindex(notecount);
                 workFlowProcessCommentService.update(context, workFlowProcessComment1);
             }
         } catch (UnprocessableEntityException e) {
@@ -344,6 +417,18 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         return converter.toRest(workFlowProcessComment, utils.obtainProjection());
     }
 
+    public static String getFolderTmp(String folderName) {
+        final String tempDirectory = System.getProperty("java.io.tmpdir");
+        String timestamp = java.time.format.DateTimeFormatter.ofPattern("ddMMMyyyyHHmmss")
+                .format(java.time.LocalDateTime.now().plusMinutes(3));
+        String uniqueId = java.util.UUID.randomUUID().toString(); // ✅ IMPORTANT
+        File directory = new File(tempDirectory + File.separator + folderName + "_" + timestamp+"_" + uniqueId);
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new RuntimeException("Failed to create temporary directory: " + directory.getAbsolutePath());
+        }
+        return directory.getAbsolutePath();
+    }
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @Override
     public WorkFlowProcessCommentRest findOne(Context context, UUID uuid) {
@@ -435,23 +520,22 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
     }
 
 
-    public WorkflowProcessReferenceDoc createFinalNoteComment(Context context, WorkFlowProcessComment comment, File tempFile1html, List<Bitstream> bitstreams, WorkFlowProcessCommentRest workFlowProcessCommentRest, WorkflowProcessReferenceDoc margedoc) throws
+    public WorkflowProcessReferenceDoc createFinalNoteComment(Context context, WorkFlowProcessComment comment, File tempFile1html, List<Bitstream> bitstreams, WorkFlowProcessCommentRest workFlowProcessCommentRest, WorkflowProcessReferenceDoc margedoc,Integer notecount) throws
 
             Exception {
 
         boolean isTextEditorFlow = false;
         boolean isdocupdate = false;
-        int notenumbe = 0;
-        if (workFlowProcessCommentRest.getWorkflowProcessRest() != null && workFlowProcessCommentRest.getWorkflowProcessRest().getUuid() != null) {
-            List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
-            if (comments != null && comments.size() != 0) {
-                notenumbe = comments.size();
-            }
-        }
-        if (notenumbe == 0) {
-            notenumbe = 1;
-        }
-        System.out.println("note number---- " + notenumbe);
+//        if (workFlowProcessCommentRest.getWorkflowProcessRest() != null && workFlowProcessCommentRest.getWorkflowProcessRest().getUuid() != null) {
+//            List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, UUID.fromString(workFlowProcessCommentRest.getWorkflowProcessRest().getId()));
+//            if (comments != null && comments.size() != 0) {
+//                notenumbe = comments.size();
+//            }
+//        }
+//        if (notenumbe == 0) {
+//            notenumbe = 1;
+//        }
+        System.out.println("note number---- " + notecount);
         // System.out.println("start.......createFinalNote");
         StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>.footer {\n" +
                 "                margin-top: 10px;width: 100%;\n" +
@@ -535,26 +619,28 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         isTextEditorFlow = true;
         sb.append("<div style=\"text-align: justify; word-break: break-word;width:100% ;text-align: left; float:left;\">");
         //coment count
-        sb.append("<p><u>Note# " + notenumbe + "</u></p>");
+        sb.append("<p><u>Note# " + notecount + "</u></p>");
         //comment text
         if (comment.getComment() != null) {
             sb.append("<div style=\"text-align: justify; word-break: break-word;\">" + comment.getComment() + "</div>");
         }
         sb.append("<br><div style=\"width:100%;\"> ");
-        sb.append("<div style=\"width:50%;  float:left;\"> <p><b>Attachment :</b></p> ");
+
+        sb.append("<div style=\"width:50%;  float:left;\"> <p><b></b></p> ");
         System.out.println("omment.getWorkflowProcessReferenceDoc().size():::" + comment.getWorkflowProcessReferenceDoc().size());
-        if (bitstreams.size() != 0) {
-            for (Bitstream bitstream : bitstreams) {
-                if (bitstream != null) {
-                    System.out.println("in Attachment");
-                    String baseurl = configurationService.getProperty("dspace.server.url");
-                    sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
-                    sb.append(bitstream.getName() + "</a></span>");
-                    // stroremetadate(bitstream, sb);
-                }
-            }
-        }
+//        if (bitstreams.size() != 0) {
+//            for (Bitstream bitstream : bitstreams) {
+//                if (bitstream != null) {
+//                    System.out.println("in Attachment");
+//                    String baseurl = configurationService.getProperty("dspace.server.url");
+//                    sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+//                    sb.append(bitstream.getName() + "</a></span>");
+//                    // stroremetadate(bitstream, sb);
+//                }
+//            }
+//        }
         sb.append("</div>");
+
         sb.append("<div style=\"    float: right;  width:30%;line-height: 1.1;\"><p> <B>Signature_1_Name:</B> </p><B>");
         if (!workFlowProcessCommentRest.getIsdosign()) {
             //this is normal
@@ -611,7 +697,7 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
 
         sb.append("<div class=footer>");
         if (items != null) {
-            sb.append("[" + items.getName() + "], [" + workFlowProcessCommentRest.getSubject() + "], [Note #" +notenumbe+ "]");
+            sb.append("[" + items.getName() + "], [" + workFlowProcessCommentRest.getSubject() + "], [Note #" +notecount+ "]");
         }
         sb.append("</div>");
         sb.append("  </body></html>");
@@ -626,8 +712,8 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
             //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
             System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
             InputStream outputfile = new FileInputStream(new File(tempFile1html.getAbsolutePath()));
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFile1html.getName());
 
+            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFile1html.getName());
             if (margedoc != null) {
                 isdocupdate = true;
                 try {
@@ -672,16 +758,20 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
 
 
             System.out.println("doc index::::::::::::::::::" + index);
+
             margedoc.setIndex(index);
             //margedoc.setWorkflowProcess(workflowProcess);
             if (isdocupdate) {
                 workflowProcessReferenceDocService.update(context, margedoc);
+                margedoc.setBitstream(bitstream);
                 return margedoc;
             } else {
                 WorkflowProcessReferenceDoc margedoc1 = workflowProcessReferenceDocService.create(context, margedoc);
+                margedoc.setBitstream(bitstream);
                 //context.commit();
                 return margedoc1;
             }
+
         }
         return null;
     }

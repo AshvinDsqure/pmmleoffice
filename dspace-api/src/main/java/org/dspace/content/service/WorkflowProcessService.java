@@ -97,6 +97,8 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     int countfindFilePendingDueDate(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft,UUID epersontoepersonmapping) throws SQLException;
 
     WorkflowProcess getNoteByItemsid(Context context, UUID itemid) throws SQLException;
+    int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid,List<UUID> statusIDs) throws SQLException;
+
     int getCountByType(Context context,UUID typeid,Integer version) throws SQLException;
     List<WorkflowProcess> Filter(Context context, HashMap<String,String> perameter , Integer offset, Integer limit) throws SQLException;
     List<WorkflowProcess> findReferList(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid,UUID statusdraft, Integer offset, Integer limit) throws SQLException;
@@ -151,5 +153,7 @@ public interface WorkflowProcessService extends DSpaceObjectService<WorkflowProc
     public List<Object[]> getActiveAndDActiveUsers(Context context, String flag) throws SQLException;
     public List<Object[]> getFileByDayTakenAndDepartment(Context context, Integer daytaken,String flag,String startdate, String enddate) throws SQLException;
     public List<String> getDraftMigration(Context context, Integer limit) throws SQLException;
+    List<WorkflowProcess> searchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber,Integer offset, Integer limit) throws SQLException;
+    int countsearchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber) throws SQLException;
 
 }

@@ -166,6 +166,36 @@ public class BitstreamDAOImpl extends AbstractHibernateDSODAO<Bitstream> impleme
     }
 
     @Override
+    public List<Bitstream> getNotBitstreamsbySatatus(Context context ,UUID drfttype, UUID itemid,UUID workflowstatuscloseid,UUID dspaceclosecloseid, Integer offset, Integer limit) throws SQLException {
+        Query query = createQuery(context,
+                "SELECT DISTINCT b " +
+                        "FROM WorkflowProcessReferenceDoc d " +
+                        "JOIN d.workflowprocessnote n " +
+                        "JOIN d.bitstream b " +   // ✅ also changed to INNER JOIN (recommended)
+                        "JOIN d.workflowProcess wp " +
+                        "JOIN wp.item i " +
+                        "JOIN wp.workflowStatus status " +
+                        "WHERE i.id = :itemid " +
+                        "AND (status.id = :stid OR status.id = :dspaceclose)  and d.drafttype.id=:drafttype " +
+                        " ORDER BY b.noteindex ASC "
+        );
+
+        query.setParameter("drafttype", drfttype);
+        query.setParameter("itemid", itemid);
+        query.setParameter("stid", workflowstatuscloseid);
+        query.setParameter("dspaceclose", dspaceclosecloseid);
+
+        if (offset != null && offset >= 0) {
+            query.setFirstResult(offset);
+        }
+        if (limit != null && limit > 0) {
+            query.setMaxResults(limit);
+        }
+
+        return query.getResultList();
+    }
+
+    @Override
     public Iterator<Bitstream> findAll(Context context, int limit, int offset) throws SQLException {
         Map<String, Object> map = new HashMap<>();
         return findByX(context, Bitstream.class, map, true, limit, offset).iterator();

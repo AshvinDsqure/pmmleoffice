@@ -204,7 +204,7 @@ public class WorkFlowProcessMasterValueRepository extends DSpaceObjectRestReposi
                         }).collect(Collectors.toList());
                 return new PageImpl(transformedList, pageable, total);
             } else if (workflowstatus.equalsIgnoreCase("Priority")) {
-                List<String> customOrder = Arrays.asList("Most Immediate", "High", "Medium", "Low");
+                List<String> customOrder = Arrays.asList("Chairman Office", "Most Urgent", "Top Most Urgent", "Urgent","Normal");
                 List<WorkFlowProcessMasterValueRest> transformedList = null;
                 transformedList = workFlowProcessMasterValueRests.stream()
                         .sorted(Comparator.comparingInt(obj -> customOrder.indexOf(obj.getPrimaryvalue())))

@@ -54,8 +54,8 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitter_id")
     private EPerson submitter = null;
-
-
+    @Column(name = "noteindex")
+    private Integer noteindex;
 
     @Column(name = "actiondate", columnDefinition = "timestamp with time zone")
     @Temporal(TemporalType.TIMESTAMP)
@@ -70,12 +70,12 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     @Column(name = "margeddocuuid")
     private String margeddocuuid;
 
-
     @Column(name = "commonname")
     private String commonname;
 
     @Column(name = "designation")
     private String designation;
+
     @Override
     public int getType() {
         return 0;
@@ -179,5 +179,13 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
 
     public void setDesignation(String designation) {
         this.designation = designation;
+    }
+
+    public Integer getNoteindex() {
+        return noteindex;
+    }
+
+    public void setNoteindex(Integer noteindex) {
+        this.noteindex = noteindex;
     }
 }

@@ -75,6 +75,9 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
     @Column(name = "filenumber")
     private String filenumber;
 
+    @Column(name = "oldfilenumber")
+    private String oldfilenumber;
+
     @Column(name = "filetype")
     private String filetype;
     @OneToOne(fetch = FetchType.LAZY)
@@ -281,5 +284,13 @@ public class WorkflowProcessReferenceDoc extends DSpaceObject implements DSpaceO
 
     public void setIndex(Integer index) {
         this.index = index;
+    }
+
+    public String getOldfilenumber() {
+        return oldfilenumber;
+    }
+
+    public void setOldfilenumber(String oldfilenumber) {
+        this.oldfilenumber = oldfilenumber;
     }
 }

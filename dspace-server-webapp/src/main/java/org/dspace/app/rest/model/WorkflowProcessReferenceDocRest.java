@@ -54,6 +54,8 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     private String filenumber;
 
+    private String oldfilenumber;
+
     private String filetype;
     private Integer index;
 
@@ -277,5 +279,13 @@ public class WorkflowProcessReferenceDocRest extends DSpaceObjectRest {
 
     public void setItemuuid(String itemuuid) {
         this.itemuuid = itemuuid;
+    }
+
+    public String getOldfilenumber() {
+        return oldfilenumber;
+    }
+
+    public void setOldfilenumber(String oldfilenumber) {
+        this.oldfilenumber = oldfilenumber;
     }
 }

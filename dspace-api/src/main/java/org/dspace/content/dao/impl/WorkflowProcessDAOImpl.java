@@ -1936,6 +1936,50 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
     }
 
+    @Override
+    public List<WorkflowProcess> searchByOldFileNumber(Context context, UUID drafttype,UUID epersontoepersonmapid, String oldfilenumber, Integer offset, Integer limit) throws SQLException {
+
+        Query query = createQuery(context, "SELECT DISTINCT wp FROM WorkflowProcessReferenceDoc as d " +
+                "left join d.workflowProcess as wp " +
+                "left join wp.workflowProcessEpeople ep " +
+                "where d.drafttype.id=:drafttypeid " +
+                "AND  lower(d.oldfilenumber) like :oldfilenumber " +
+                "AND ep.ePerson.id=:eperson ");
+        query.setParameter("drafttypeid",drafttype);
+        query.setParameter("oldfilenumber","%"+oldfilenumber.toLowerCase()+"%");
+        query.setParameter("eperson",context.getCurrentUser().getID());
+       // query.setParameter("epersontoepersonmapid",epersontoepersonmapid);
+
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int countsearchByOldFileNumber(Context context, UUID drafttype, UUID epersontoepersonmapid, String oldfilenumber) throws SQLException {
+       try {
+           Query query = createQuery(context, "SELECT count(DISTINCT wp.id) FROM WorkflowProcessReferenceDoc as d " +
+                   "left join d.workflowProcess as wp " +
+                   "left join wp.workflowProcessEpeople ep " +
+                   "where d.drafttype.id=:drafttypeid " +
+                   "AND  lower(d.oldfilenumber) like :oldfilenumber " +
+                   "AND ep.ePerson.id=:eperson " +
+                   "AND ep.epersontoepersonmapping.id = :epersontoepersonmapid ");
+           query.setParameter("drafttypeid",drafttype);
+           query.setParameter("oldfilenumber","%"+oldfilenumber.toLowerCase()+"%");
+           query.setParameter("eperson",context.getCurrentUser().getID());
+           query.setParameter("epersontoepersonmapid",epersontoepersonmapid);
+           return count(query);
+       }catch (Exception e){
+           System.out.println("Error::countsearchByOldFileNumber:::"+e.getMessage());
+           return 0;
+       }
+    }
+
 
     @Override
     public int countgetHistoryByNotOwnerAndNotDraft(Context context, UUID eperson, UUID statusid, UUID epersontoepersonmapid) throws SQLException {
@@ -2264,6 +2308,23 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "join wp.item as i  where i.id=:itemid");
         query.setParameter("itemid", itemid);
         return (WorkflowProcess) query.getSingleResult();
+    }
+
+    @Override
+    public int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid,List<UUID> statusIDs) throws SQLException {
+        try {
+            Query query = createQuery(context, "" +
+                    "SELECT count(wp.id) FROM WorkflowProcess as wp " +
+                    "where wp.item.id=:itemid AND wp.workflowStatus.id IN (:statusIDs)");
+
+            query.setParameter("itemid", itemid);
+            query.setParameter("statusIDs", statusIDs);
+
+            return count(query);
+        } catch (Exception e) {
+            System.out.println("Error in getInpogressWorkflowProcessByItemsid " + e.getMessage());
+            return 0;
+        }
     }
 
     @Override
