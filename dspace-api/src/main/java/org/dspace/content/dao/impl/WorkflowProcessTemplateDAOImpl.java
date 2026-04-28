@@ -58,4 +58,57 @@ public class WorkflowProcessTemplateDAOImpl extends AbstractHibernateDSODAO<Work
             return 0;
         }
     }
+    @Override
+    public int getbyuserandeditorandtemplate(Context context, UUID user, String editor, String templatename) throws SQLException {
+        try {
+            Query query = createQuery(context, "SELECT count(t) from  WorkflowProcessTemplate as t join t.ePerson as u where u.id=:userid and t.editortext=:editor and t.templatename=:templatename and t.isdelete=:isdelete");
+            query.setParameter("userid",user);
+            query.setParameter("editor",editor);
+            query.setParameter("templatename",templatename);
+            query.setParameter("isdelete",false);
+            return count(query);
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    public int getbyuserandtemplate(Context context, UUID user, String templatename) throws SQLException {
+       try {
+                Query query = createQuery(context, "SELECT count(t) from  WorkflowProcessTemplate as t join t.ePerson as u where u.id=:userid and t.templatename=:templatename and t.isdelete=:isdelete");
+                query.setParameter("userid",user);
+                query.setParameter("templatename",templatename);
+                query.setParameter("isdelete",false);
+                return count(query);
+            }catch (Exception e){
+                System.out.println("in error " + e.getMessage());
+                return 0;
+            }
+        }
+
+
+    @Override
+    public int getCountWorkflowProcessByUser(Context context, UUID userid) throws SQLException {
+        try {
+            Query query = createQuery(context, "SELECT count(t) from  WorkflowProcessTemplate as t join t.ePerson as u where u.id=:userid");
+            query.setParameter("userid",userid);
+            return count(query);
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return 0;
+        }
+    }
+    @Override
+    public List<WorkflowProcessTemplate> getWorkflowProcessByUser(Context context, UUID userid, Integer offset, Integer limit) throws SQLException {
+        try {
+            Query query = createQuery(context, "SELECT t from  WorkflowProcessTemplate as t join t.ePerson as u where u.id=:userid and t.isdelete=:isdelete ORDER BY t.index");
+            query.setParameter("userid",userid);
+            query.setParameter("isdelete",false);
+            return query.getResultList();
+        }catch (Exception e){
+            System.out.println("in error " + e.getMessage());
+            return null;
+        }
+    }
 }

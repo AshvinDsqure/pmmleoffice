@@ -50,13 +50,11 @@ import static java.util.stream.Collectors.toList;
 @Component(WorkFlowProcessCommentRest.CATEGORY + "." + WorkFlowProcessCommentRest.NAME)
 
 public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository<WorkFlowProcessComment, WorkFlowProcessCommentRest> {
-
     private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(WorkFlowProcessCommentRepository.class);
     @Autowired
     WorkFlowProcessCommentService workFlowProcessCommentService;
     @Autowired
     WorkFlowProcessCommentConverter workFlowProcessCommentConverter;
-
 
     @Autowired
     WorkflowProcessNoteService workflowProcessNoteService;
@@ -124,13 +122,17 @@ public class WorkFlowProcessCommentRepository extends DSpaceObjectRestRepository
         WorkFlowProcessComment workFlowProcessComment = null;
         try {
             workFlowProcessCommentRest = mapper.readValue(req.getInputStream(), WorkFlowProcessCommentRest.class);
+            // Validate comment field
+            if (workFlowProcessCommentRest.getComment() == null || workFlowProcessCommentRest.getComment().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Please Enter note.");
+            }
             workFlowProcessComment = createWorkFlowProcessCommentFromRestObject(context, workFlowProcessCommentRest);
             workFlowProcessCommentRest = workFlowProcessCommentConverter.convert(workFlowProcessComment, utils.obtainProjection());
             context.commit();
         } catch (Exception e1) {
             log.info("::::::error::::createAndReturn::::::::::");
             e1.printStackTrace();
-            throw new UnprocessableEntityException("error parsing the body... maybe this is not the right error code");
+            throw new UnprocessableEntityException("Error Create Comment Note "+e1.getMessage());
         }
         log.info("::::::complate::::createAndReturn::::::::::");
         return workFlowProcessCommentRest;

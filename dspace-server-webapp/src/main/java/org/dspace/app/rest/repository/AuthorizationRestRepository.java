@@ -154,9 +154,10 @@ public class AuthorizationRestRepository extends DSpaceRestRepository<Authorizat
             Pageable pageable) throws AuthorizeException, SQLException {
 
         Context context = obtainContext();
-
         EPerson currUser = context.getCurrentUser();
-
+        if(featureName.equalsIgnoreCase("canChangePassword")){
+            context.setAuthenticationMethod("password");
+        }
         // get the user specified in the requested parameters, can be null for anonymous
         EPerson user = getUserFromRequestParameter(context, epersonUuid);
         if (ObjectUtils.notEqual(currUser, user)) {
@@ -164,9 +165,7 @@ public class AuthorizationRestRepository extends DSpaceRestRepository<Authorizat
             // authorizations based on that user
             context.switchContextUser(user);
         }
-
         List<Authorization> authorizations = findAuthorizationsForUri(context, user, uri, featureName);
-
         if (ObjectUtils.notEqual(currUser, user)) {
             // restore the real current user
             context.restoreContextUser();
@@ -174,32 +173,39 @@ public class AuthorizationRestRepository extends DSpaceRestRepository<Authorizat
         return converter.toRestPage(authorizations, pageable, utils.obtainProjection());
     }
 
-    @PreAuthorize("#epersonUuid==null || hasPermission(#epersonUuid, 'EPERSON', 'READ')")
+   // @PreAuthorize("#epersonUuid==null || hasPermission(#epersonUuid, 'EPERSON', 'READ')")
     @SearchRestMethod(name = "objects")
     public Page<AuthorizationRest> findByObjects(@Parameter(value = "uuid", required = true) List<String> uuidList,
             @Parameter(value = "type", required = true) String type,
             @Parameter(value = "eperson") UUID epersonUuid, @Parameter(value = "feature") List<String> featureNames,
             Pageable pageable) throws AuthorizeException, SQLException {
 
+        System.out.println("----in findByObjects ");
+
         Context context = obtainContext();
 
         EPerson currUser = context.getCurrentUser();
+
 
         // get the user specified in the requested parameters, can be null for anonymous
         EPerson user = getUserFromRequestParameter(context, epersonUuid);
         if (ObjectUtils.notEqual(currUser, user)) {
             // Temporarily change the Context's current user in order to retrieve
             // authorizations based on that user
+
+
             context.switchContextUser(user);
         }
 
         List<Authorization> authorizations =
                 findAuthorizationsByUUIDList(context, type, uuidList, user, featureNames);
+        System.out.println("Authorizations result size: {}"+ authorizations != null ? authorizations.size() : "NULL");
 
         if (ObjectUtils.notEqual(currUser, user)) {
             // restore the real current user
             context.restoreContextUser();
         }
+
         return converter.toRestPage(authorizations, pageable, utils.obtainProjection());
     }
 
@@ -207,6 +213,8 @@ public class AuthorizationRestRepository extends DSpaceRestRepository<Authorizat
         Context context,
         String type, List<String> uuidList, EPerson user,
         List<String> featureNames) {
+
+        System.out.println("Calling findAuthorizationsByUUIDList...");
 
         if (featureNames.isEmpty()) {
             return new ArrayList<>();

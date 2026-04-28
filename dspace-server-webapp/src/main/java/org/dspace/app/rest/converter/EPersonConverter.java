@@ -13,6 +13,7 @@ import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.projection.Projection;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.dspace.eperson.PasswordHash;
 import org.dspace.eperson.service.EPersonService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,16 +54,10 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-//        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
-//            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
-//        }
-//        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
-//            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
-//        }
+        if(obj.getMobile()!=null){
+            eperson.setMobile(obj.getMobile());
+        }
         try {
-//            if (obj.getDesignation() != null) {
-//                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
-//            }
             if (obj.getFullName() != null) {
                 if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
                     eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());
@@ -73,7 +68,6 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return eperson;
     }
 
@@ -85,6 +79,7 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         eperson.setRequireCertificate(obj.getRequireCertificate());
         eperson.setSelfRegistered(obj.getSelfRegistered());
         eperson.setEmail(obj.getEmail());
+
         eperson.setUuid(obj.getID().toString());
         if (obj.getTablenumber() != null) {
             eperson.setTablenumber(obj.getTablenumber());
@@ -92,16 +87,10 @@ public class EPersonConverter extends DSpaceObjectConverter<EPerson, org.dspace.
         if (obj.getEmployeeid() != null) {
             eperson.setEmployeeid(obj.getEmployeeid());
         }
-//        if (obj.getDepartment() != null && obj.getDepartment().getID() != null) {
-//            eperson.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
-//        }
-//        if (obj.getOffice() != null && obj.getOffice().getID() != null) {
-//            eperson.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
-//        }
+        if(obj.getMobile()!=null){
+            eperson.setMobile(obj.getMobile());
+        }
         try {
-//            if (obj.getDesignation() != null) {
-//                eperson.setDesignationRest(workFlowProcessMasterValueConverter.convert(obj.getDesignation(), projection));
-//            }
             if (obj.getFullName() != null) {
                 if (obj.getDesignation() != null && obj.getDesignation().getPrimaryvalue() != null) {
                     eperson.setFullname(obj.getFullName() + " / " + obj.getDesignation().getPrimaryvalue());

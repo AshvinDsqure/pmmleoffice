@@ -109,5 +109,22 @@ public class WorkflowProcessTemplateServiceImpl extends DSpaceObjectServiceImpl<
     public List<WorkflowProcessTemplate> getWorkflowProcessByTemplate(Context context, UUID template, Integer offset, Integer limit) throws SQLException {
         return workflowProcessTemplateDAO.getWorkflowProcessByTemplate(context,template,offset,limit);
     }
+    @Override
+    public int getbyuserandeditorandtemplate(Context context, UUID user, String editor, String templatename) throws SQLException {
+        return workflowProcessTemplateDAO.getbyuserandeditorandtemplate(context,user,editor,templatename);
+    }
+    @Override
+    public int getCountWorkflowProcessByUser(Context context, UUID userid) throws SQLException {
+        return workflowProcessTemplateDAO.getCountWorkflowProcessByUser(context,userid);
+    }
+    @Override
+    public List<WorkflowProcessTemplate> getWorkflowProcessByUser(Context context, UUID userid, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessTemplateDAO.getWorkflowProcessByUser(context,userid,offset,limit);
+    }
+
+    @Override
+    public int getbyuserandtemplate(Context context, UUID user, String templatename) throws SQLException {
+        return workflowProcessTemplateDAO.getbyuserandtemplate(context,user,templatename);
+    }
 
 }

@@ -139,7 +139,26 @@ public class EPersonPasswordAddOperation<R> extends PatchOperation<R> {
         String currentPassword = passwordVO.getCurrentPassword()
             .orElseThrow(() -> new WrongCurrentPasswordException("No current password provided"));
 
-        boolean canChangePassword = authenticationService.canChangePassword(context, eperson, currentPassword);
+        context.setAuthenticationMethod("password");
+
+        System.out.println("Verifying current password for user " + eperson.getEmail() + " with provided password: " + currentPassword);
+        System.out.println("Context authentication method: " + context.getAuthenticationMethod());
+
+        boolean canChangePassword = authenticationService.canChangePassword(context, eperson, currentPassword.trim());
+        
+        // Fallback: Try direct password check if authentication service fails
+        if (!canChangePassword) {
+            System.out.println("Authentication service failed, trying direct password check");
+            try {
+                // Direct password verification using EPersonService
+                canChangePassword = ePersonService.checkPassword(context, eperson, currentPassword.trim());
+                System.out.println("Direct password check result: " + canChangePassword);
+            } catch (Exception e) {
+                System.out.println("Direct password check failed: " + e.getMessage());
+                canChangePassword = false;
+            }
+        }
+        
         if (!canChangePassword) {
             throw new WrongCurrentPasswordException("The provided password is wrong");
         }

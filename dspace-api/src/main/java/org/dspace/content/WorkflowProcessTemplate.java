@@ -59,7 +59,8 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "epersontoepersonmapping")
     private EpersonToEpersonMapping epersontoepersonmapping;
-
+    @Column(name = "templatename")
+    private String templatename;
     @Column(name = "isdelete")
     private Boolean isdelete = false;
     @Override
@@ -141,5 +142,13 @@ public class WorkflowProcessTemplate extends DSpaceObject implements DSpaceObjec
 
     public void setEpersontoepersonmapping(EpersonToEpersonMapping epersontoepersonmapping) {
         this.epersontoepersonmapping = epersontoepersonmapping;
+    }
+
+    public String getTemplatename() {
+        return templatename;
+    }
+
+    public void setTemplatename(String templatename) {
+        this.templatename = templatename;
     }
 }

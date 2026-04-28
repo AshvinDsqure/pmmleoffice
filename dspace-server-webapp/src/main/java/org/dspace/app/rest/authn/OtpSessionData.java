@@ -7,6 +7,7 @@ import java.util.Date;
 public class OtpSessionData {
 
     private String email;
+    private String mobile;
     private String otpHash;
     private Date createdTime;
     private Date expiryTime;
@@ -89,5 +90,13 @@ public class OtpSessionData {
     @JsonIgnore
     public boolean isExpired() {
         return new Date().after(expiryTime);
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 }

@@ -42,6 +42,9 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
     private WorkFlowProcessMasterValueRest templatetypeRest = null;
     @JsonProperty
     private String editortext;
+
+    @JsonProperty
+    private String templatename;
     @JsonProperty
     private EpersonToEpersonMappingRest epersontoepersonmappingRest;
 
@@ -111,5 +114,13 @@ public class WorkflowProcessTemplateRest extends DSpaceObjectRest {
 
     public void setEpersontoepersonmappingRest(EpersonToEpersonMappingRest epersontoepersonmappingRest) {
         this.epersontoepersonmappingRest = epersontoepersonmappingRest;
+    }
+
+    public String getTemplatename() {
+        return templatename;
+    }
+
+    public void setTemplatename(String templatename) {
+        this.templatename = templatename;
     }
 }

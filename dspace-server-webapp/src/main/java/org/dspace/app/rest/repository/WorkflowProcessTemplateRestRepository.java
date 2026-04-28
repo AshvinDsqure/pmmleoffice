@@ -107,14 +107,40 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
         // this need to be revisited we should receive an EPersonRest as input
         HttpServletRequest req = getRequestService().getCurrentRequest().getHttpServletRequest();
         ObjectMapper mapper = new ObjectMapper();
-        WorkflowProcessTemplateRest wroWorkflowProcessTemplateRest = null;
+        WorkflowProcessTemplateRest workflowProcessTemplateRest = null;
         WorkflowProcessTemplate workflowProcessTemplate = null;
         try {
-            wroWorkflowProcessTemplateRest = mapper.readValue(req.getInputStream(), WorkflowProcessTemplateRest.class);
-            workflowProcessTemplate = createworkflowProcessDefinitionFromRestObject(context, wroWorkflowProcessTemplateRest);
-        } catch (Exception e1) {
+            workflowProcessTemplateRest = mapper.readValue(req.getInputStream(), WorkflowProcessTemplateRest.class);
+            // Validate required fields
+            if(workflowProcessTemplateRest.getePersonRest() == null || workflowProcessTemplateRest.getePersonRest().getId() == null){
+                throw new UnprocessableEntityException("EPerson is required");
+            }
+
+            if(workflowProcessTemplateRest.getEditortext() == null || workflowProcessTemplateRest.getEditortext().trim().isEmpty()){
+                throw new UnprocessableEntityException("Editor text is required and cannot be empty");
+            }
+
+            if(workflowProcessTemplateRest.getTemplatename() == null || workflowProcessTemplateRest.getTemplatename().trim().isEmpty()){
+                throw new UnprocessableEntityException("Template name is required and cannot be empty");
+            }
+
+            // Check for duplicate combination
+            Integer i= workflowProcessTemplateService.getbyuserandeditorandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getEditortext().trim(),workflowProcessTemplateRest.getTemplatename().trim());
+            if(i>0){
+                throw new UnprocessableEntityException("The user has already created a Workflow process template with the same editor text and template name");
+            }
+            Integer ii= workflowProcessTemplateService.getbyuserandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getTemplatename().trim());
+            if(ii>0){
+                throw new UnprocessableEntityException("The user has already created a workflow process template with the same  template name");
+            }
+            workflowProcessTemplate = createworkflowProcessDefinitionFromRestObject(context, workflowProcessTemplateRest);
+        } catch (UnprocessableEntityException e){
+            throw e;
+        }catch (Exception e1) {
             e1.printStackTrace();
-            throw new UnprocessableEntityException("error parsing the body... maybe this is not the right error code");
+            throw new UnprocessableEntityException(
+                    "Unable to create workflow process template"
+            );
         }
         return converter.toRest(workflowProcessTemplate, utils.obtainProjection());
     }
@@ -187,6 +213,27 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
             workflowProcessTemplateRests = witems.stream().map(d -> {
                 return workflowProcessTemplateConverter.convert(d, utils.obtainProjection());
             }).collect(toList());
+            System.out.println("out getDraftByWorkFlowTypeID");
+            return new PageImpl(workflowProcessTemplateRests, pageable, total);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "getWorkflowProcessTemplateByUser")
+    public Page<WorkflowProcessTemplate> getWorkflowProcessTemplateByUser(@Parameter(value = "userid", required = true) UUID userid, Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            //
+            List<WorkflowProcessTemplateRest>workflowProcessTemplateRests = new ArrayList<WorkflowProcessTemplateRest>();;
+            long total = workflowProcessTemplateService.getCountWorkflowProcessByUser(context, userid);
+            List<WorkflowProcessTemplate> witems = workflowProcessTemplateService.getWorkflowProcessByUser(context,userid, Math.toIntExact(pageable.getOffset()),
+                    Math.toIntExact(pageable.getPageSize()));
+            //
+            workflowProcessTemplateRests = witems.stream().map(d -> {
+                return workflowProcessTemplateConverter.convert(d, utils.obtainProjection());
+            }).collect(toList());
+
             System.out.println("out getDraftByWorkFlowTypeID");
             return new PageImpl(workflowProcessTemplateRests, pageable, total);
         } catch (SQLException e) {

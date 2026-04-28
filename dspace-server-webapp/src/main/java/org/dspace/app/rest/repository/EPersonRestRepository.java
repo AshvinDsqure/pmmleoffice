@@ -171,6 +171,9 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             eperson.setCanLogIn(epersonRest.isCanLogIn());
             eperson.setRequireCertificate(epersonRest.isRequireCertificate());
             eperson.setEmail(epersonRest.getEmail());
+            if(epersonRest.getMobile()!=null) {
+                eperson.setMobile(epersonRest.getMobile());
+            }
             eperson.setNetid(epersonRest.getNetid());
             eperson.setTablenumber(epersonRest.getTablenumber());
             eperson.setEmployeeid(epersonRest.getEmployeeid());
@@ -423,10 +426,10 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                             "changing the password");
                 }
             } else {
-                if (passwordChangeFound && !StringUtils.equals(context.getAuthenticationMethod(), "password")) {
-                    throw new AccessDeniedException("Refused to perform the EPerson patch based to change the password " +
-                            "for non \"password\" authentication");
-                }
+//                if (passwordChangeFound && !StringUtils.equals(context.getAuthenticationMethod(), "password")) {
+//                    throw new AccessDeniedException("Refused to perform the EPerson patch based to change the password " +
+//                            "for non \"password\" authentication");
+//                }
             }
             if(StringUtils.isNotBlank(request.getParameter("token")) && passwordChangeFound){
                 System.out.println("in update Password::::::::::::::");
@@ -435,6 +438,10 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                 System.out.println(":::::::::::::::::::::::::::::::::IN UPDATE EPERSON::::::::::::::::::::::::::::::;");
                 //System.out.println("ep..........." + ePerson.getEmail());
                 for (Operation operation : patch.getOperations()) {
+                    System.out.println("operation.getPath()::"+operation.getPath());
+                    System.out.println("operation.value::"+operation.getValue());
+                    System.out.println("operation.getOp()::"+operation.getOp());
+
                     if (operation.getPath().equalsIgnoreCase("/metadata/dspace.agreements.end-user")) {
                         //System.out.println("::::::::::::::::::::::::::::::in::aggrement::::::::::::::::::::::::::::::;");
                         patchDSpaceObject(apiCategory, model, uuid, patch);
@@ -461,49 +468,11 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                         ePerson.setFirstName(context, operation.getValue().toString());
                     } else if (operation.getPath().equalsIgnoreCase("/employeeid")) {
                         ePerson.setEmployeeid(operation.getValue().toString());
+                    } else if (operation.getPath().equalsIgnoreCase("/mobile")) {
+                        ePerson.setMobile(operation.getValue().toString());
+                    }else if (operation.getPath().equalsIgnoreCase("/metadata/mobile")) {
+                        ePerson.setMobile(operation.getValue().toString());
                     }else if(operation.getPath().equalsIgnoreCase("/epersonmapping")){
-//                       EPerson ePersonfinal=ePerson;
-//                      String mapping=  operation.getValue().toString();
-//                        if (mapping != null && !mapping.isEmpty()) {
-//                            List<EpersonToEpersonMapping> epersonToEpersonMappings = new ArrayList<>();
-//
-//                            List<String> mappingList = mapping.contains(",")
-//                                    ? Arrays.asList(mapping.split(","))
-//                                    : Collections.singletonList(mapping);
-//
-//                            for (String mapId : mappingList) {
-//                                try {
-//
-//                                    System.out.println("mapp id ::"+mapId);
-//                                    System.out.println("epeeee id ::"+ePersonfinal.getID());
-//                                    System.out.println("getEmail id ::"+ePersonfinal.getEmail());
-//
-//
-//                                    UUID mappingUUID = UUID.fromString(mapId);
-//                                    EpersonToEpersonMapping existingMapping = epersonToEpersonMappingService
-//                                            .findByEpersonAndEpersonMapping(context, mappingUUID, ePersonfinal.getID());
-//
-//                                    if (existingMapping == null) {
-//                                        System.out.println("add new mapping ::::::::::::::");
-//                                        EpersonToEpersonMapping newMapping = new EpersonToEpersonMapping();
-//                                        newMapping.setEperson(ePersonfinal);
-//                                        newMapping.setEpersonmapping(epersonMappingService.find(context, mappingUUID));
-//                                        newMapping.setIsactive(false);
-//                                        epersonToEpersonMappings.add(newMapping);
-//                                    }
-//                                } catch (SQLException e) {
-//                                    throw new RuntimeException("Error processing eperson mapping", e);
-//                                }
-//                            }
-//
-//                            if (!epersonToEpersonMappings.isEmpty()) {
-//
-//                                System.out.println("size ::::"+epersonToEpersonMappings.size());
-//
-//                                ePerson.setEpersonToEpersonMappings(epersonToEpersonMappings);
-//                            }
-//                        }
-
                     } else if (operation.getPath().equalsIgnoreCase("/tablenumber")) {
                         if (!operation.getValue().toString().isEmpty()&&operation.getValue()!=null&&!StringUtils.isNotBlank(operation.getValue().toString())) {
                             ePerson.setTablenumber(Integer.parseInt(operation.getValue().toString()));
@@ -512,7 +481,7 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                         }
                     } else if (operation.getPath().equalsIgnoreCase("/email")) {
                         ePerson.setEmail(operation.getValue().toString());
-                    } else if (operation.getPath().equalsIgnoreCase("/password")) {
+                    }else if (operation.getPath().equalsIgnoreCase("/password")) {
                         if (!validatePasswordService.isPasswordValid(operation.getValue().toString())) {
                             throw new PasswordNotValidException();
                         }

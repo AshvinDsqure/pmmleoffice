@@ -208,8 +208,11 @@ public class WorkflowProcessDigitalSignController {
             String emBridgeLicense = configurationService.getProperty("em.bridge.license");
             String emBridgeLogs = configurationService.getProperty("em.bridge.logs");
             emBridge bridge = new emBridge(emBridgeLicense, emBridgeLogs);
-
             ResponseDataListProviderToken responseDataListProviderToken = bridge.decListToken(data.getEncryptedRequest());
+            if(responseDataListProviderToken.getTokens()==null||responseDataListProviderToken.getTokens().size()==0){
+                responseDataListProviderToken.setErrorCode("0");
+                responseDataListProviderToken.setErrorMsg("Please attach or reinsert the USB dongle properly, then try again.");
+            }
             return responseDataListProviderToken;
         } catch (Exception e) {
             log.error("Errro in getTokenResponse"+e.getMessage());

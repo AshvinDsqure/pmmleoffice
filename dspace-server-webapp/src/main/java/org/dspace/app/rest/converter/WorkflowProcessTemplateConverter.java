@@ -63,13 +63,16 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
                 rest.setTemplatetypeRest(workFlowProcessMasterValueConverter.convert(obj.getTemplatetype(),projection));
             }
             if(obj.getEditortext()!=null){
-               rest.setEditortext(obj.getEditortext());
+                rest.setEditortext(obj.getEditortext());
             }
-            if(obj.getePerson()!=null){
-                rest.setePersonRest(ePersonConverter.convertBYUSer(obj.getePerson(),projection));
-            }
+//            if(obj.getePerson()!=null){
+//                rest.setePersonRest(ePersonConverter.convert(obj.getePerson(),projection));
+//            }
             if(obj.getEpersontoepersonmapping()!=null){
                 rest.setEpersontoepersonmappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+            }
+            if(obj.getTemplatename()!=null){
+                rest.setTemplatename(obj.getTemplatename());
             }
             rest.setUuid(obj.getID().toString());
             return rest;
@@ -85,14 +88,26 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         if(rest.getInitDate()!=null){
             obj.setInitDate(rest.getInitDate());
         }
-        if(rest.getIndex()!=null){
-            obj.setIndex(rest.getIndex());
-        }
         if(rest.getTemplateRest()!=null){
             obj.setTemplate(workFlowProcessMasterValueConverter.convert(context,rest.getTemplateRest()));
         }
-        if(rest.getePersonRest()!=null){
+        if(rest.getTemplatename()!=null){
+            obj.setTemplatename(rest.getTemplatename());
+        }
+        if(rest.getePersonRest()!=null&&rest.getePersonRest().getId()!=null){
             obj.setePerson(ePersonConverter.convert(context,rest.getePersonRest()));
+            long total = workflowProcessTemplateService.getCountWorkflowProcessByUser(context, UUID.fromString(rest.getePersonRest().getId()));
+            int index = (int) total+1;
+            obj.setIndex(index);
+            System.out.println("index is " + index);
+        }else{
+            if(context.getCurrentUser() != null) {
+                obj.setePerson(context.getCurrentUser());
+                long total = workflowProcessTemplateService.getCountWorkflowProcessByUser(context, context.getCurrentUser().getID());
+                int index = (int) total + 1;
+                obj.setIndex(index);
+                System.out.println("index is currunt::" + index);
+            }
         }
         if(rest.getTemplatetypeRest()!=null){
             obj.setTemplatetype(workFlowProcessMasterValueConverter.convert(context,rest.getTemplatetypeRest()));
@@ -127,6 +142,9 @@ public class WorkflowProcessTemplateConverter extends DSpaceObjectConverter<Work
         }
         if(rest.getEpersontoepersonmappingRest()!=null){
             obj.setEpersontoepersonmapping(epersonToEpersonMappingConverter.convertbyService(context,rest.getEpersontoepersonmappingRest()));
+        }
+        if(rest.getTemplatename()!=null){
+            obj.setTemplatename(rest.getTemplatename());
         }
 
         rest.setUuid(obj.getID().toString());

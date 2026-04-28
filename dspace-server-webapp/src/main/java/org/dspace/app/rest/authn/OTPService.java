@@ -1,6 +1,7 @@
 package org.dspace.app.rest.authn;
 
 import org.dspace.app.rest.notification.NotificationService;
+import org.dspace.content.Item;
 import org.dspace.core.Context;
 import org.dspace.core.Email;
 import org.dspace.core.I18nUtil;
@@ -55,10 +56,6 @@ public class OTPService {
     private NotificationService emailNotificationServiceImpl;
 
 
-
-
-
-
     private final RedisCache<OtpSessionData> otpCache =
             RedisCache.getInstance();
 
@@ -102,20 +99,22 @@ public class OTPService {
     }
 
     // ✅ CREATE OTP SESSION + SEND OTP
-    public String createOtpSession(EPerson eperson,Context context) throws MessagingException, IOException {
+    public String createOtpSession(EPerson eperson, Context context) throws MessagingException, IOException {
 
         if (eperson == null) {
             throw new IllegalArgumentException("EPerson cannot be null");
         }
 
         String email = eperson.getEmail();
-        //String phoneNumber = getPhoneNumber(eperson); // temp
+        String mobile = eperson.getMobile();
 
+        //String phoneNumber = getPhoneNumber(eperson); // temp
         String otp = generateOtp();
         String sessionId = UUID.randomUUID().toString();
 
         log.info("CREATING OTP SESSION");
         log.info("Email      => {}", email);
+        log.info("Mobile      => {}", mobile);
         log.info("Session ID => {}", sessionId);
 
         String otpHash = hashOtp(otp, email, sessionId);
@@ -125,39 +124,35 @@ public class OTPService {
         OtpSessionData data = new OtpSessionData(email, otpHash);
         int ttl = getOtpTtlSeconds();
         otpCache.put(sessionId, data, ttl);
-
-        // ✅ SEND OTP (UltraMsg)
-        String message =
-                "Your DSpace OTP code is: " + otp + ". Valid for 5 minutes.";
-
         // here switch statement
-
-        sendOtpByChannel(otp, email, null,context);
-
+        if(email!=null&&!email.isEmpty()) {
+            sendOtpByChannel(otp, email, null, context, "email");
+        }
+        if (mobile != null&&!mobile.isEmpty()) {
+            data.setMobile(mobile);
+            sendOtpByChannel(otp, email, mobile, context, "whatsapp");
+        }
         return sessionId;
     }
-
 
 
     // otp channel
     private void sendOtpByChannel(
             String otp,
             String email,
-            String phoneNumber,Context context) throws MessagingException, IOException {
-
-        String channel = configurationService.getProperty(
-                "dspace.notification.channel",
-                "email" // default
-        );
+            String phoneNumber, Context context, String channel) throws MessagingException, IOException {
 
         String message =
-                "Your DSpace OTP code is: " + otp + ". Valid for 5 minutes.";
+                "Dear " + email + ",\n\n" +
+                        "Your OTP is: " + otp + " for multi-factor authentication login to PMML eOffice.\n" +
+                        "Please do not share this code with anyone. If you did not request this, please ignore this message.\n\n" +
+                        "Regards,\n" +
+                        "Prime Minister’s Museum & Library (PMML)";
 
         switch (channel.toLowerCase()) {
-
             case "email":
                 Email emailobject = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "email_otp_notification"));
-              String from_email= configurationService.getProperty("mail.from.address","support@pmml.in");
+                String from_email = configurationService.getProperty("mail.from.address", "support@pmml.in");
                 emailNotificationServiceImpl.send(
                         from_email,
                         email,
@@ -165,16 +160,17 @@ public class OTPService {
                         emailobject
                 );
                 log.info("OTP sent via Email");
+                System.out.println("OTP sent via Email");
                 break;
-
             case "whatsapp":
                 whatsAppNotificationServiceImpl.send(
                         null,
-                        null,
+                        phoneNumber,
                         message,
                         null
                 );
                 log.info("OTP sent via WhatsApp");
+                System.out.println("OTP sent via WhatsApp");
                 break;
 
             case "sms":
@@ -192,9 +188,8 @@ public class OTPService {
     }
 
 
-
     // ✅ VERIFY OTP
-    public OtpVerificationStatus  verifyOtp(String sessionId, String otp) {
+    public OtpVerificationStatus verifyOtp(String sessionId, String otp) {
 
         log.info("VERIFYING OTP");
         log.info("Session ID => {}", sessionId);
@@ -231,7 +226,6 @@ public class OTPService {
     }
 
 
-
     //  GET USER AFTER VERIFIED OTP
     public EPerson getEpersonFromSession(String sessionId) {
 
@@ -257,9 +251,8 @@ public class OTPService {
     }
 
 
-
     // ✅ RESEND OTP + SEND AGAIN
-    public boolean resendOtp(String sessionId,Context context) throws MessagingException, IOException {
+    public boolean resendOtp(String sessionId, Context context) throws MessagingException, IOException {
 
         log.info("RESENDING OTP | sessionId={}", sessionId);
 
@@ -287,7 +280,6 @@ public class OTPService {
             log.warn("MAX RESEND ATTEMPTS REACHED");
             return false;
         }
-
         // Generate new OTP
         String newOtp = generateOtp();
         String newHash =
@@ -302,22 +294,28 @@ public class OTPService {
         data.setExpiryTime(
                 new Date(System.currentTimeMillis() + ttl * 1000L)
         );
-
         otpCache.put(sessionId, data, ttl);
         //Email emailobject = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "registration_approve"));
-        sendOtpByChannel(
-                newOtp,
-                data.getEmail(),
-                null,
-                context
-        );
-
-        log.info("OTP resent successfully");
+       if(data.getEmail()!=null&&!data.getEmail().isEmpty()) {
+           sendOtpByChannel(
+                   newOtp,
+                   data.getEmail(),
+                   null,
+                   context,
+                   "email"
+           );
+           log.info("OTP resent successfully Email.");
+       }
+       if(data.getMobile()!=null&&!data.getMobile().isEmpty()) {
+           sendOtpByChannel(
+                   newOtp,
+                   data.getEmail(),
+                   data.getMobile(),
+                   context,
+                   "whatsapp"
+           );
+           log.info("OTP resent successfully Mobile.");
+       }
         return true;
     }
-
-
-
-
-
-    }
+}

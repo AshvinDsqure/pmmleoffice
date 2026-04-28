@@ -63,5 +63,9 @@ public interface WorkflowProcessTemplateService extends DSpaceObjectService<Work
     public List<WorkflowProcessTemplate> findAll(Context context, Integer limit, Integer offset) throws SQLException;
     public int getCountWorkflowProcessByTemplate(Context context , UUID template) throws SQLException;
     public List<WorkflowProcessTemplate> getWorkflowProcessByTemplate(Context context , UUID template,Integer offset, Integer limit) throws SQLException;
+    public int getbyuserandeditorandtemplate(Context context , UUID user,String editor, String templatename) throws SQLException;
+    public int getCountWorkflowProcessByUser(Context context , UUID userid) throws SQLException;
+    public List<WorkflowProcessTemplate> getWorkflowProcessByUser(Context context , UUID userid,Integer offset, Integer limit) throws SQLException;
+    public int getbyuserandtemplate(Context context , UUID user,String templatename) throws SQLException;
 
 }

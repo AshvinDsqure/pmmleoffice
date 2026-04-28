@@ -63,6 +63,8 @@ public class EPersonRest extends DSpaceObjectRest {
     private String password;
     @JsonProperty
     private String fullname;
+    @JsonProperty
+    private String mobile;
 
     @Override
     @JsonProperty(access = Access.READ_ONLY)
@@ -190,5 +192,13 @@ public class EPersonRest extends DSpaceObjectRest {
 
     public void setEpersonmapping(String epersonmapping) {
         this.epersonmapping = epersonmapping;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 }

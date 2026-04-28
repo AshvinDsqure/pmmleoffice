@@ -50,6 +50,9 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
     @Column(name = "email", unique = true, length = 64)
     private String email;
 
+    @Column(name = "mobile", unique = true, length = 64)
+    private String mobile;
+
 
     @Column(name = "require_certificate")
     private boolean requireCertificate = false;
@@ -517,5 +520,13 @@ public class EPerson extends DSpaceObject implements DSpaceObjectLegacySupport {
 
     public void setIsmap(boolean ismap) {
         this.ismap = ismap;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 }

@@ -211,9 +211,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public boolean canChangePassword(Context context, EPerson ePerson, String currentPassword) {
 
+        System.out.println("canChangePassword for " + ePerson.getEmail() + " with current password: " + currentPassword);
+
+        context.setAuthenticationMethod("password");
+        // Try the specific authentication method from context first
+        String contextAuthMethod = context.getAuthenticationMethod();
+        if (contextAuthMethod != null) {
+            for (AuthenticationMethod method : getAuthenticationMethodStack()) {
+                if (method.getName().equals(contextAuthMethod)) {
+                    System.out.println("in.................");
+                    return method.canChangePassword(context, ePerson, currentPassword);
+                }
+            }
+        }
+
+        // If context authentication method is not set or not found, try all methods
         for (AuthenticationMethod method : getAuthenticationMethodStack()) {
-            if (method.getName().equals(context.getAuthenticationMethod())) {
-                return method.canChangePassword(context, ePerson, currentPassword);
+            if (method.canChangePassword(context, ePerson, currentPassword)) {
+                return true;
             }
         }
 
