@@ -489,7 +489,11 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
                             es.setPassword(ePerson, operation.getValue().toString());
                         }else {
                            // System.out.println("pass:::not string:::::::" + operation.getValue());
-                            patchDSpaceObject(apiCategory, model, uuid, patch);
+                            try {
+                                patchDSpaceObject(apiCategory, model, uuid, patch);
+                            }catch (Exception e){
+                                throw new UnprocessableEntityException(e.getMessage());
+                            }
                         }
                     } else {
                         patchDSpaceObject(apiCategory, model, uuid, patch);
@@ -499,9 +503,11 @@ public class EPersonRestRepository extends DSpaceObjectRestRepository<EPerson, E
             es.update(context, ePerson);
             context.commit();
             System.out.println(":::::::::::::::::::::::::::::::::   DONE UPDATE EPERSON  ! ::::::::::::::::::::::::::::::;");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("errr" + e.getMessage());
+        }catch (UnprocessableEntityException e){
+            throw new UnprocessableEntityException(e.getMessage());
+        }
+        catch (Exception e) {
+            throw new UnprocessableEntityException(e.getMessage());
         }
     }
 
