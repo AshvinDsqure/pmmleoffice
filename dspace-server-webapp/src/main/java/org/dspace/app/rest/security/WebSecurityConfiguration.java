@@ -2,6 +2,7 @@ package org.dspace.app.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.authn.OTPService;
+import org.dspace.app.rest.authn.OtpRateLimiter;
 import org.dspace.app.rest.exception.DSpaceAccessDeniedHandler;
 import org.dspace.authenticate.service.AuthenticationService;
 import org.dspace.eperson.service.EPersonService;
@@ -61,6 +62,10 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private OTPService otpService;
+
+
+    @Autowired
+    private OtpRateLimiter otpRateLimiter;
 
     @Autowired
     private EPersonService epersonService; // ✅ ADD THIS
@@ -157,7 +162,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         filter.setOtpService(otpService);
         filter.setEpersonService(epersonService);
         filter.setObjectMapper(objectMapper);
-
+        filter.setOtpRateLimiter(otpRateLimiter);
         return filter;
     }
 

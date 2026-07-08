@@ -20,6 +20,7 @@ import org.dspace.app.rest.enums.WorkFlowAction;
 import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.enums.WorkFlowUserType;
+import org.dspace.app.rest.exception.FieldBlankOrNullException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.jbpm.JbpmServerImpl;
 import org.dspace.app.rest.model.*;
@@ -273,10 +274,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (ispriority != null && ispriority == true) {
                 perameter.put("ispriority", "true");
             }
-            if(isdepartment!=null&&isdepartment==true) {
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -366,7 +367,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -476,17 +477,17 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 perameter.put("ispriority", "true");
 
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
 
             }
             if (order != null && !order.isEmpty()) {
                 perameter.put("order", order);
             }
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid, workflowtypeid, statusidclose, epersonToEpersonMappingid,perameter);
+            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid, workflowtypeid, statusidclose, epersonToEpersonMappingid, perameter);
 
             System.out.println("sentTapal count " + count);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
@@ -541,17 +542,17 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
                 perameter.put("order", order);
             }
 
-            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid, workflowtypeid, statusidclose, epersonToEpersonMappingid,perameter);
+            int count = workflowProcessService.countTapal(context, context.getCurrentUser().getID(), statusid, workflowtypeid, statusidclose, epersonToEpersonMappingid, perameter);
             List<WorkflowProcess> workflowProcesses = workflowProcessService.sentTapal(context,
                     context.getCurrentUser().getID(),
                     statusid,
@@ -610,10 +611,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -669,10 +670,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -684,6 +685,143 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
             System.out.println("out closeTapal");
+            return new PageImpl(workflowsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "departmentDiscardedFile")
+    public Page<WorkflowProcessDTO> departmentDiscardedFile(@Parameter(value = "departmentname", required = false) String departmentname,
+                                                            @Parameter(value = "status", required = false) String status,
+                                                            @Parameter(value = "startdate", required = false) String startdate,
+                                                            @Parameter(value = "enddate", required = false) String enddate,
+                                                            @Parameter(value = "workflowtype", required = false) String workflowtype,
+                                                            @Parameter(value = "item", required = false) String item,
+                                                            Pageable pageable) {
+        System.out.println("in departmentDiscardedFile");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid = map.get().getID();
+            }
+            HashMap<String, String> perameter = new HashMap<>();
+
+            if (departmentname == null && departmentname.isEmpty()) {
+                throw new FieldBlankOrNullException("Please Select Department.");
+            }
+            if (workflowtype == null && workflowtype.isEmpty()) {
+                throw new FieldBlankOrNullException("Please Select Workflow Type.");
+            }
+
+            if (departmentname != null) {
+                perameter.put("departmentname", departmentname);
+            }
+            if (workflowtype != null) {
+                perameter.put("workflowtype", workflowtype);
+            }
+            if(item!=null){
+                perameter.put("item", item);
+            }
+            if (status != null) {
+                perameter.put("status", status);
+               WorkFlowProcessMasterValue wp= workFlowProcessMasterValueService.find(context,UUID.fromString(status));
+                if(wp.getPrimaryvalue()!=null&&wp.getPrimaryvalue().equalsIgnoreCase("Discard")){
+                    perameter.put("isdiscard","yes");
+                }
+            }
+            if (startdate != null) {
+                perameter.put("startdate", startdate);
+                            }
+            if (enddate != null) {
+                perameter.put("enddate", enddate);
+            }
+            int count = workflowProcessService.countDepartmentDiscardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter);
+            System.out.println("count::"+count);
+
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.departmentDiscardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            System.out.println("size::"+workflowProcesses.size());
+
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+
+            System.out.println("out departmentDiscardedFile");
+            return new PageImpl(workflowsRes, pageable, count);
+        }catch (FieldBlankOrNullException e){
+            e.printStackTrace();
+            throw new UnprocessableEntityException(e.getMessage());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw new UnprocessableEntityException(e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @SearchRestMethod(name = "discardedFile")
+    public Page<WorkflowProcessDTO> discardedFile(@Parameter(value = "iscreateddate", required = false) Boolean iscreateddate,
+                                               @Parameter(value = "isreciveddate", required = false) Boolean isreciveddate,
+                                               @Parameter(value = "ispriority", required = false) Boolean ispriority,
+                                               @Parameter(value = "isdepartment", required = false) Boolean isdepartment,
+                                               @Parameter(value = "issender", required = false) Boolean issender,
+                                               @Parameter(value = "order", required = false) String order,
+                                               Pageable pageable) {
+        System.out.println("in discardedFile");
+        List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
+        try {
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            HashMap<String, String> perameter = new HashMap<>();
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid = map.get().getID();
+            }
+            UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            UUID sattusid = WorkFlowStatus.DISCARD.getUserTypeFromMasterValue(context).get().getID();
+            if(sattusid!=null){
+                perameter.put("status",sattusid.toString());
+            }
+            if (workflowtypeid != null) {
+                perameter.put("workflowtype", workflowtypeid.toString());
+            }
+
+            if (iscreateddate != null && iscreateddate == true) {
+                perameter.put("iscreateddate", "true");
+            }
+            if (ispriority != null && ispriority == true) {
+                perameter.put("ispriority", "true");
+            }
+            if (isreciveddate != null && isreciveddate == true) {
+                perameter.put("isreciveddate", "true");
+            }
+            if (isdepartment != null && isdepartment == true) {
+                perameter.put("isdepartment", "true");
+            }
+            if (issender != null && issender == true) {
+                perameter.put("issender", "true");
+            }
+            if (order != null && !order.isEmpty()) {
+                perameter.put("order", order);
+            }
+
+
+            int count = workflowProcessService.countDiscardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.discardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            workflowsRes = workflowProcesses.stream().map(d -> {
+                return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
+            }).collect(toList());
+
+            System.out.println("out discardedFile");
             return new PageImpl(workflowsRes, pageable, count);
         } catch (Exception e) {
             e.printStackTrace();
@@ -773,10 +911,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -831,10 +969,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -918,10 +1056,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -979,10 +1117,10 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
                 perameter.put("isreciveddate", "true");
             }
 
-            if(isdepartment != null && isdepartment == true){
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
+            if (issender != null && issender == true) {
                 perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
@@ -1242,20 +1380,20 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (ispriority != null && ispriority == true) {
                 perameter.put("ispriority", "true");
             }
-            if(isdepartment!=null&&isdepartment==true){
-                perameter.put("isdepartment","true");
-            }
-            if(isdepartment!=null&&isdepartment==true) {
+            if (isdepartment != null && isdepartment == true) {
                 perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
-                perameter.put("issender","true");
+            if (isdepartment != null && isdepartment == true) {
+                perameter.put("isdepartment", "true");
+            }
+            if (issender != null && issender == true) {
+                perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
                 perameter.put("order", order);
             }
-            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statusinpogress, statusdraftid, statusdraft, epersonToEpersonMappingid,statusReject);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statusinpogress, statusdraftid, statusdraft, epersonToEpersonMappingid, perameter,statusReject, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countfindDraftPending(context, context.getCurrentUser().getID(), statusinpogress, statusdraftid, statusdraft, epersonToEpersonMappingid, statusReject);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.findDraftPending(context, context.getCurrentUser().getID(), statusinpogress, statusdraftid, statusdraft, epersonToEpersonMappingid, perameter, statusReject, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
 
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
@@ -1306,11 +1444,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (ispriority != null && ispriority == true) {
                 perameter.put("ispriority", "true");
             }
-            if(isdepartment!=null&&isdepartment==true){
-                perameter.put("isdepartment","true");
+            if (isdepartment != null && isdepartment == true) {
+                perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
-                perameter.put("issender","true");
+            if (issender != null && issender == true) {
+                perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
                 perameter.put("order", order);
@@ -1333,7 +1471,7 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @SearchRestMethod(name = "searchOldFilenumber")
     public Page<WorkFlowProcessRest> searchOldFilenumber(@Parameter(value = "oldfilenumber", required = false) String oldfilenumber,
-                                                            Pageable pageable) {
+                                                         Pageable pageable) {
         log.info("in getDraftNotePendingWorkflow start");
         List<WorkFlowProcessRest> workflowsRes = new ArrayList<WorkFlowProcessRest>();
         try {
@@ -1349,8 +1487,8 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (map.isPresent()) {
                 epersonToEpersonMappingid = map.get().getID();
             }
-            int count = workflowProcessService.countsearchByOldFileNumber(context, statusdraftid,epersonToEpersonMappingid, oldfilenumber);
-            List<WorkflowProcess> workflowProcesses = workflowProcessService.searchByOldFileNumber(context, statusdraftid, epersonToEpersonMappingid, oldfilenumber,  Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+            int count = workflowProcessService.countsearchByOldFileNumber(context, statusdraftid, epersonToEpersonMappingid, oldfilenumber);
+            List<WorkflowProcess> workflowProcesses = workflowProcessService.searchByOldFileNumber(context, statusdraftid, epersonToEpersonMappingid, oldfilenumber, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
             workflowsRes = workflowProcesses.stream().map(d -> {
                 return workFlowProcessConverter.convertByDashbord(context, d, utils.obtainProjection());
             }).collect(toList());
@@ -1400,11 +1538,11 @@ public class WorkflowProcessRestRepository extends DSpaceObjectRestRepository<Wo
             if (isreciveddate != null && isreciveddate == true) {
                 perameter.put("isreciveddate", "true");
             }
-            if(isdepartment!=null&&isdepartment==true){
-                perameter.put("isdepartment","true");
+            if (isdepartment != null && isdepartment == true) {
+                perameter.put("isdepartment", "true");
             }
-            if(issender!=null&&issender==true){
-                perameter.put("issender","true");
+            if (issender != null && issender == true) {
+                perameter.put("issender", "true");
             }
             if (order != null && !order.isEmpty()) {
                 perameter.put("order", order);

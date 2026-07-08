@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.app.rest.authn.OTPService;
+import org.dspace.app.rest.authn.OtpRateLimiter;
 import org.dspace.app.rest.utils.ContextUtil;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
@@ -50,6 +51,8 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
     private EPersonService epersonService;
     private OTPService otpService;
 
+    private OtpRateLimiter otpRateLimiter;
+
     private ObjectMapper objectMapper;
 
     @Override
@@ -66,6 +69,10 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
     // ✅ ADD SETTERS
     public void setOtpService(OTPService otpService) {
         this.otpService = otpService;
+    }
+
+    public void setOtpRateLimiter(OtpRateLimiter otpRateLimiter) {
+        this.otpRateLimiter = otpRateLimiter;
     }
 
     public void setEpersonService(EPersonService epersonService) {
@@ -131,6 +138,7 @@ public class StatelessLoginFilter extends AbstractAuthenticationProcessingFilter
         Context context=ContextUtil.obtainContext(req);
         EPerson eperson;
         String username = auth.getName();
+
         try {
             // 2️⃣ Create DSpace context to fetch EPerson
             context = new Context();

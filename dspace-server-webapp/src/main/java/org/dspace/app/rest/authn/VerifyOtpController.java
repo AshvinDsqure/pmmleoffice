@@ -8,10 +8,7 @@ import org.dspace.app.rest.utils.ContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,14 +26,24 @@ public class VerifyOtpController {
     @Autowired
     private RestAuthenticationService restAuthenticationService;
 
+    @Autowired
+    private OtpRateLimiter otpRateLimiter;
+
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestParam String otpSessionId,
-                                       @RequestParam String otp,
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest otpRequest,
                                        HttpServletRequest request,
                                        HttpServletResponse response) throws IOException {
 
+        String clientIp = request.getRemoteAddr(); // or getClientIp() if behind Apache proxy
+
+        if (!otpRateLimiter.isAllowed(clientIp)) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Too many OTP requests. Try again after 5 minutes.");
+        }
+
         OtpVerificationStatus status =
-                otpService.verifyOtp(otpSessionId, otp);
+                otpService.verifyOtp(otpRequest.getOtpSessionId(), otpRequest.getOtp());
 
         switch (status) {
 
@@ -54,8 +61,7 @@ public class VerifyOtpController {
                 break;
         }
 
-
-        EPerson eperson = otpService.getEpersonFromSession(otpSessionId);
+        EPerson eperson = otpService.getEpersonFromSession(otpRequest.getOtpSessionId());
         if (eperson == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

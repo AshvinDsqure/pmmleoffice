@@ -455,6 +455,7 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
     @Override
     public List<WorkflowProcess> closeTapal(Context context, UUID eperson, UUID statusdraftid, UUID statuscloseid,UUID statusdspatchcloseid, UUID workflowtypeid,UUID epersontoepersonmapid,UUID usertype, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
         MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+
         return workflowProcessDAO.closeTapal(context,eperson,statusdraftid,statuscloseid,statusdspatchcloseid,workflowtypeid,epersontoepersonmapid,usertype,perameter,metadataFields,offset,limit);
     }
     @Override
@@ -644,5 +645,30 @@ public class WorkFlowProcessServiceImpl extends DSpaceObjectServiceImpl<Workflow
         return financialYears;
     }
 
+    @Override
+    public List<WorkflowProcess> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        return workflowProcessDAO.departmentDiscardedFile(context, eperson, epersontoepersonmapid, perameter, offset, limit);
+    }
+
+    @Override
+    public int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid,HashMap<String, String> perameter) throws SQLException {
+        return workflowProcessDAO.countDepartmentDiscardedFile(context, eperson, epersontoepersonmapid,perameter);
+    }
+
+    @Override
+    public List<WorkflowProcess> discardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFields = metadataFieldService.findByElement(context, MetadataSchemaEnum.EPERSON.getName(), "firstname", null);
+        return workflowProcessDAO.discardedFile(context,eperson,epersontoepersonmapid,metadataFields,perameter,offset,limit);
+    }
+
+    @Override
+    public int countDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter) throws SQLException {
+        return workflowProcessDAO.countDiscardedFile(context,eperson,epersontoepersonmapid,perameter);
+    }
+
+    @Override
+    public WorkflowProcess getByItem(Context context, UUID item) throws SQLException {
+        return workflowProcessDAO.getByItem(context,item);
+    }
 
 }

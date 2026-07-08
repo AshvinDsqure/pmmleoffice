@@ -13,18 +13,16 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.dspace.app.rest.utils.CaptchaUtils;
 
 import org.dspace.app.rest.converter.ConverterService;
 import org.dspace.app.rest.converter.EPersonConverter;
 import org.dspace.app.rest.link.HalLinkService;
-import org.dspace.app.rest.model.AuthenticationStatusRest;
-import org.dspace.app.rest.model.AuthenticationTokenRest;
-import org.dspace.app.rest.model.AuthnRest;
-import org.dspace.app.rest.model.EPersonRest;
-import org.dspace.app.rest.model.GroupRest;
+import org.dspace.app.rest.model.*;
 import org.dspace.app.rest.model.hateoas.AuthenticationStatusResource;
 import org.dspace.app.rest.model.hateoas.AuthenticationTokenResource;
 import org.dspace.app.rest.model.hateoas.AuthnResource;
@@ -42,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -54,6 +54,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import cn.apiclub.captcha.Captcha;
 
 /**
  * Rest controller that handles authentication on the REST API together with the Spring Security filters
@@ -76,6 +77,9 @@ public class AuthenticationRestController implements InitializingBean {
 
     @Autowired
     private ConverterService converter;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Autowired
     private EPersonConverter ePersonConverter;
@@ -142,6 +146,25 @@ public class AuthenticationRestController implements InitializingBean {
         AuthenticationStatusResource authenticationStatusResource = converter.toResource(authenticationStatusRest);
 
         return authenticationStatusResource;
+    }
+
+    @RequestMapping(value = "/captcha", method = RequestMethod.GET)
+    public captcha getCaptcha(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException {
+        Captcha captcha = CaptchaUtils.createCaptcha(200, 50);
+        String base64Captch=CaptchaUtils.encodeBase64(captcha);
+        org.dspace.app.rest.model.captcha model=new captcha();
+
+        try {
+            UUID uuid = UUID.randomUUID();
+            model.setUuid(uuid);
+            model.setBase64captch(base64Captch);
+            Cache captch = cacheManager.getCache("captchaCache");
+            captch.put(uuid.toString(),captcha.getAnswer());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return  model;
     }
 
     /**

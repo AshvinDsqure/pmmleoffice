@@ -8,8 +8,15 @@
 package org.dspace.content.dao.impl;
 
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -616,5 +623,213 @@ public class ItemDAOImpl extends AbstractHibernateDSODAO<Item> implements ItemDA
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public List<Item> getItemBycurrentuserinworkflow(Context context,UUID workflowtype,UUID stastus, Integer offset, Integer limit) throws Exception {
+        StringBuffer hql = new StringBuffer("SELECT DISTINCT i FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join wp.item as i " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t ");
+        hql.append("WHERE t.id=:workflowtype and p.id=:user and st.id=:status");
+        Query query = createQuery(context, hql.toString());
+        query.setParameter("workflowtype", workflowtype);
+        query.setParameter("status", stastus);
+        query.setParameter("user", context.getCurrentUser().getID());
+        if (offset != null && limit != null) {
+            query.setFirstResult(offset);
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int getItemBycurrentuserinworkflow(Context context,UUID workflowtype,UUID stastus) throws Exception {
+        StringBuffer hql = new StringBuffer("SELECT COUNT(DISTINCT i.id) FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join wp.item as i " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t ");
+        hql.append("WHERE t.id=:workflowtype and p.id=:user and st.id=:status");
+        Query query = createQuery(context, hql.toString());
+        query.setParameter("workflowtype", workflowtype);
+        query.setParameter("status", stastus);
+        query.setParameter("user", context.getCurrentUser().getID());
+        return count(query);
+    }
+
+    @Override
+    public List<Item> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter,MetadataField metadataFieldaccessioneddate, Integer offset, Integer limit) throws SQLException {
+
+        String department = perameter.get("departmentname");
+        String workflowtype = perameter.get("workflowtype");
+        String satatus = perameter.get("status");
+        String startdate = perameter.get("startdate");
+        String enddate = perameter.get("enddate");
+        String isdiscard = perameter.get("isdiscard");
+        Boolean isdelete=false;
+        UUID statusUuid=null;
+        UUID workflowTypeUuid=null;
+        UUID departmentUuid=null;
+        if(satatus!=null){
+            statusUuid = UUID.fromString(satatus);
+        }
+        if(workflowtype!=null) {
+            workflowTypeUuid= UUID.fromString(workflowtype);
+        }
+        if(department!=null) {
+             departmentUuid = UUID.fromString(department);
+        }
+        System.out.println("===== INPUT PARAMETERS =====departmentDiscardedFile");
+        System.out.println("department     : " + department);
+        System.out.println("workflowtype   : " + workflowtype);
+        System.out.println("status         : " + satatus);
+        System.out.println("startdate      : " + startdate);
+        System.out.println("enddate        : " + enddate);
+        System.out.println("isdiscard        : " + isdiscard);
+        System.out.println("============================");
+        if(satatus!=null&isdiscard!=null&&isdiscard.equalsIgnoreCase("yes")){
+            isdelete=true;
+        }
+        StringBuffer hql = new StringBuffer("SELECT i FROM WorkflowProcess as wp " +
+                "LEFT JOIN wp.item as i " +
+                "LEFT JOIN i.metadata metadatavalue " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap " +
+                "LEFT join emap.department as d ");
+        hql.append("WHERE wp.isdelete = :isdelete " +
+                "and d.id=:departmentname " +
+                "and t.id=:workflowtype and ep.sequence = 0 ");
+        if(statusUuid != null){
+            hql.append(" and st.id=:statusid ");
+        }
+        if(startdate != null && enddate != null){
+
+            hql.append("AND  metadatavalue.metadataField = :metadataField " +
+                    "AND metadatavalue.value >= :startdate " +
+                    "AND metadatavalue.value <= :enddate " +
+                    "");
+        }
+        hql.append(" GROUP BY i.id ORDER BY MAX(metadatavalue.value) DESC");
+
+        Query query = createQuery(context, hql.toString());
+        if(statusUuid != null) {
+            query.setParameter("statusid", statusUuid);
+        }
+        if(startdate != null && enddate != null){
+            try {
+                String startDateStr = startdate + "T00:00:00Z";
+                String endDateStr   = enddate + "T23:59:59Z";
+                query.setParameter("startdate", startDateStr);
+                query.setParameter("enddate", endDateStr);
+                query.setParameter("metadataField",metadataFieldaccessioneddate);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("hql:::"+hql);
+        query.setParameter("isdelete", isdelete);
+        query.setParameter("departmentname", departmentUuid);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        if (0 <= offset) {
+            query.setFirstResult(offset);
+        }
+        if (0 <= limit) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter,MetadataField metadataFieldaccessioneddate) throws SQLException {
+
+        String department = perameter.get("departmentname");
+        String workflowtype = perameter.get("workflowtype");
+        String satatus = perameter.get("status");
+        String startdate = perameter.get("startdate");
+        String enddate = perameter.get("enddate");
+        String isdiscard = perameter.get("isdiscard");
+
+        System.out.println("===== INPUT PARAMETERS =====countDepartmentDiscardedFile");
+        System.out.println("department     : " + department);
+        System.out.println("workflowtype   : " + workflowtype);
+        System.out.println("status         : " + satatus);
+        System.out.println("startdate      : " + startdate);
+        System.out.println("enddate        : " + enddate);
+        System.out.println("isdiscard        : " + isdiscard);
+        System.out.println("============================");
+
+        Boolean isdelete=false;
+        UUID statusUuid=null;
+        UUID workflowTypeUuid=null;
+        UUID departmentUuid=null;
+        if(satatus!=null){
+            statusUuid = UUID.fromString(satatus);
+        }
+        if(workflowtype!=null) {
+            workflowTypeUuid= UUID.fromString(workflowtype);
+        }
+        if(department!=null) {
+            departmentUuid = UUID.fromString(department);
+        }
+        if(satatus!=null&&isdiscard!=null&&isdiscard.equalsIgnoreCase("yes")){
+            isdelete=true;
+        }
+
+        StringBuffer hql = new StringBuffer("SELECT count(DISTINCT i.id) FROM WorkflowProcess as wp " +
+                "LEFT JOIN wp.item as i " +
+                "LEFT JOIN i.metadata metadatavalue " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap " +
+                "LEFT join emap.department as d ");
+        hql.append("WHERE wp.isdelete = :isdelete " +
+                "and d.id =:departmentname " +
+                "and t.id =:workflowtype and ep.sequence = 0 "
+        );
+        if(statusUuid != null){
+            hql.append("and st.id=:statusid ");
+        }
+        if(startdate != null && enddate != null){
+
+            hql.append(" AND  metadatavalue.metadataField = :metadataField " +
+                    "AND metadatavalue.value >= :startdate " +
+                    "AND metadatavalue.value <= :enddate " +
+                    "");
+        }
+
+        Query query = createQuery(context, hql.toString());
+        //query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+       // query.setParameter("eperson", eperson);
+        if(statusUuid != null) {
+            query.setParameter("statusid", statusUuid);
+        }
+        if(startdate != null && enddate != null){
+            try {
+                    String startDateStr = startdate + "T00:00:00Z";
+                    String endDateStr   = enddate + "T23:59:59Z";
+                    query.setParameter("startdate", startDateStr);
+                    query.setParameter("enddate", endDateStr);
+                    query.setParameter("metadataField",metadataFieldaccessioneddate);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("hql:::"+hql);
+        query.setParameter("isdelete", isdelete);
+        query.setParameter("departmentname", departmentUuid);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        return count(query);
     }
 }

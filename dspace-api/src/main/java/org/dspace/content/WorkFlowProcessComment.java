@@ -76,6 +76,10 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
     @Column(name = "designation")
     private String designation;
 
+    @Column(name = "senttoname")
+    private String senttoname;
+
+
     @Override
     public int getType() {
         return 0;
@@ -187,5 +191,13 @@ public class WorkFlowProcessComment extends DSpaceObject implements DSpaceObject
 
     public void setNoteindex(Integer noteindex) {
         this.noteindex = noteindex;
+    }
+
+    public String getSenttoname() {
+        return senttoname;
+    }
+
+    public void setSenttoname(String senttoname) {
+        this.senttoname = senttoname;
     }
 }

@@ -226,8 +226,12 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         workFlowProcessRest.setIssignnote(obj.getIssignnote());
         workFlowProcessRest.setIsinternal(obj.getIsinternal());
         workFlowProcessRest.setIssignatorysame(obj.getIssignatorysame());
+
         if (obj.getIspredefineuser() != null) {
             workFlowProcessRest.setIspredefineuser(obj.getIspredefineuser());
+        }
+        if(obj.getIsconfidential()!=null){
+            workFlowProcessRest.setIsconfidential(obj.getIsconfidential());
         }
 
         workFlowProcessRest.setUuid(obj.getID().toString());
@@ -373,6 +377,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         if (obj.getIssameuser() != null) {
             workflowProcess.setIssameuser(obj.getIssameuser());
         }
+        if(obj.getIsconfidential()!=null){
+            workflowProcess.setIsconfidential(obj.getIsconfidential());
+        }
         workflowProcess.setIsinternal(obj.getIsinternal());
         workflowProcess.setIssignatorysame(obj.getIssignatorysame());
         return workflowProcess;
@@ -506,6 +513,9 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
         }
         workflowProcess.setIsinternal(obj.getIsinternal());
         workflowProcess.setIssignatorysame(obj.getIssignatorysame());
+        if(obj.getIsconfidential()!=null){
+            workflowProcess.setIsconfidential(obj.getIsconfidential());
+        }
         return workflowProcess;
     }
 
@@ -741,8 +751,15 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 rest.setFilenumber(obj.getItem().getName());
                 String subject = itemService.getMetadataFirstValue(obj.getItem(), "dc", "subject", null, null);
                 rest.setFilesubject(subject!=null?subject:"NA");
+                String filecreateddate = itemService.getMetadataFirstValue(obj.getItem(), "dc", "date", "accessioned", null);
+                rest.setFilecreateddate(filecreateddate!=null?filecreateddate:"NA");
+
             } catch (Exception ignored) {}
         });
+
+        if(obj.getIsconfidential()!=null){
+            rest.setIsconfidential(obj.getIsconfidential());
+        }
 
         return rest;
     }
@@ -885,6 +902,8 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                 rest.setFilenumber(obj.getItem().getName());
                 String subject = itemService.getMetadataFirstValue(obj.getItem(), "dc", "subject", null, null);
                 rest.setFilesubject(subject!=null?subject:"NA");
+                String filecreateddate = itemService.getMetadataFirstValue(obj.getItem(), "dc", "date", "accessioned", null);
+                rest.setFilecreateddate(filecreateddate!=null?filecreateddate:"NA");
             } catch (Exception ignored) {}
         });
 
@@ -900,6 +919,10 @@ public class WorkFlowProcessConverter extends DSpaceObjectConverter<WorkflowProc
                     .ifPresentOrElse(rest::setDepartmentname, () -> rest.setDepartmentname("NA"));
         } catch (Exception e) {
             rest.setDepartmentname("NA");
+        }
+
+        if(obj.getIsconfidential()!=null){
+            rest.setIsconfidential(obj.getIsconfidential());
         }
 
         return rest;

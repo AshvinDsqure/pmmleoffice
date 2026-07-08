@@ -99,6 +99,9 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
     private Boolean ismode = false;
 
     @JsonProperty
+    private Boolean isconfidential = false;
+
+    @JsonProperty
     private Boolean issameuser = false;
 
     @JsonProperty
@@ -141,6 +144,10 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     @JsonProperty
     private String filesubject;
+
+    @JsonProperty
+    private String filecreateddate;
+
 
     @JsonProperty
     private String inwardnumber;
@@ -816,5 +823,21 @@ public class WorkFlowProcessRest extends DSpaceObjectRest {
 
     public void setIssameuser(Boolean issameuser) {
         this.issameuser = issameuser;
+    }
+
+    public Boolean getIsconfidential() {
+        return isconfidential;
+    }
+
+    public void setIsconfidential(Boolean isconfidential) {
+        this.isconfidential = isconfidential;
+    }
+
+    public String getFilecreateddate() {
+        return filecreateddate;
+    }
+
+    public void setFilecreateddate(String filecreateddate) {
+        this.filecreateddate = filecreateddate;
     }
 }

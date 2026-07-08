@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.dspace.services.ConfigurationService;
 
+import javax.crypto.Cipher;
 import javax.crypto.Mac;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.mail.MessagingException;
 import java.io.IOException;
@@ -99,7 +101,8 @@ public class OTPService {
     }
 
     // ✅ CREATE OTP SESSION + SEND OTP
-    public String createOtpSession(EPerson eperson, Context context) throws MessagingException, IOException {
+    public String createOtpSession(EPerson eperson, Context context)
+            throws MessagingException, IOException {
 
         if (eperson == null) {
             throw new IllegalArgumentException("EPerson cannot be null");
@@ -108,13 +111,15 @@ public class OTPService {
         String email = eperson.getEmail();
         String mobile = eperson.getMobile();
 
-        //String phoneNumber = getPhoneNumber(eperson); // temp
         String otp = generateOtp();
+
+        System.out.println("otp:::" + otp);
+
         String sessionId = UUID.randomUUID().toString();
 
         log.info("CREATING OTP SESSION");
         log.info("Email      => {}", email);
-        log.info("Mobile      => {}", mobile);
+        log.info("Mobile     => {}", mobile);
         log.info("Session ID => {}", sessionId);
 
         String otpHash = hashOtp(otp, email, sessionId);
@@ -122,16 +127,77 @@ public class OTPService {
         log.info("STORING OTP HASH IN REDIS => {}", otpHash);
 
         OtpSessionData data = new OtpSessionData(email, otpHash);
+
         int ttl = getOtpTtlSeconds();
+
         otpCache.put(sessionId, data, ttl);
-        // here switch statement
-        if(email!=null&&!email.isEmpty()) {
-            sendOtpByChannel(otp, email, null, context, "email");
+
+        String emailonoff =
+                configurationService.getProperty(
+                        "dspace.notification.channel.email"
+                );
+
+        String whatsapponoff =
+                configurationService.getProperty(
+                        "dspace.notification.channel.whatsapp"
+                );
+
+
+
+        /* EMAIL */
+
+        if (email != null
+                && !email.isEmpty()
+                && emailonoff != null
+                && emailonoff.equalsIgnoreCase("on")) {
+
+            try {
+
+                sendOtpByChannel(
+                        otp,
+                        email,
+                        null,
+                        context,
+                        "email"
+                );
+
+                log.info("EMAIL OTP SENT SUCCESSFULLY");
+
+            } catch (Exception e) {
+
+                log.error("EMAIL OTP FAILED", e);
+            }
         }
-        if (mobile != null&&!mobile.isEmpty()) {
-            data.setMobile(mobile);
-            sendOtpByChannel(otp, email, mobile, context, "whatsapp");
+
+
+
+        /* WHATSAPP */
+
+        if (mobile != null
+                && !mobile.isEmpty()
+                && whatsapponoff != null
+                && whatsapponoff.equalsIgnoreCase("on")) {
+
+            try {
+
+                data.setMobile(mobile);
+
+                sendOtpByChannel(
+                        otp,
+                        email,
+                        mobile,
+                        context,
+                        "whatsapp"
+                );
+
+                log.info("WHATSAPP OTP SENT SUCCESSFULLY");
+
+            } catch (Exception e) {
+
+                log.error("WHATSAPP OTP FAILED", e);
+            }
         }
+
         return sessionId;
     }
 
@@ -194,6 +260,25 @@ public class OTPService {
         log.info("VERIFYING OTP");
         log.info("Session ID => {}", sessionId);
         log.info("Provided OTP => {}", otp);
+
+
+        try {
+            String key = "STORE1970qswlaqw";
+            String iv = "STORE1970qswlaqw";
+            System.out.println("BEFORE::::::::OTP"+otp);
+            Base64.Decoder decoder = Base64.getDecoder();
+            byte[] encryptedusername = decoder.decode(otp);
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+            cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
+            byte[] originaluser = cipher.doFinal(encryptedusername);
+            String originalusers = new String(originaluser);
+            otp=originalusers.trim();
+            System.out.println("AFTER::::::::OTP\t"+otp);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         OtpSessionData data =
                 otpCache.get(sessionId, OtpSessionData.class);
@@ -296,7 +381,10 @@ public class OTPService {
         );
         otpCache.put(sessionId, data, ttl);
         //Email emailobject = Email.getEmail(I18nUtil.getEmailFilename(context.getCurrentLocale(), "registration_approve"));
-       if(data.getEmail()!=null&&!data.getEmail().isEmpty()) {
+        String emailonoff=configurationService.getProperty("dspace.notification.channel.email");
+        String whatsapponoff=configurationService.getProperty("dspace.notification.channel.whatsapp");
+
+        if(data.getEmail()!=null&&!data.getEmail().isEmpty()&&emailonoff!=null&&emailonoff.equalsIgnoreCase("on")) {
            sendOtpByChannel(
                    newOtp,
                    data.getEmail(),
@@ -306,7 +394,7 @@ public class OTPService {
            );
            log.info("OTP resent successfully Email.");
        }
-       if(data.getMobile()!=null&&!data.getMobile().isEmpty()) {
+       if(data.getMobile()!=null&&!data.getMobile().isEmpty()&&whatsapponoff!=null&&whatsapponoff.equalsIgnoreCase("on")) {
            sendOtpByChannel(
                    newOtp,
                    data.getEmail(),

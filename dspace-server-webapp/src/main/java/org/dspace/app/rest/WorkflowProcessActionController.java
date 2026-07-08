@@ -125,7 +125,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-
+import static java.util.stream.Collectors.toList;
 import static org.dspace.app.rest.utils.RegexUtils.REGEX_REQUESTMAPPING_IDENTIFIER_AS_UUID;
 
 
@@ -1126,7 +1126,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
 
-            WorkFlowAction backward = WorkFlowAction.BACKWARD;
+            WorkFlowAction backward = WorkFlowAction.CHANGDRAFT;
 
             if (comment != null) {
 
@@ -1284,98 +1284,222 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
 
 
+//    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+//
+//
+//
+//    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.HEAD}, value = "discard")
+//
+//    public WorkFlowProcessRest discard(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
+//
+//        log.info("in discard Action start!");
+//
+//        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
+//        try {
+//            Context context = ContextUtil.obtainContext(request);
+//            context.turnOffAuthorisationSystem();
+//            context.turnOffAuthorisationSystem();
+//
+//            ObjectMapper mapper = new ObjectMapper();
+//
+//            WorkFlowProcessRest workFlowProcessRest1 = mapper.readValue(request.getInputStream(), WorkFlowProcessRest.class);
+//
+//            if(workFlowProcessRest1.getComment()==null){
+//                throw new RuntimeException("please Enter Remark!");
+//            }
+//            WorkflowProcess finalw=null;
+//            WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
+//            if (workFlowProcess != null && workFlowProcess.getIsdelete() != null && !workFlowProcess.getIsdelete()) {
+//                finalw=workFlowProcess;
+//                List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, uuid);
+//                if(comments!=null) {
+//                    Optional<WorkFlowProcessComment> firstComment =
+//                            comments.stream()
+//                                    .filter(Objects::nonNull)
+//                                    .min(Comparator.comparing(WorkFlowProcessComment::getNoteindex));
+//                    if(firstComment.isPresent()){
+//
+//                        WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Department Counts");
+//                        if (workFlowProcessMaster != null) {
+//                            WorkFlowProcessMasterValue itemnotecountvalue = workFlowProcessMasterValueService.findByName(context, workFlowProcess.getItem().getID().toString(), workFlowProcessMaster);
+//                            if (itemnotecountvalue != null) {
+//
+//                                Integer notecount = firstComment.get().getNoteindex() - 1;
+//                                System.out.println("update index:::" + notecount);
+//                                itemnotecountvalue.setSecondaryvalue(String.valueOf(notecount));
+//                                workFlowProcessMasterValueService.update(context, itemnotecountvalue);
+//                            }
+//                        }
+//                    }
+//                    List<WorkFlowProcessComment> sortedComments = comments.stream()
+//                            .filter(Objects::nonNull)
+//                            .sorted(Comparator.comparing(
+//                                    WorkFlowProcessComment::getNoteindex,
+//                                    Comparator.nullsLast(Integer::compareTo)))
+//                            .collect(toList());
+//
+//
+//                    int i=1;
+//                    for (WorkFlowProcessComment comment:sortedComments
+//                         ) {
+//                        comment.setNoteindex(i);
+//                        workFlowProcessCommentService.update(context,comment);
+//                        i++;
+//                    }
+//                    System.out.println(">>>>>>.comment update done<<<<");
+//
+//                }
+//                workFlowProcess.setIsdelete(true);
+//                Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.DISCARD.getUserTypeFromMasterValue(context);
+//                if (workFlowTypeStatus.isPresent()) {
+//                    workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
+//                }
+//                workflowProcessService.create(context, workFlowProcess);
+//                storeWorkFlowHistoryDiscard(context,finalw,workFlowProcessRest1.getComment());
+//                context.commit();
+//                System.out.println("WorkflowProcess Deleted!");
+//            } else {
+//                System.out.println("WorkflowProcess already Deleted");
+//            }
+//            log.info("in discard Action stop!");
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//
+//            log.error("error in discard" + e.getMessage());
+//
+//        }
+//
+//        return workFlowProcessRest;
+//
+//    }
+
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
-
-
-
     @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.HEAD}, value = "discard")
+    public WorkFlowProcessRest discard(@PathVariable UUID uuid, HttpServletRequest request,HttpServletResponse res) throws Exception {
 
-    public WorkFlowProcessRest discard(@PathVariable UUID uuid, HttpServletRequest request) throws Exception {
+        log.info("Discard action started for workflowId={}", uuid);
 
-        log.info("in discard Action start!");
-
-        WorkFlowProcessRest workFlowProcessRest = new WorkFlowProcessRest();
+        Context context = ContextUtil.obtainContext(request);
+        context.turnOffAuthorisationSystem();
 
         try {
+            // ✅ Parse request body
+            ObjectMapper mapper = new ObjectMapper();
+            WorkFlowProcessRest requestBody =
+                    mapper.readValue(request.getInputStream(), WorkFlowProcessRest.class);
 
-            Context context = ContextUtil.obtainContext(request);
-
-            context.turnOffAuthorisationSystem();
-
-            WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
-
-            if (workFlowProcess.getWorkFlowProcessDraftDetails() != null && workFlowProcess.getWorkFlowProcessDraftDetails().getIssapdoc() && workFlowProcess.getWorkFlowProcessDraftDetails().getSapdocumentno() != null) {
-
-                SAPResponse sapResponse = new SAPResponse();
-
-                System.out.println(":::::::::::::::::::in SAP Calll::::::::::::::::::::");
-
-                JCoDestination destination = sapService.getDestination();
-
-                try {
-
-                    if (destination != null && destination.isValid()) {
-
-                        JCoFunction function = sapService.getFunctionZDMS_DOCUMENT_REJECT(destination);
-
-                        if (function != null) {
-
-                            sapResponse = sapService.executeSAP(function, destination, workFlowProcess.getWorkFlowProcessDraftDetails().getSapdocumentno());
-
-                        }
-
-                    }
-
-                } catch (Exception e) {
-
-                    sapResponse.setMSGTYP("E");
-
-                    sapResponse.setMESSAGE(e.getMessage());
-
-                    workFlowProcessRest.setSapResponse(sapResponse);
-
-                    return workFlowProcessRest;
-
-                }
-
-                System.out.println("::MESSAGE::::" + sapResponse.getMESSAGE());
-
-                System.out.println(":::MSGTYP:::" + sapResponse.getMSGTYP());
-
+            if (requestBody.getComment() == null || requestBody.getComment().trim().isEmpty()) {
+                throw new FieldBlankOrNullException("Please enter remark!");
             }
 
-            if (workFlowProcess != null && workFlowProcess.getIsdelete() != null && !workFlowProcess.getIsdelete()) {
+            // ✅ Fetch workflow
+            WorkflowProcess workflow = workflowProcessService.find(context, uuid);
 
-                workFlowProcess.setIsdelete(true);
-
-                workflowProcessService.create(context, workFlowProcess);
-
-                context.commit();
-
-                System.out.println("WorkflowProcess Deleted!");
-
-            } else {
-
-                System.out.println("WorkflowProcess already Deleted");
-
+            if (workflow == null || Boolean.TRUE.equals(workflow.getIsdelete())) {
+                log.warn("Workflow already deleted or not found: {}", uuid);
+                return new WorkFlowProcessRest();
             }
 
-            log.info("in discard Action stop!");
+            // ✅ Handle comments
+            handleCommentReindex(context, workflow);
 
-        } catch (Exception e) {
+            // ✅ Update workflow status
+            workflow.setIsdelete(true);
 
-            e.printStackTrace();
+            WorkFlowStatus.DISCARD.getUserTypeFromMasterValue(context)
+                    .ifPresent(workflow::setWorkflowStatus);
 
-            log.error("error in discard" + e.getMessage());
+            workflowProcessService.update(context, workflow);
 
+            // ✅ Save history
+            storeWorkFlowHistoryDiscard(context, workflow, requestBody.getComment());
+
+            context.commit();
+            log.info("Workflow discarded successfully: {}", uuid);
+
+        }catch (FieldBlankOrNullException e){
+            res.sendError(406, "Please Enter Remark.");
+
+            log.error("Please Enter Remark.", HttpServletResponse.SC_NOT_ACCEPTABLE, e);
+
+            throw new FieldBlankOrNullException(" "+e.getMessage());
         }
-
-        return workFlowProcessRest;
-
+        catch (Exception e) {
+            context.abort(); // ✅ IMPORTANT (rollback)
+            log.error("Error while discarding workflow {}", uuid, e);
+            throw e; // rethrow so API returns error
+        }
+        return new WorkFlowProcessRest();
     }
 
 
+    private void handleCommentReindex(Context context, WorkflowProcess workflow) throws SQLException, AuthorizeException {
 
+        List<WorkFlowProcessComment> comments =
+                workFlowProcessCommentService.getComments(context, workflow.getID());
+
+        if (comments == null || comments.isEmpty()) {
+            return;
+        }
+
+        // ✅ Find smallest index
+        comments.stream()
+                .filter(Objects::nonNull)
+                .min(Comparator.comparing(WorkFlowProcessComment::getNoteindex))
+                .ifPresent(firstComment -> {
+                    try {
+                        updateNoteCount(context, workflow, firstComment);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    } catch (AuthorizeException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        // ✅ Sort + reindex
+        List<WorkFlowProcessComment> sortedComments = comments.stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(
+                        WorkFlowProcessComment::getNoteindex,
+                        Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.toList());
+
+        int index = 1;
+        for (WorkFlowProcessComment comment : sortedComments) {
+            comment.setNoteindex(index++);
+            workFlowProcessCommentService.update(context, comment);
+        }
+
+        log.info("Comment reindex completed for workflowId={}", workflow.getID());
+    }
+
+    private void updateNoteCount(Context context,
+                                 WorkflowProcess workflow,
+                                 WorkFlowProcessComment firstComment) throws SQLException, AuthorizeException {
+
+        WorkFlowProcessMaster master =
+                workFlowProcessMasterService.findByName(context, "Department Counts");
+
+        if (master == null) return;
+
+        WorkFlowProcessMasterValue value =
+                workFlowProcessMasterValueService.findByName(
+                        context,
+                        workflow.getItem().getID().toString(),
+                        master
+                );
+
+        if (value != null) {
+            int noteCount = firstComment.getNoteindex() - 1;
+            value.setSecondaryvalue(String.valueOf(noteCount));
+            workFlowProcessMasterValueService.update(context, value);
+
+            log.info("Updated note count to {}", noteCount);
+        }
+    }
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
 
 
@@ -1580,6 +1704,139 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
 
 
+
+    @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.HEAD}, value = "backwardflow")
+    public WorkFlowProcessRest backwardflow(@PathVariable UUID uuid, HttpServletRequest request, HttpServletResponse res) throws IOException, SQLException, AuthorizeException {
+        log.info("in backwardflow Action start!");
+        WorkFlowProcessRest workFlowProcessRest = null;
+        WorkflowProcessEpersonRest workflowProcessEpersonRest = null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            workflowProcessEpersonRest = mapper.readValue(request.getInputStream(), WorkflowProcessEpersonRest.class);
+            String comment = workflowProcessEpersonRest.getComment();
+            Integer index = workflowProcessEpersonRest.getIndex();
+            Context context = ContextUtil.obtainContext(request);
+            EPerson currentUser=context.getCurrentUser();
+            context.turnOffAuthorisationSystem();
+            WorkflowProcess workFlowProcess = workflowProcessService.find(context, uuid);
+
+            boolean InitiatorForward = false;
+            boolean initiator = false;
+
+            if (workFlowProcess != null) {
+                workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+                if (index == 0) {
+                    initiator = true;
+                }
+
+                List<WorkflowProcessEperson> epeople = Optional
+                        .ofNullable(workFlowProcess.getWorkflowProcessEpeople())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .sorted(Comparator.comparing(WorkflowProcessEperson::getIndex))
+                        .collect(Collectors.toList());
+
+                Optional<WorkflowProcessEperson> owners = workFlowProcess.getWorkflowProcessEpeople()
+                        .stream()
+                        .filter(WorkflowProcessEperson::getOwner).findFirst();
+
+                System.out.println("owners.get().getIndex()::::::::::::::::"+owners.get().getIndex());
+
+                WorkflowProcessEperson previousDifferentUser = null;
+
+                for (int i = owners.get().getIndex()-1; i >= 0; i--) {
+
+                    System.out.println("i==="+i);
+                    WorkflowProcessEperson owner = epeople.get(i);
+                    System.out.println("owner.getePerson().getEmail()::::::::::::::::"+owner.getePerson().getEmail());
+                    if (!owner.getePerson().getID().equals(currentUser.getID())) {
+                        previousDifferentUser = owner;
+                        break;
+                    }else{
+                        System.out.println("Same user, skipping to find previous different user");
+                    }
+                }
+
+                if (previousDifferentUser != null) {
+
+                    System.out.println(previousDifferentUser.getePerson().getEmail());
+
+                } else {
+
+                    System.out.println("No different user found");
+                }
+
+                if (previousDifferentUser!=null&& !initiator) {
+                    int total = workFlowProcess.getWorkflowProcessEpeople().size();
+                    int newindex = total;
+                    System.out.println("::::::   New user index    :::" + newindex);
+                    WorkflowProcessEpersonRest rest = workFlowProcessEpersonConverter.convertByDashbord(previousDifferentUser, utils.obtainProjection());
+                    rest.setIndex(newindex);
+                    rest.setSequence(newindex);
+                    rest.setIssequence(true);
+                    Optional<WorkFlowProcessMasterValue> workFlowUserTypOptional = WorkFlowUserType.NORMAL.getUserTypeFromMasterValue(context);
+                    rest.setUserType(workFlowProcessMasterValueConverter.convert(workFlowUserTypOptional.get(), utils.obtainProjection()));
+                    List<WorkflowProcessEpersonRest> list = workFlowProcessRest.getWorkflowProcessEpersonRests();
+                    list.add(rest);
+                    workFlowProcessRest.setWorkflowProcessEpersonRests(list);
+                    WorkflowProcessEperson workflowProcessEperson = workFlowProcessEpersonConverter.convert(context, rest);
+                    workflowProcessEperson.setWorkflowProcess(workFlowProcess);
+                    workFlowProcess.setnewUser(workflowProcessEperson);
+                    if (comment != null) {
+                        workFlowProcess.setRemark(comment);
+                    }
+                    workflowProcessService.create(context, workFlowProcess);
+                }
+            }
+
+            Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
+            if (workFlowTypeStatus.isPresent()) {
+                workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
+            }
+            workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            //action is call back but work as forword
+            if (comment != null) {
+                workFlowProcessRest.setRemark(comment);
+            }
+            WorkFlowAction action = WorkFlowAction.BACKWARD;
+            //one flow completed after next time forward initiator to next user
+            if (workFlowProcess.getWorkflowProcessEpeople() != null) {
+                Optional<WorkflowProcessEperson> workflowPro = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getUsertype().getPrimaryvalue().equalsIgnoreCase(WorkFlowUserType.INITIATOR.getAction())).findFirst();
+                if (InitiatorForward) {
+                    System.out.println("::::::::::::::::::::::::::::setInitiatorForward::::::::true::::::::::::::::::::");
+                    action.setInitiatorForward(true);
+                } else {
+                    action.setInitiatorForward(false);
+                }
+            }
+            if (initiator) {
+                action.setInitiator(true);
+            }
+            WorkFlowProcessRest workFlowProcessResta = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
+            if (comment != null) {
+                workFlowProcessResta.setRemark(comment);
+            }
+            action.perfomeAction(context, workFlowProcess, workFlowProcessResta);
+            context.commit();
+            System.out.println("call back commit done:::::");
+            action.setComment(null);
+            action.setInitiator(false);
+            action.setInitiatorForward(false);
+            action.setWorkflowProcessReferenceDocs(null);
+            log.info("in callback Action stop!");
+            return workFlowProcessRest;
+        } catch (CanNotAccesssException e) {
+                res.sendError(406, "Unable to return your File/Dack; please contact the next user for return File/Tapal!");
+            //  log.error("Captcha not match", HttpServletResponse.SC_FORBIDDEN, e);
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new UnprocessableEntityException("error in callback Server..");
+        }
+    }
+
+
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
 
 
@@ -1624,7 +1881,7 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
                 System.out.println("You can  Not Call Back!");
 
-                throw new CanNotAccesssException("Unable to return your File/Tapal; please contact the next user for return File/Tapal!");
+                throw new CanNotAccesssException("Unable to return your File/Dak; please contact the next user for return File/Dak!");
 
             }
 
@@ -1703,61 +1960,42 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
                             inisiatoer=true;
 
                         }else{
-
-                            throw  new CanNotAccesssException("Unable to return your File/Tapal; please contact the next user for return File/Tapal!");
-
+                            throw  new CanNotAccesssException("Unable to return your File/Dak; please contact the next user for return File/Dak!");
                         }
-
                     }
-
-
-
                 }
 
+                try {
+                    WorkFlowProcessComment comments = workFlowProcessCommentService.getLatestCommentByNoteIndex(context, uuid);
+                    if (comments != null) {
+                        comments.setIsdraftsave(true);
+                        workFlowProcessCommentService.update(context, comments);
+                        System.out.println("========comment updated============setIsdraftsave true");
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
-
-
-
             Optional<WorkFlowProcessMasterValue> workFlowTypeStatus = WorkFlowStatus.INPROGRESS.getUserTypeFromMasterValue(context);
-
             if (workFlowTypeStatus.isPresent()) {
-
                 workFlowProcess.setWorkflowStatus(workFlowTypeStatus.get());
-
             }
-
             workFlowProcessRest = workFlowProcessConverter.convert(workFlowProcess, utils.obtainProjection());
-
             int index = workFlowProcess.getWorkflowProcessEpeople().size();
-
             WorkflowProcessEperson initit = workFlowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getIndex() == 0).findFirst().get();
-
-
-
             //action is call back but work as forword
-
-            WorkFlowAction action = WorkFlowAction.CALLBACK;
-
+            WorkFlowAction action = WorkFlowAction.CallbackandPreviousNotediscarded;
             //user not select any next user then flow go initiator auto
-
             if (initit.getePerson().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
-
                 System.out.println("::::::::::::::::::::::Initiator  set::::::::::::::::::::::::");
-
                 action.setInitiator(true);
-
                 inisiatoer=true;
-
             } else {
 
                 //This code current user add in workflow and forwad
-
                 WorkflowProcessEpersonRest rest = new WorkflowProcessEpersonRest();
-
                 rest.setIndex(index);
-
                 Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
-
                 if (map.isPresent()) {
 
                     EpersonToEpersonMappingRest rests = epersonToEpersonMappingConverter.convert(map.get(), utils.obtainProjection());
@@ -1826,23 +2064,17 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
         } catch (CanNotAccesssException e) {
 
-            res.sendError(406, "Unable to return your File/Tapal; please contact the next user for return File/Tapal!");
+            res.sendError(406, "Unable to return your File/Dak; please contact the next user for return File/Dak!");
 
             //  log.error("Captcha not match", HttpServletResponse.SC_FORBIDDEN, e);
 
             return null;
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
-            throw new UnprocessableEntityException("error in callback Server..");
-
+            throw new UnprocessableEntityException("error in callback Server.."+e.getMessage());
         }
-
     }
-
-
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
 
@@ -5186,474 +5418,1587 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
 
 
-    public WorkflowProcessReferenceDoc createFinalNoteSignPendingPDF(Context context, WorkflowProcess workflowProcess) throws
-
-            Exception {
-
-        boolean isTextEditorFlow = false;
-
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        InputStream input2 = null;
-
-        DocToPdfConverter docToPdfConverter = null;
-
-        List<Bitstream> bitstreams = null;
-
-        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
-
-        // System.out.println("start.......createFinalNote");
-
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
-
-                ".sign {\n" +
-
-                "        text-align: left; margin: 1px; margin-top: -31px;\n" +
-
-                "    }\n" +
-
-                "    .sign i {\n" +
-
-                "        font-size: 24px; /* Adjust size as needed */\n" +
-
-                "        margin-bottom: 10px; /* Space between icon and text */\n" +
-
-                "        color: #000; /* Icon color */\n" +
-
-                "    }\n" +
-
-                "\t.img{height: 75px;\n" +
-
-                "    width: 128px;\n" +
-
-                "    margin-bottom: -75px;" +
-
-                "}" +
-
-                "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
-
-        long notecount = 0;
-
-        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
-
-            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
-
-            notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess.getItem().getID(), statusid);
-
-            map.put("notecount", notecount);
-
-        }
-
-        notecount = notecount + 1;
-
-        File tempFileDoc = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
-
-        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
-
-        if (!tempFile1html.exists()) {
-
-            try {
-
-                tempFile1html.createNewFile();
-
-            } catch (IOException e) {
-
-                // TODO Auto-generated catch block
-
-                e.printStackTrace();
-
-            }
-
-        }
-
-        if (!tempFileDoc.exists()) {
-
-            try {
-
-                tempFileDoc.createNewFile();
-
-            } catch (IOException e) {
-
-                // TODO Auto-generated catch block
-
-                e.printStackTrace();
-
-            }
-
-        }
-
-        // System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
-
-        if(workflowProcess.getItem()!=null&&workflowProcess.getItem().getName()!=null) {
-
-                sb.append("<div style=\"float: right; width:65%\">");
-
-                sb.append("<span><b>FileNo : </b> " +workflowProcess.getItem().getName() + "</span><br>");
-
-                sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
-
-                sb.append("</div>");
-
-        }
-
-        sb.append("</br></br></br></br><p> <b>Subject : " + workflowProcess.getSubject() + "</b></p>");
-
-        isTextEditorFlow = true;
-
-        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
-
-        DigitalSignRequet digitalSignRequet = null;
-
-        List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
-
-
-        List<WorkFlowProcessComment> sortedcomment = comments.stream()
-                .sorted(Comparator.comparingInt(WorkFlowProcessComment::getNoteindex))
-                .collect(Collectors.toList());
-        int i = 1;
-
-        for (WorkFlowProcessComment comment : sortedcomment) {
-
-            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
-
-            //coment count
-
-            if(comment.getNoteindex()!=null) {
-                sb.append("<p><u>Note# " + comment.getNoteindex() + "</u></p>");
-            }else{
-                sb.append("<p><u>Note# " + i + "</u></p>");
-            }
-
-            //comment text
-
-            if (comment.getComment() != null) {
-
-                sb.append("<p>" + comment.getComment() + "</p>");
-
-                if (comment.getWorkflowProcessReferenceDoc() != null) {
-
-                    bitstreams = new ArrayList<>();
-
-                    bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
-
-                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
-
-                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
-
-                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
-
-                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
-
-                            .filter(d -> d.getBitstream() != null)
-
-                            .map(d -> d.getBitstream()).collect(Collectors.toList());
-
-                }
-
-            }
-
-            sb.append("<br><br>");
-
-            sb.append("<br><br><div style=\"width:100%;\"> ");
-
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+//    public WorkflowProcessReferenceDoc createFinalNoteSignPendingPDF(Context context, WorkflowProcess workflowProcess) throws
 //
-//            if (bitstreams.size() != 0) {
+//            Exception {
 //
-//                for (Bitstream bitstream : bitstreams) {
+//        boolean isTextEditorFlow = false;
 //
-//                    if (bitstream != null) {
+//        Map<String, Object> map = new HashMap<String, Object>();
 //
-//                        System.out.println("in Attachment");
+//        InputStream input2 = null;
 //
-//                        String baseurl = configurationService.getProperty("dspace.server.url");
+//        DocToPdfConverter docToPdfConverter = null;
 //
-//                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+//        List<Bitstream> bitstreams = null;
 //
-//                        sb.append(bitstream.getName() + "</a></span>");
+//        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
 //
-//                        // stroremetadate(bitstream, sb);
+//        // System.out.println("start.......createFinalNote");
+//
+//        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
+//
+//                ".sign {\n" +
+//
+//                "        text-align: left; margin: 1px; margin-top: -31px;\n" +
+//
+//                "    }\n" +
+//
+//                "    .sign i {\n" +
+//
+//                "        font-size: 24px; /* Adjust size as needed */\n" +
+//
+//                "        margin-bottom: 10px; /* Space between icon and text */\n" +
+//
+//                "        color: #000; /* Icon color */\n" +
+//
+//                "    }\n" +
+//
+//                "\t.img{height: 75px;\n" +
+//
+//                "    width: 128px;\n" +
+//
+//                "    margin-bottom: -75px;" +
+//
+//                "}" +
+//
+//                "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
+//
+//        long notecount = 0;
+//
+//        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
+//
+//            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
+//
+//            notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess.getItem().getID(), statusid);
+//
+//            map.put("notecount", notecount);
+//
+//        }
+//
+//        notecount = notecount + 1;
+//
+//        File tempFileDoc = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//
+//        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//
+//        if (!tempFile1html.exists()) {
+//
+//            try {
+//
+//                tempFile1html.createNewFile();
+//
+//            } catch (IOException e) {
+//
+//                // TODO Auto-generated catch block
+//
+//                e.printStackTrace();
+//
+//            }
+//
+//        }
+//
+//        if (!tempFileDoc.exists()) {
+//
+//            try {
+//
+//                tempFileDoc.createNewFile();
+//
+//            } catch (IOException e) {
+//
+//                // TODO Auto-generated catch block
+//
+//                e.printStackTrace();
+//
+//            }
+//
+//        }
+//
+//        // System.out.println("start.......createFinalNote" + tempFile1html.getAbsolutePath());
+//
+//        if(workflowProcess.getItem()!=null&&workflowProcess.getItem().getName()!=null) {
+//
+//                sb.append("<div style=\"float: right; width:65%\">");
+//
+//                sb.append("<span><b>FileNo : </b> " +workflowProcess.getItem().getName() + "</span><br>");
+//
+//                sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
+//
+//                sb.append("</div>");
+//
+//        }
+//
+//        sb.append("</br></br></br></br><p> <b>Subject : " + workflowProcess.getSubject() + "</b></p>");
+//
+//        isTextEditorFlow = true;
+//
+//        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
+//
+//        DigitalSignRequet digitalSignRequet = null;
+//
+//        List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
+//
+//
+//        List<WorkFlowProcessComment> sortedcomment = comments.stream()
+//                .sorted(Comparator.comparingInt(WorkFlowProcessComment::getNoteindex))
+//                .collect(Collectors.toList());
+//        int i = 1;
+//
+//        for (WorkFlowProcessComment comment : sortedcomment) {
+//
+//            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
+//
+//            //coment count
+//
+//            if(comment.getNoteindex()!=null) {
+//                sb.append("<p><u>Note# " + comment.getNoteindex() + "</u></p>");
+//            }else{
+//                sb.append("<p><u>Note# " + i + "</u></p>");
+//            }
+//
+//            //comment text
+//
+//            if (comment.getComment() != null) {
+//
+//                sb.append("<p>" + comment.getComment() + "</p>");
+//
+//                if (comment.getWorkflowProcessReferenceDoc() != null) {
+//
+//                    bitstreams = new ArrayList<>();
+//
+//                    bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
+//
+//                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
+//
+//                            .filter(d -> d.getBitstream() != null)
+//
+//                            .map(d -> d.getBitstream()).collect(Collectors.toList());
+//
+//                }
+//
+//            }
+//
+//            sb.append("<br><br>");
+//
+//            sb.append("<br><br><div style=\"width:100%;\"> ");
+//
+//            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+////
+////            if (bitstreams.size() != 0) {
+////
+////                for (Bitstream bitstream : bitstreams) {
+////
+////                    if (bitstream != null) {
+////
+////                        System.out.println("in Attachment");
+////
+////                        String baseurl = configurationService.getProperty("dspace.server.url");
+////
+////                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+////
+////                        sb.append(bitstream.getName() + "</a></span>");
+////
+////                        // stroremetadate(bitstream, sb);
+////
+////                    }
+////
+////                }
+////
+////            }
+//
+//            sb.append("</div>");
+//
+//            //start normal sign with HTML Cordinate
+//
+//          if(comment.getNoteindex()!=null) {
+//              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + comment.getNoteindex() + "_Name:</B> </p>");
+//          }else{
+//              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + i + "_Name:</B> </p>");
+//
+//          }
+//            //this is normal
+//
+//            //String icon = configurationService.getProperty("digital.sign.icon");
+//
+//            //String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+//
+//            //sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+//
+//            sb.append("<div class=\"sign\">");
+//
+//
+//
+//            sb.append("<B>");
+//
+//            if(comment.getIsdosign()&&comment.getCommonname()!=null){
+//
+//                sb.append("<br>Signed By : " + comment.getCommonname());
+//
+//
+//
+//            }else {
+//
+//                if (comment.getSubmitter() != null) {
+//
+//                    if (comment.getSubmitter().getFullName() != null) {
+//
+//                        sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
 //
 //                    }
 //
 //                }
 //
 //            }
+//
+//            if (comment.getDesignation()!= null) {
+//
+//                sb.append("<br>Designation : " + comment.getDesignation());
+//
+//            }
+//
+//            if (comment.getActionDate() != null) {
+//
+//                sb.append("<br>Date : " + DateFormate(comment.getActionDate()));
+//
+//            }
+//
+//
+//
+//            //sb.append("<br>Reason :Digital Copy.");
+//
+//            //sb.append("<br>Location :New Delhi.");
+//
+//            sb.append("</B>");
+//
+//            //end  normal sign
+//
+//            sb.append("</div>");
+//
+//            sb.append("</div>");
+//
+//            //end  normal sign
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            digitalSignRequets.add(digitalSignRequet);
+//
+//            i++;
+//
+//        }
+//        sb.append("</body></html>");
+//
+//        if (isTextEditorFlow) {
+//
+//            System.out.println("::::::::::IN isTextEditorFlow :::::::::");
+//
+//            FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
+//
+//            System.out.println("HTML:::" + sb.toString());
+//
+//            //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
+//
+//            int ii = jbpmServer.htmltopdf(sb.toString(), files);
+//
+//            //System.out.println("iii>>>>>>>.."+ii);
+//
+//            System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
+//
+//            File finalnotepath = tempFile1html;//PDFTextSearch.getSingDoc(tempFile1html.getAbsolutePath(),digitalSignRequets);
+//
+//            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+//
+//            margedoc.setSubject(workflowProcess.getSubject());
+//
+//            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(finalnotepath.getName()));
+//
+//            margedoc.setInitdate(new Date());
+//
+//            margedoc.setItemname(workflowProcess.getItem().getName());
+//
+//            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
+//
+//            if (workFlowProcessMaster != null) {
+//
+//                WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
+//
+//                if (workFlowProcessMasterValue != null) {
+//
+//                    margedoc.setDrafttype(workFlowProcessMasterValue);
+//
+//                }
+//
+//            }
+//
+//            margedoc.setWorkflowProcess(workflowProcess);
+//
+//            InputStream fileInputStream1 = null;
+//
+//            FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
+//
+//            fileInputStream1 = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
+//
+//            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", finalnotepath.getName());
+//            int result = (int) notecount;
+//            bitstream.setNoteindex(result);
+//            margedoc.setBitstream(bitstream);
+//
+//            margedoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
+//
+//            if (workflowProcess.getWorkflowProcessNote() != null) {
+//
+//                margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+//
+//                for (WorkflowProcessReferenceDoc d : workflowProcess.getWorkflowProcessReferenceDocs()) {
+//
+//                    if (d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet"))
+//
+//                        d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+//
+//                    workflowProcessReferenceDocService.update(context, d);
+//
+//                }
+//
+//            }
+//
+//            WorkflowProcessReferenceDoc margedoc1 = workflowProcessReferenceDocService.create(context, margedoc);
+//
+//            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = margedoc1;
+//
+//            WorkflowProcessNote workflowProcessNote = new WorkflowProcessNote();
+//
+//            Optional<EPerson> creator = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson() != null).filter(d -> d.getIndex() == 0).map(d -> d.getePerson()).findFirst();
+//
+//            if (creator.isPresent()) {
+//
+//                workflowProcessNote.setSubmitter(creator.get());
+//
+//            }
+//
+//            if (workflowProcess.getSubject() != null) {
+//
+//                workflowProcessNote.setSubject(workflowProcess.getSubject());
+//
+//            }
+//
+//            List<WorkflowProcessReferenceDoc> doc = new ArrayList<>();
+//
+//            doc.add(workflowProcessReferenceDoc);
+//
+//            WorkflowProcessNote finalw = workflowProcessNoteService.create(context, workflowProcessNote);
+//
+//            margedoc.setWorkflowprocessnote(finalw);
+//
+//            workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
+//
+//            return workflowProcessReferenceDoc;
+//
+//        } else {
+//
+//            System.out.println(":::::::::In Document flow:::::::::::::::");
+//
+//            MargedDocUtils.DocthreWrite(map);
+//
+//            MargedDocUtils.finalwriteDocument(tempFileDoc.getAbsolutePath());
+//
+//            //DocToPdfConverter.genarateDocumentFlowNote(map, tempFileDoc.getAbsolutePath(), notecount);
+//
+//            System.out.println("tempFileDoc:" + tempFileDoc.getAbsolutePath());
+//
+//            System.out.println("tempFileDoc :" + tempFileDoc.getAbsolutePath());
+//
+//            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+//
+//            margedoc.setSubject(workflowProcess.getSubject());
+//
+//            margedoc.setDescription(workflowProcess.getSubject() + " for " + tempFileDoc.getName());
+//
+//            margedoc.setInitdate(new Date());
+//
+//            margedoc.setReferenceNumber("" + notecount);
+//
+//            WorkFlowProcessMasterValue doctype = getMastervalueData(context, "Document Type", "Invoice");
+//
+//            if (doctype != null) {
+//
+//                margedoc.setWorkFlowProcessReferenceDocType(doctype);
+//
+//            }
+//
+//            WorkFlowProcessMasterValue lattercategory = getMastervalueData(context, "Latter Category", "Latter Category 1");
+//
+//            if (lattercategory != null) {
+//
+//                margedoc.setLatterCategory(lattercategory);
+//
+//            }
+//
+//            WorkFlowProcessMasterValue Drafttype = getMastervalueData(context, "Draft Type", "Note");
+//
+//            if (Drafttype != null) {
+//
+//                margedoc.setDrafttype(Drafttype);
+//
+//            }
+//
+//            margedoc.setWorkflowProcess(workflowProcess);
+//
+//            FileInputStream outputfile = new FileInputStream(new File(tempFileDoc.getAbsolutePath()));
+//
+//            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFileDoc.getName());
+//
+//            margedoc.setBitstream(bitstream);
+//
+//            if (workflowProcess.getWorkflowProcessNote() != null) {
+//
+//                margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+//
+//                for (WorkflowProcessReferenceDoc d : workflowProcess.getWorkflowProcessReferenceDocs()) {
+//
+//                    if (d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet"))
+//
+//                        d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+//
+//                    workflowProcessReferenceDocService.update(context, d);
+//
+//                }
+//
+//            }
+//
+//            margedoc = workflowProcessReferenceDocService.create(context, margedoc);
+//
+//            return margedoc;
+//
+//        }
+//
+//    }
 
-            sb.append("</div>");
 
-            //start normal sign with HTML Cordinate
+//    public WorkflowProcessReferenceDoc createFinalNoteSignPendingPDF(Context context, WorkflowProcess workflowProcess) throws Exception {
+//
+//        boolean isTextEditorFlow = false;
+//
+//        Map<String, Object> map = new HashMap<String, Object>();
+//
+//        InputStream input2 = null;
+//
+//        DocToPdfConverter docToPdfConverter = null;
+//
+//        List<Bitstream> bitstreams = null;
+//
+//        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
+//
+//        StringBuffer sb = new StringBuffer(
+//                "<!DOCTYPE html>" +
+//                        "<html>" +
+//                        "<head>" +
+//                        "<title>Note</title>" +
+//
+//                        "<style>" +
+//
+//                        "@page{" +
+//                        "size:A4;" +
+//                        "margin:0;" +
+//                        "}" +
+//
+//                        "html,body{" +
+//                        "width:100%;" +
+//                        "height:100%;" +
+//                        "margin:0;" +
+//                        "padding:0;" +
+//                        "background:#c5e6c1;" +
+//                        "}" +
+//
+//                        "*{" +
+//                        "box-sizing:border-box;" +
+//                        "}" +
+//
+//                        "body{" +
+//                        "padding:15px;" +
+//                        "background:#c5e6c1;" +
+//                        "font-family:Arial,sans-serif;" +
+//                        "font-size:14px;" +
+//                        "line-height:1.5;" +
+//                        "color:#000;" +
+//                        "-webkit-print-color-adjust: exact;" +
+//                        "print-color-adjust: exact;" +
+//                        "}" +
+//
+//                        ".sign{" +
+//                        "text-align:left;" +
+//                        "margin-top:10px;" +
+//                        "line-height:1.8;" +
+//                        "}" +
+//
+//                        ".sign i{" +
+//                        "font-size:24px;" +
+//                        "margin-bottom:10px;" +
+//                        "color:#000;" +
+//                        "}" +
+//
+//                        ".img{" +
+//                        "height:75px;" +
+//                        "width:128px;" +
+//                        "margin-bottom:-75px;" +
+//                        "}" +
+//
+//                        "</style>" +
+//
+//                        "</head>" +
+//
+//                        "<body>"
+//        );
+//
+//        long notecount = 0;
+//
+//        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
+//
+//            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
+//
+//            notecount = workflowProcessNoteService.getNoteCountNumber(
+//                    context,
+//                    workflowProcess.getItem().getID(),
+//                    statusid
+//            );
+//
+//            map.put("notecount", notecount);
+//        }
+//
+//        notecount = notecount + 1;
+//
+//        File tempFileDoc = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//
+//        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//
+//        if (!tempFile1html.exists()) {
+//
+//            try {
+//
+//                tempFile1html.createNewFile();
+//
+//            } catch (IOException e) {
+//
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        if (!tempFileDoc.exists()) {
+//
+//            try {
+//
+//                tempFileDoc.createNewFile();
+//
+//            } catch (IOException e) {
+//
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        if (workflowProcess.getItem() != null &&
+//                workflowProcess.getItem().getName() != null) {
+//
+//            sb.append("<div style=\"float:right;width:65%;\">");
+//
+//            sb.append("<span><b>FileNo : </b> ")
+//                    .append(workflowProcess.getItem().getName())
+//                    .append("</span><br>");
+//
+//            sb.append("<span><b>Date : </b> ")
+//                    .append(DateUtils.getCurrentDDMMYY())
+//                    .append("</span>");
+//
+//            sb.append("</div>");
+//        }
+//
+//        sb.append("<br><br><br><br>");
+//
+//        sb.append("<p><b>Subject : ")
+//                .append(workflowProcess.getSubject())
+//                .append("</b></p>");
+//
+//        isTextEditorFlow = true;
+//
+//        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
+//
+//        DigitalSignRequet digitalSignRequet = null;
+//
+//        List<WorkFlowProcessComment> comments =
+//                workFlowProcessCommentService.getComments(
+//                        context,
+//                        workflowProcess.getID()
+//                );
+//
+//        List<WorkFlowProcessComment> sortedcomment = comments.stream()
+//                .sorted(Comparator.comparingInt(
+//                        WorkFlowProcessComment::getNoteindex))
+//                .collect(Collectors.toList());
+//
+//        int i = 1;
+//
+//        for (WorkFlowProcessComment comment : sortedcomment) {
+//
+//            sb.append("<div style=\"width:100%;text-align:left;float:left;\">");
+//
+//            if (comment.getNoteindex() != null) {
+//
+//                sb.append("<p><u>Note# ")
+//                        .append(comment.getNoteindex())
+//                        .append("</u></p>");
+//
+//            } else {
+//
+//                sb.append("<p><u>Note# ")
+//                        .append(i)
+//                        .append("</u></p>");
+//            }
+//
+//            if (comment.getComment() != null) {
+//
+//                sb.append("<p>")
+//                        .append(comment.getComment())
+//                        .append("</p>");
+//
+//                if (comment.getWorkflowProcessReferenceDoc() != null) {
+//
+//                    bitstreams = new ArrayList<>();
+//
+//                    bitstreams = comment.getWorkflowProcessReferenceDoc()
+//                            .stream()
+//
+//                            .filter(d -> d.getDrafttype() != null
+//                                    && d.getDrafttype().getPrimaryvalue() != null
+//                                    && !d.getDrafttype().getPrimaryvalue()
+//                                    .equalsIgnoreCase("Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null
+//                                    && d.getDrafttype().getPrimaryvalue() != null
+//                                    && !d.getDrafttype().getPrimaryvalue()
+//                                    .equalsIgnoreCase("Reference Reply Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null
+//                                    && d.getDrafttype().getPrimaryvalue() != null
+//                                    && !d.getDrafttype().getPrimaryvalue()
+//                                    .equalsIgnoreCase("Reply Note"))
+//
+//                            .filter(d -> d.getDrafttype() != null
+//                                    && d.getDrafttype().getPrimaryvalue() != null
+//                                    && !d.getDrafttype().getPrimaryvalue()
+//                                    .equalsIgnoreCase("Reference Document"))
+//
+//                            .filter(d -> d.getBitstream() != null)
+//
+//                            .map(d -> d.getBitstream())
+//                            .collect(Collectors.toList());
+//                }
+//            }
+//
+//            sb.append("<br><br>");
+//
+//            sb.append("<div style=\"width:100%;\">");
+//
+//            sb.append("<div style=\"width:70%;float:left;\">");
+//            sb.append("<p><b></b></p>");
+//
+//            sb.append("</div>");
+//
+//            if (comment.getNoteindex() != null) {
+//
+//                sb.append("<div style=\"float:right;width:30%;\">");
+//                sb.append("<p><b>Signature_")
+//                        .append(comment.getNoteindex())
+//                        .append("_Name:</b></p>");
+//
+//            } else {
+//
+//                sb.append("<div style=\"float:right;width:30%;\">");
+//                sb.append("<p><b>Signature_")
+//                        .append(i)
+//                        .append("_Name:</b></p>");
+//            }
+//
+//            sb.append("<div class=\"sign\">");
+//
+//            sb.append("<b>");
+//
+//            if (comment.getIsdosign() &&
+//                    comment.getCommonname() != null) {
+//
+//                sb.append("Signed By : ")
+//                        .append(comment.getCommonname());
+//
+//            } else {
+//
+//                if (comment.getSubmitter() != null &&
+//                        comment.getSubmitter().getFullName() != null) {
+//
+//                    sb.append("Signed By : ")
+//                            .append(comment.getSubmitter().getFullName());
+//                }
+//            }
+//
+//            if (comment.getDesignation() != null) {
+//
+//                sb.append("<br>Designation : ")
+//                        .append(comment.getDesignation());
+//            }
+//
+//            if (comment.getActionDate() != null) {
+//
+//                sb.append("<br>Date : ")
+//                        .append(DateFormate(comment.getActionDate()));
+//            }
+//
+//            sb.append("</b>");
+//
+//            sb.append("</div>");
+//
+//            sb.append("</div>");
+//
+//            sb.append("</div>");
+//
+//            sb.append("<br><br><br><br><br>");
+//
+//            digitalSignRequets.add(digitalSignRequet);
+//
+//            i++;
+//        }
+//
+//        sb.append("</body></html>");
+//
+//        if (isTextEditorFlow) {
+//
+//            System.out.println("::::::::::IN isTextEditorFlow :::::::::");
+//
+//            FileOutputStream files =
+//                    new FileOutputStream(
+//                            new File(tempFile1html.getAbsolutePath())
+//                    );
+//
+//            System.out.println("HTML:::" + sb.toString());
+//
+//            int ii = jbpmServer.htmltopdf(sb.toString(), files);
+//
+//            System.out.println(
+//                    "HTML CONVERT DONE::::::::::::::: :"
+//                            + tempFile1html.getAbsolutePath()
+//            );
+//
+//            File finalnotepath = tempFile1html;
+//
+//            WorkflowProcessReferenceDoc margedoc =
+//                    new WorkflowProcessReferenceDoc();
+//
+//            margedoc.setSubject(workflowProcess.getSubject());
+//
+//            margedoc.setDescription(
+//                    workflowProcess.getSubject()
+//                            + " for "
+//                            + FileUtils.getNameWithoutExtension(
+//                            finalnotepath.getName()
+//                    )
+//            );
+//
+//            margedoc.setInitdate(new Date());
+//
+//            margedoc.setItemname(
+//                    workflowProcess.getItem().getName()
+//            );
+//
+//            WorkFlowProcessMaster workFlowProcessMaster =
+//                    workFlowProcessMasterService.findByName(
+//                            context,
+//                            "Draft Type"
+//                    );
+//
+//            if (workFlowProcessMaster != null) {
+//
+//                WorkFlowProcessMasterValue workFlowProcessMasterValue =
+//                        workFlowProcessMasterValueService.findByName(
+//                                context,
+//                                "Note",
+//                                workFlowProcessMaster
+//                        );
+//
+//                if (workFlowProcessMasterValue != null) {
+//
+//                    margedoc.setDrafttype(
+//                            workFlowProcessMasterValue
+//                    );
+//                }
+//            }
+//
+//            margedoc.setWorkflowProcess(workflowProcess);
+//
+//            InputStream fileInputStream1 = null;
+//
+//            FileInputStream outputfile =
+//                    new FileInputStream(
+//                            new File(finalnotepath.getAbsolutePath())
+//                    );
+//
+//            fileInputStream1 =
+//                    new FileInputStream(
+//                            new File(finalnotepath.getAbsolutePath())
+//                    );
+//
+//            Bitstream bitstream =
+//                    bundleRestRepository
+//                            .processBitstreamCreationWithoutBundle(
+//                                    context,
+//                                    outputfile,
+//                                    "",
+//                                    finalnotepath.getName()
+//                            );
+//
+//            int result = (int) notecount;
+//
+//            bitstream.setNoteindex(result);
+//
+//            margedoc.setBitstream(bitstream);
+//
+//            margedoc.setPage(
+//                    FileUtils.getPageCountInPDF(fileInputStream1)
+//            );
+//
+//            if (workflowProcess.getWorkflowProcessNote() != null) {
+//
+//                margedoc.setWorkflowprocessnote(
+//                        workflowProcess.getWorkflowProcessNote()
+//                );
+//
+//                for (WorkflowProcessReferenceDoc d :
+//                        workflowProcess.getWorkflowProcessReferenceDocs()) {
+//
+//                    if (d.getDrafttype() != null
+//                            && d.getDrafttype().getPrimaryvalue() != null
+//                            && !d.getDrafttype().getPrimaryvalue()
+//                            .equalsIgnoreCase("Notesheet"))
+//
+//                        d.setWorkflowprocessnote(
+//                                workflowProcess.getWorkflowProcessNote()
+//                        );
+//
+//                    workflowProcessReferenceDocService.update(context, d);
+//                }
+//            }
+//
+//            WorkflowProcessReferenceDoc margedoc1 =
+//                    workflowProcessReferenceDocService.create(
+//                            context,
+//                            margedoc
+//                    );
+//
+//            WorkflowProcessReferenceDoc workflowProcessReferenceDoc =
+//                    margedoc1;
+//
+//            WorkflowProcessNote workflowProcessNote =
+//                    new WorkflowProcessNote();
+//
+//            Optional<EPerson> creator =
+//                    workflowProcess.getWorkflowProcessEpeople()
+//                            .stream()
+//                            .filter(d -> d.getePerson() != null)
+//                            .filter(d -> d.getIndex() == 0)
+//                            .map(d -> d.getePerson())
+//                            .findFirst();
+//
+//            if (creator.isPresent()) {
+//
+//                workflowProcessNote.setSubmitter(creator.get());
+//            }
+//
+//            if (workflowProcess.getSubject() != null) {
+//
+//                workflowProcessNote.setSubject(
+//                        workflowProcess.getSubject()
+//                );
+//            }
+//
+//            List<WorkflowProcessReferenceDoc> doc =
+//                    new ArrayList<>();
+//
+//            doc.add(workflowProcessReferenceDoc);
+//
+//            WorkflowProcessNote finalw =
+//                    workflowProcessNoteService.create(
+//                            context,
+//                            workflowProcessNote
+//                    );
+//
+//            margedoc.setWorkflowprocessnote(finalw);
+//
+//            workflowProcessReferenceDocService.update(
+//                    context,
+//                    workflowProcessReferenceDoc
+//            );
+//
+//            return workflowProcessReferenceDoc;
+//
+//        } else {
+//
+//            System.out.println(
+//                    ":::::::::In Document flow:::::::::::::::"
+//            );
+//
+//            MargedDocUtils.DocthreWrite(map);
+//
+//            MargedDocUtils.finalwriteDocument(
+//                    tempFileDoc.getAbsolutePath()
+//            );
+//
+//            WorkflowProcessReferenceDoc margedoc =
+//                    new WorkflowProcessReferenceDoc();
+//
+//            margedoc.setSubject(workflowProcess.getSubject());
+//
+//            margedoc.setDescription(
+//                    workflowProcess.getSubject()
+//                            + " for "
+//                            + tempFileDoc.getName()
+//            );
+//
+//            margedoc.setInitdate(new Date());
+//
+//            margedoc.setReferenceNumber("" + notecount);
+//
+//            WorkFlowProcessMasterValue doctype =
+//                    getMastervalueData(
+//                            context,
+//                            "Document Type",
+//                            "Invoice"
+//                    );
+//
+//            if (doctype != null) {
+//
+//                margedoc.setWorkFlowProcessReferenceDocType(doctype);
+//            }
+//
+//            WorkFlowProcessMasterValue lattercategory =
+//                    getMastervalueData(
+//                            context,
+//                            "Latter Category",
+//                            "Latter Category 1"
+//                    );
+//
+//            if (lattercategory != null) {
+//
+//                margedoc.setLatterCategory(lattercategory);
+//            }
+//
+//            WorkFlowProcessMasterValue Drafttype =
+//                    getMastervalueData(
+//                            context,
+//                            "Draft Type",
+//                            "Note"
+//                    );
+//
+//            if (Drafttype != null) {
+//
+//                margedoc.setDrafttype(Drafttype);
+//            }
+//
+//            margedoc.setWorkflowProcess(workflowProcess);
+//
+//            FileInputStream outputfile =
+//                    new FileInputStream(
+//                            new File(tempFileDoc.getAbsolutePath())
+//                    );
+//
+//            Bitstream bitstream =
+//                    bundleRestRepository
+//                            .processBitstreamCreationWithoutBundle(
+//                                    context,
+//                                    outputfile,
+//                                    "",
+//                                    tempFileDoc.getName()
+//                            );
+//
+//            margedoc.setBitstream(bitstream);
+//
+//            if (workflowProcess.getWorkflowProcessNote() != null) {
+//
+//                margedoc.setWorkflowprocessnote(
+//                        workflowProcess.getWorkflowProcessNote()
+//                );
+//
+//                for (WorkflowProcessReferenceDoc d :
+//                        workflowProcess.getWorkflowProcessReferenceDocs()) {
+//
+//                    if (d.getDrafttype() != null
+//                            && d.getDrafttype().getPrimaryvalue() != null
+//                            && !d.getDrafttype().getPrimaryvalue()
+//                            .equalsIgnoreCase("Notesheet"))
+//
+//                        d.setWorkflowprocessnote(
+//                                workflowProcess.getWorkflowProcessNote()
+//                        );
+//
+//                    workflowProcessReferenceDocService.update(context, d);
+//                }
+//            }
+//
+//            margedoc =
+//                    workflowProcessReferenceDocService.create(
+//                            context,
+//                            margedoc
+//                    );
+//
+//            return margedoc;
+//        }
+//    }
 
-          if(comment.getNoteindex()!=null) {
-              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + comment.getNoteindex() + "_Name:</B> </p>");
-          }else{
-              sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + i + "_Name:</B> </p>");
 
-          }
-            //this is normal
+    public WorkflowProcessReferenceDoc createFinalNoteSignPendingPDF(
+            Context context,
+            WorkflowProcess workflowProcess) throws Exception {
 
-            //String icon = configurationService.getProperty("digital.sign.icon");
+        boolean isTextEditorFlow = false;
 
-            //String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+        Map<String, Object> map = new HashMap<>();
 
-            //sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+        List<Bitstream> bitstreams = null;
 
-            sb.append("<div class=\"sign\">");
+        final String TEMP_DIRECTORY = getFolderTmp("NOTES");
 
+        // ─────────────────────────────────────────────
+        // 1. NOTE COUNT
+        // ─────────────────────────────────────────────
+        long notecount = 0;
 
+        if (workflowProcess.getItem() != null
+                && workflowProcess.getItem().getName() != null) {
 
-            sb.append("<B>");
+            UUID statusId = WorkFlowStatus.COMPLETE
+                    .getUserTypeFromMasterValue(context)
+                    .get()
+                    .getID();
 
-            if(comment.getIsdosign()&&comment.getCommonname()!=null){
+            notecount = workflowProcessNoteService.getNoteCountNumber(
+                    context,
+                    workflowProcess.getItem().getID(),
+                    statusId
+            );
 
-                sb.append("<br>Signed By : " + comment.getCommonname());
-
-
-
-            }else {
-
-                if (comment.getSubmitter() != null) {
-
-                    if (comment.getSubmitter().getFullName() != null) {
-
-                        sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
-
-                    }
-
-                }
-
-            }
-
-            if (comment.getDesignation()!= null) {
-
-                sb.append("<br>Designation : " + comment.getDesignation());
-
-            }
-
-            if (comment.getActionDate() != null) {
-
-                sb.append("<br>Date : " + DateFormate(comment.getActionDate()));
-
-            }
-
-
-
-            //sb.append("<br>Reason :Digital Copy.");
-
-            //sb.append("<br>Location :New Delhi.");
-
-            sb.append("</B>");
-
-            //end  normal sign
-
-            sb.append("</div>");
-
-            sb.append("</div>");
-
-            //end  normal sign
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            digitalSignRequets.add(digitalSignRequet);
-
-            i++;
-
+            map.put("notecount", notecount);
         }
-        sb.append("</body></html>");
 
+        notecount = notecount + 1;
+
+        // ─────────────────────────────────────────────
+        // 2. TEMP FILES
+        // ─────────────────────────────────────────────
+        File tempFileDoc  = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+
+        createIfNotExists(tempFile1html);
+        createIfNotExists(tempFileDoc);
+
+        // ─────────────────────────────────────────────
+        // 3. BUILD HTML
+        // ─────────────────────────────────────────────
+        String html = buildNoteHtml(context, workflowProcess, notecount);
+
+        // ─────────────────────────────────────────────
+        // 4. COLLECT COMMENTS + BITSTREAMS
+        // ─────────────────────────────────────────────
+        List<WorkFlowProcessComment> comments =
+                workFlowProcessCommentService.getComments(context, workflowProcess.getID());
+
+        List<WorkFlowProcessComment> sortedComments = comments.stream()
+                .sorted(Comparator.comparingInt(WorkFlowProcessComment::getNoteindex))
+                .collect(Collectors.toList());
+
+        for (WorkFlowProcessComment comment : sortedComments) {
+
+            if (comment.getComment() != null
+                    && comment.getWorkflowProcessReferenceDoc() != null) {
+
+                bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
+                        .filter(d -> d.getDrafttype() != null
+                                && d.getDrafttype().getPrimaryvalue() != null)
+                        .filter(d -> !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+                        .filter(d -> !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
+                        .filter(d -> !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
+                        .filter(d -> !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
+                        .filter(d -> d.getBitstream() != null)
+                        .map(WorkflowProcessReferenceDoc::getBitstream)
+                        .collect(Collectors.toList());
+            }
+        }
+
+        isTextEditorFlow = true;
+
+        // ─────────────────────────────────────────────
+        // 5. CONVERT HTML → PDF
+        // ─────────────────────────────────────────────
         if (isTextEditorFlow) {
 
             System.out.println("::::::::::IN isTextEditorFlow :::::::::");
 
-            FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
+            FileOutputStream fileOut = new FileOutputStream(tempFile1html.getAbsolutePath());
 
-            System.out.println("HTML:::" + sb.toString());
+            System.out.println("HTML:::\n" + html);
 
-            //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
+            jbpmServer.htmltopdf(html, fileOut);
 
-            int ii = jbpmServer.htmltopdf(sb.toString(), files);
+            System.out.println("HTML CONVERT DONE ::: " + tempFile1html.getAbsolutePath());
 
-            //System.out.println("iii>>>>>>>.."+ii);
-
-            System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
-
-            File finalnotepath = tempFile1html;//PDFTextSearch.getSingDoc(tempFile1html.getAbsolutePath(),digitalSignRequets);
-
-            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
-
-            margedoc.setSubject(workflowProcess.getSubject());
-
-            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(finalnotepath.getName()));
-
-            margedoc.setInitdate(new Date());
-
-            margedoc.setItemname(workflowProcess.getItem().getName());
-
-            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
-
-            if (workFlowProcessMaster != null) {
-
-                WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
-
-                if (workFlowProcessMasterValue != null) {
-
-                    margedoc.setDrafttype(workFlowProcessMasterValue);
-
-                }
-
-            }
-
-            margedoc.setWorkflowProcess(workflowProcess);
-
-            InputStream fileInputStream1 = null;
-
-            FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
-
-            fileInputStream1 = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
-
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", finalnotepath.getName());
-            int result = (int) notecount;
-            bitstream.setNoteindex(result);
-            margedoc.setBitstream(bitstream);
-
-            margedoc.setPage(FileUtils.getPageCountInPDF(fileInputStream1));
-
-            if (workflowProcess.getWorkflowProcessNote() != null) {
-
-                margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-
-                for (WorkflowProcessReferenceDoc d : workflowProcess.getWorkflowProcessReferenceDocs()) {
-
-                    if (d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet"))
-
-                        d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-
-                    workflowProcessReferenceDocService.update(context, d);
-
-                }
-
-            }
-
-            WorkflowProcessReferenceDoc margedoc1 = workflowProcessReferenceDocService.create(context, margedoc);
-
-            WorkflowProcessReferenceDoc workflowProcessReferenceDoc = margedoc1;
-
-            WorkflowProcessNote workflowProcessNote = new WorkflowProcessNote();
-
-            Optional<EPerson> creator = workflowProcess.getWorkflowProcessEpeople().stream().filter(d -> d.getePerson() != null).filter(d -> d.getIndex() == 0).map(d -> d.getePerson()).findFirst();
-
-            if (creator.isPresent()) {
-
-                workflowProcessNote.setSubmitter(creator.get());
-
-            }
-
-            if (workflowProcess.getSubject() != null) {
-
-                workflowProcessNote.setSubject(workflowProcess.getSubject());
-
-            }
-
-            List<WorkflowProcessReferenceDoc> doc = new ArrayList<>();
-
-            doc.add(workflowProcessReferenceDoc);
-
-            WorkflowProcessNote finalw = workflowProcessNoteService.create(context, workflowProcessNote);
-
-            margedoc.setWorkflowprocessnote(finalw);
-
-            workflowProcessReferenceDocService.update(context, workflowProcessReferenceDoc);
-
-            return workflowProcessReferenceDoc;
+            return persistNoteDocument(context, workflowProcess, tempFile1html, notecount);
 
         } else {
 
             System.out.println(":::::::::In Document flow:::::::::::::::");
 
             MargedDocUtils.DocthreWrite(map);
-
             MargedDocUtils.finalwriteDocument(tempFileDoc.getAbsolutePath());
 
-            //DocToPdfConverter.genarateDocumentFlowNote(map, tempFileDoc.getAbsolutePath(), notecount);
-
-            System.out.println("tempFileDoc:" + tempFileDoc.getAbsolutePath());
-
-            System.out.println("tempFileDoc :" + tempFileDoc.getAbsolutePath());
-
-            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
-
-            margedoc.setSubject(workflowProcess.getSubject());
-
-            margedoc.setDescription(workflowProcess.getSubject() + " for " + tempFileDoc.getName());
-
-            margedoc.setInitdate(new Date());
-
-            margedoc.setReferenceNumber("" + notecount);
-
-            WorkFlowProcessMasterValue doctype = getMastervalueData(context, "Document Type", "Invoice");
-
-            if (doctype != null) {
-
-                margedoc.setWorkFlowProcessReferenceDocType(doctype);
-
-            }
-
-            WorkFlowProcessMasterValue lattercategory = getMastervalueData(context, "Latter Category", "Latter Category 1");
-
-            if (lattercategory != null) {
-
-                margedoc.setLatterCategory(lattercategory);
-
-            }
-
-            WorkFlowProcessMasterValue Drafttype = getMastervalueData(context, "Draft Type", "Note");
-
-            if (Drafttype != null) {
-
-                margedoc.setDrafttype(Drafttype);
-
-            }
-
-            margedoc.setWorkflowProcess(workflowProcess);
-
-            FileInputStream outputfile = new FileInputStream(new File(tempFileDoc.getAbsolutePath()));
-
-            Bitstream bitstream = bundleRestRepository.processBitstreamCreationWithoutBundle(context, outputfile, "", tempFileDoc.getName());
-
-            margedoc.setBitstream(bitstream);
-
-            if (workflowProcess.getWorkflowProcessNote() != null) {
-
-                margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-
-                for (WorkflowProcessReferenceDoc d : workflowProcess.getWorkflowProcessReferenceDocs()) {
-
-                    if (d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet"))
-
-                        d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
-
-                    workflowProcessReferenceDocService.update(context, d);
-
-                }
-
-            }
-
-            margedoc = workflowProcessReferenceDocService.create(context, margedoc);
-
-            return margedoc;
-
+            return persistDocumentFlow(context, workflowProcess, tempFileDoc, notecount);
         }
-
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — BUILD COMPLETE HTML STRING
+// ═══════════════════════════════════════════════════════════════════
+    private String buildNoteHtml(
+            Context context,
+            WorkflowProcess workflowProcess,
+            long notecount) throws SQLException {
+
+        List<WorkFlowProcessComment> comments =
+                workFlowProcessCommentService.getComments(context, workflowProcess.getID());
+
+        List<WorkFlowProcessComment> sortedComments = comments.stream()
+                .sorted(Comparator.comparingInt(WorkFlowProcessComment::getNoteindex))
+                .collect(Collectors.toList());
+
+        StringBuilder sb = new StringBuilder();
+
+        // ── HEAD + CSS ──────────────────────────────
+        // ── In buildNoteHtml() — replace the CSS block with this ──────────
+
+        sb.append("<!DOCTYPE html>")
+                .append("<html>")
+                .append("<head>")
+                .append("<title>Note</title>")
+
+                .append("<style>")
+
+                // PAGE
+                .append("@page{")
+                .append("size:A4;")
+                .append("margin:10mm 10mm;")
+                .append("background:#c5e6c1 !important;")
+                .append("}")
+
+                // HTML
+                .append("html{")
+                .append("background:#c5e6c1 !important;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;")
+                .append("}")
+
+                // BODY
+                .append("body{")
+                .append("background:#c5e6c1 !important;")
+                .append("margin:0;")
+                .append("padding:0;")
+                .append("font-family:Arial,sans-serif;")
+                .append("font-size:13px;")
+                .append("line-height:1.5;")
+                .append("color:#000;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;")
+                .append("}")
+
+                // MAIN BACKGROUND WRAPPER
+                .append(".pdf-page-bg{")
+                .append("background:#c5e6c1 !important;")
+                .append("width:100%;")
+                .append("}")
+
+                // GLOBAL
+                .append("*{")
+                .append("box-sizing:border-box;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;")
+                .append("}")
+
+                // PAGE WRAP
+                .append(".page-wrap{")
+                .append("width:100%;")
+                .append("background:#c5e6c1 !important;")
+                .append("}")
+
+                // HEADER
+                .append(".header{")
+                .append("width:100%;")
+                .append("text-align:right;")
+                .append("margin-bottom:20px;")
+                .append("background:#c5e6c1 !important;")
+                .append("page-break-after:avoid;")
+                .append("break-after:avoid;")
+                .append("}")
+
+                // SUBJECT
+                .append(".subject{")
+                .append("width:100%;")
+                .append("margin-bottom:20px;")
+                .append("background:#c5e6c1 !important;")
+                .append("page-break-after:avoid;")
+                .append("break-after:avoid;")
+                .append("}")
+
+                // NOTE BLOCK
+                .append(".note-block{")
+                .append("width:100%;")
+                .append("background:#c5e6c1 !important;")
+                .append("margin-bottom:0;")
+                .append("padding-top:8mm;")
+                .append("padding-bottom:8mm;")
+                .append("padding-left:0;")
+                .append("padding-right:0;")
+                .append("}")
+
+
+                // NOTE TITLE
+                .append(".note-title{")
+                .append("font-weight:bold;")
+                .append("text-decoration:underline;")
+                .append("margin-bottom:10px;")
+                .append("page-break-after:avoid;")
+                .append("break-after:avoid;")
+                .append("}")
+
+                // NOTE CONTENT
+                .append(".note-content{")
+                .append("width:100%;")
+                .append("margin-bottom:10px;")
+                .append("word-break:break-word;")
+                .append("overflow-wrap:break-word;")
+                .append("page-break-after:avoid;")
+                .append("break-after:avoid;")
+                .append("}")
+
+                // SIGN TABLE
+                .append(".sig-table{")
+                .append("width:100%;")
+                .append("border-collapse:collapse;")
+                .append("background:#c5e6c1 !important;")
+                .append("page-break-inside:avoid;")
+                .append("break-inside:avoid;")
+                .append("}")
+
+                .append(".sig-table tr,.sig-table td{")
+                .append("background:#c5e6c1 !important;")
+                .append("page-break-inside:avoid !important;")
+                .append("break-inside:avoid !important;")
+                .append("}")
+
+                // SIGN AREA
+                .append(".sig-left{")
+                .append("width:70%;")
+                .append("vertical-align:top;")
+                .append("}")
+
+                .append(".sig-right{")
+                .append("width:30%;")
+                .append("vertical-align:top;")
+                .append("text-align:left;")
+                .append("}")
+
+                .append(".sig-title{")
+                .append("font-weight:bold;")
+                .append("margin-bottom:6px;")
+                .append("}")
+
+                .append(".sig-details{")
+                .append("line-height:1.8;")
+                .append("}")
+
+                // PRINT MEDIA
+                .append("@media print{")
+                .append("html,body,.pdf-page-bg,.page-wrap,.header,.subject,.note-block,.sig-table,.sig-table tr,.sig-table td{")
+                .append("background:#c5e6c1 !important;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;")
+                .append("}")
+                .append("}")
+
+                .append("</style>")
+                .append("</head>")
+
+                .append("<body>")
+                .append("<div class='pdf-page-bg'>")
+                .append("<div class='page-wrap'>");
+
+// ... rest of buildNoteHtml remains the same (header, subject, note blocks loop)
+
+
+        // ── HEADER ──────────────────────────────────
+        if (workflowProcess.getItem() != null
+                && workflowProcess.getItem().getName() != null) {
+
+            sb.append("<div class=\"header\">")
+                    .append("<div><b>FileNo :</b> ")
+                    .append(escapeHtml(workflowProcess.getItem().getName()))
+                    .append("</div>")
+                    .append("<div><b>Date :</b> ")
+                    .append(escapeHtml(DateUtils.getCurrentDDMMYY()))
+                    .append("</div>")
+                    .append("</div>");
+        }
+
+        // ── SUBJECT ─────────────────────────────────
+        sb.append("<div class=\"subject\">")
+                .append("<b>Subject :</b> ")
+                .append(escapeHtml(workflowProcess.getSubject()))
+                .append("</div>");
+
+        // ── NOTE BLOCKS ─────────────────────────────
+        int i = 1;
+
+        for (WorkFlowProcessComment comment : sortedComments) {
+
+            int noteIndex = (comment.getNoteindex() != null) ? comment.getNoteindex() : i;
+
+            sb.append("<div class=\"note-block\">"); // ← whole block protected
+
+            // Title
+            sb.append("<div class=\"note-title\">Note# ").append(noteIndex).append("</div>");
+
+            // Content
+            if (comment.getComment() != null) {
+                sb.append("<div class=\"note-content\">")
+                        .append(comment.getComment())   // already HTML from editor
+                        .append("</div>");
+            }
+
+            // Signature row — table keeps left spacer + right signature together
+            sb.append("<table class=\"sig-table\"><tr>")
+                    .append("<td class=\"sig-left\"></td>")
+                    .append("<td class=\"sig-right\">");
+
+            sb.append("<div class=\"sig-title\">Signature_")
+                    .append(noteIndex)
+                    .append("_Name:</div>");
+
+            sb.append("<div class=\"sig-details\">");
+
+            // Signed By
+            if (comment.getIsdosign() && comment.getCommonname() != null) {
+                sb.append("<b>Signed By :</b> ")
+                        .append(escapeHtml(comment.getCommonname()))
+                        .append("<br>");
+            } else if (comment.getSubmitter() != null
+                    && comment.getSubmitter().getFullName() != null) {
+                sb.append("<b>Signed By :</b> ")
+                        .append(escapeHtml(comment.getSubmitter().getFullName()))
+                        .append("<br>");
+            }
+
+            // Designation
+            if (comment.getDesignation() != null) {
+                sb.append("<b>Designation :</b> ")
+                        .append(escapeHtml(comment.getDesignation()))
+                        .append("<br>");
+            }
+
+            // Date
+            if (comment.getActionDate() != null) {
+                sb.append("<b>Date :</b> ")
+                        .append(escapeHtml(DateFormate(comment.getActionDate())));
+            }
+
+            sb.append("</div>") // sig-details
+                    .append("</td>")
+                    .append("</tr></table>");
+
+            sb.append("</div>"); // note-block
+
+            i++;
+        }
+        sb.append("</div>"); // page-wrap
+                sb.append("</div>"); // pdf-page-bg
+        sb.append("</div>") // main-container
+                .append("</body></html>");
+
+        return sb.toString();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — PERSIST NOTE DOCUMENT (isTextEditorFlow = true)
+   //    ═══════════════════════════════════════════════════════════════════
+    private WorkflowProcessReferenceDoc persistNoteDocument(
+            Context context,
+            WorkflowProcess workflowProcess,
+            File pdfFile,
+            long notecount) throws Exception {
+
+        WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+        margedoc.setSubject(workflowProcess.getSubject());
+        margedoc.setDescription(workflowProcess.getSubject()
+                + " for " + FileUtils.getNameWithoutExtension(pdfFile.getName()));
+        margedoc.setInitdate(new Date());
+        margedoc.setItemname(workflowProcess.getItem().getName());
+
+        // Draft type = "Note"
+        WorkFlowProcessMaster master =
+                workFlowProcessMasterService.findByName(context, "Draft Type");
+
+        if (master != null) {
+            WorkFlowProcessMasterValue draftType =
+                    workFlowProcessMasterValueService.findByName(context, "Note", master);
+            if (draftType != null) {
+                margedoc.setDrafttype(draftType);
+            }
+        }
+
+        margedoc.setWorkflowProcess(workflowProcess);
+
+        // Create bitstream
+        try (FileInputStream fis1 = new FileInputStream(pdfFile);
+             FileInputStream fis2 = new FileInputStream(pdfFile)) {
+
+            Bitstream bitstream = bundleRestRepository
+                    .processBitstreamCreationWithoutBundle(context, fis1, "", pdfFile.getName());
+
+            bitstream.setNoteindex((int) notecount);
+            margedoc.setBitstream(bitstream);
+            margedoc.setPage(FileUtils.getPageCountInPDF(fis2));
+        }
+
+        // Link to workflow note
+        if (workflowProcess.getWorkflowProcessNote() != null) {
+            margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+            updateReferenceDocs(context, workflowProcess);
+        }
+
+        WorkflowProcessReferenceDoc savedDoc =
+                workflowProcessReferenceDocService.create(context, margedoc);
+
+        // Create WorkflowProcessNote
+        WorkflowProcessNote workflowProcessNote = new WorkflowProcessNote();
+
+        workflowProcess.getWorkflowProcessEpeople().stream()
+                .filter(d -> d.getePerson() != null && d.getIndex() == 0)
+                .map(d -> d.getePerson())
+                .findFirst()
+                .ifPresent(workflowProcessNote::setSubmitter);
+
+        if (workflowProcess.getSubject() != null) {
+            workflowProcessNote.setSubject(workflowProcess.getSubject());
+        }
+
+        WorkflowProcessNote finalNote =
+                workflowProcessNoteService.create(context, workflowProcessNote);
+
+        savedDoc.setWorkflowprocessnote(finalNote);
+        workflowProcessReferenceDocService.update(context, savedDoc);
+
+        return savedDoc;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — PERSIST DOCUMENT FLOW (isTextEditorFlow = false)
+// ═══════════════════════════════════════════════════════════════════
+    private WorkflowProcessReferenceDoc persistDocumentFlow(
+            Context context,
+            WorkflowProcess workflowProcess,
+            File docFile,
+            long notecount) throws Exception {
+
+        WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+        margedoc.setSubject(workflowProcess.getSubject());
+        margedoc.setDescription(workflowProcess.getSubject() + " for " + docFile.getName());
+        margedoc.setInitdate(new Date());
+        margedoc.setReferenceNumber(String.valueOf(notecount));
+
+        WorkFlowProcessMasterValue doctype =
+                getMastervalueData(context, "Document Type", "Invoice");
+        if (doctype != null) margedoc.setWorkFlowProcessReferenceDocType(doctype);
+
+        WorkFlowProcessMasterValue latterCategory =
+                getMastervalueData(context, "Latter Category", "Latter Category 1");
+        if (latterCategory != null) margedoc.setLatterCategory(latterCategory);
+
+        WorkFlowProcessMasterValue draftType =
+                getMastervalueData(context, "Draft Type", "Note");
+        if (draftType != null) margedoc.setDrafttype(draftType);
+
+        margedoc.setWorkflowProcess(workflowProcess);
+
+        try (FileInputStream fis = new FileInputStream(docFile)) {
+            Bitstream bitstream = bundleRestRepository
+                    .processBitstreamCreationWithoutBundle(context, fis, "", docFile.getName());
+            margedoc.setBitstream(bitstream);
+        }
+
+        if (workflowProcess.getWorkflowProcessNote() != null) {
+            margedoc.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+            updateReferenceDocs(context, workflowProcess);
+        }
+
+        return workflowProcessReferenceDocService.create(context, margedoc);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — UPDATE REFERENCE DOCS ON WORKFLOW
+// ═══════════════════════════════════════════════════════════════════
+    private void updateReferenceDocs(
+            Context context,
+            WorkflowProcess workflowProcess) throws Exception {
+
+        for (WorkflowProcessReferenceDoc d :
+                workflowProcess.getWorkflowProcessReferenceDocs()) {
+
+            if (d.getDrafttype() != null
+                    && d.getDrafttype().getPrimaryvalue() != null
+                    && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Notesheet")) {
+
+                d.setWorkflowprocessnote(workflowProcess.getWorkflowProcessNote());
+                workflowProcessReferenceDocService.update(context, d);
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — CREATE FILE IF NOT EXISTS
+// ═══════════════════════════════════════════════════════════════════
+    private void createIfNotExists(File file) {
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+// HELPER — ESCAPE HTML SPECIAL CHARACTERS
+// ═══════════════════════════════════════════════════════════════════
+    private String escapeHtml(String input) {
+        if (input == null) return "";
+        return input
+                .replace("&",  "&amp;")
+                .replace("<",  "&lt;")
+                .replace(">",  "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'",  "&#39;");
+    }
     public static String getFolderTmp(String folderName) {
 
         final String tempDirectory = System.getProperty("java.io.tmpdir");
@@ -5678,294 +7023,660 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
 
 
 
-    public FileInputStream createFinalNoteInpogresss(Context context, WorkflowProcess workflowProcess) throws Exception {
-
-        boolean isTextEditorFlow = false;
-        Map<String, Object> map = new HashMap<String, Object>();
-        InputStream input2 = null;
-        DocToPdfConverter docToPdfConverter = null;
-        List<Bitstream> bitstreams = null;
-
-        final String TEMP_DIRECTORY = getFolderTmp("createFinalNoteInpogresss");
-
-        // System.out.println("start.......createFinalNote");
-
-        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
-                ".sign {\n" +
-                "        text-align: left; margin: 1px; margin-top: -31px;\n" +
-                "    }\n" +
-                "    .sign i {\n" +
-                "        font-size: 24px; /* Adjust size as needed */\n" +
-                "        margin-bottom: 10px; /* Space between icon and text */\n" +
-                "        color: #000; /* Icon color */\n" +
-                "    }\n" +
-                "\t.img{height: 75px;\n" +
-                "    width: 128px;\n" +
-                "    margin-bottom: -75px;" +
-                "}" +
-                "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
-
-        long notecount = 0;
-
-        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
-
-            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
-
-            notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess.getItem().getID(), statusid);
-
-            map.put("notecount", notecount);
-
-        }
-
-        notecount = notecount + 1;
-
-
-
-        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
-
-        if (!tempFile1html.exists()) {
-
-            try {
-
-                tempFile1html.createNewFile();
-
-            } catch (IOException e) {
-
-                // TODO Auto-generated catch block
-
-                e.printStackTrace();
-
-            }
-
-        }
-        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
-
-            sb.append("<div style=\"float: right; width:65%\">");
-
-            sb.append("<span><b>FileNo : </b> " + workflowProcess.getItem().getName() + "</span><br>");
-
-            sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
-
-            sb.append("</div>");
-
-        }
-
-        sb.append("</br></br></br></br><p> <b>Subject : " + workflowProcess.getSubject() + "</b></p>");
-
-        isTextEditorFlow = true;
-
-        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
-
-        DigitalSignRequet digitalSignRequet = null;
-
-        List<WorkFlowProcessComment> comments = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
-
-        System.out.println("comments size:::::::::::::::" + comments.size());
-
-        int i = 1;
-
-
-
-        for (WorkFlowProcessComment comment : comments) {
-
-            System.out.println("comment # " + i + " : " + comment.getID());
-
-            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
-
-            //coment count
-
-            sb.append("<p><u>Note# " + i + "</u></p>");
-
-            //comment text
-
-            if (comment.getComment() != null) {
-
-                sb.append("<p>" + comment.getComment() + "</p>");
-
-            }
-
-            // Initialize bitstreams for each comment
-
-            bitstreams = new ArrayList<>();
-
-            if (comment.getWorkflowProcessReferenceDoc() != null) {
-
-                bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
-
-                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
-
-                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
-
-                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
-
-                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
-
-                        .filter(d -> d.getBitstream() != null)
-
-                        .map(d -> d.getBitstream()).collect(Collectors.toList());
-
-            }
-
-            sb.append("<br><br>");
-
-            sb.append("<br><br><div style=\"width:100%;\"> ");
-
-            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+//    public FileInputStream createFinalNoteInpogresss(Context context, WorkflowProcess workflowProcess) throws Exception {
 //
-//            if (bitstreams.size() != 0) {
+//        boolean isTextEditorFlow = false;
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        InputStream input2 = null;
+//        DocToPdfConverter docToPdfConverter = null;
+//        List<Bitstream> bitstreams = null;
 //
-//                for (Bitstream bitstream : bitstreams) {
+//        final String TEMP_DIRECTORY = getFolderTmp("createFinalNoteInpogresss");
 //
-//                    if (bitstream != null) {
+//        // System.out.println("start.......createFinalNote");
 //
-//                        System.out.println("in Attachment");
+//        StringBuffer sb = new StringBuffer("<!DOCTYPE html>\n" + "<html>\n" + "<head><style>@page{size:A4;margin: 0;}" +
+//                ".sign {\n" +
+//                "        text-align: left; margin: 1px; margin-top: -31px;\n" +
+//                "    }\n" +
+//                "    .sign i {\n" +
+//                "        font-size: 24px; /* Adjust size as needed */\n" +
+//                "        margin-bottom: 10px; /* Space between icon and text */\n" +
+//                "        color: #000; /* Icon color */\n" +
+//                "    }\n" +
+//                "\t.img{height: 75px;\n" +
+//                "    width: 128px;\n" +
+//                "    margin-bottom: -75px;" +
+//                "}" +
+//                "</style>\n" + "<title>Note</title>\n" + "</head>\n" + "<body style=\"padding-right: 20px;padding-left: 20px;background-color:#c5e6c1;\">");
 //
-//                        String baseurl = configurationService.getProperty("dspace.server.url");
+//        long notecount = 0;
 //
-//                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+//        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
 //
-//                        sb.append(bitstream.getName() + "</a></span>");
+//            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
 //
-//                        // stroremetadate(bitstream, sb);
+//            notecount = workflowProcessNoteService.getNoteCountNumber(context, workflowProcess.getItem().getID(), statusid);
+//
+//            map.put("notecount", notecount);
+//
+//        }
+//
+//        notecount = notecount + 1;
+//
+//
+//
+//        File tempFile1html = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+//
+//        if (!tempFile1html.exists()) {
+//
+//            try {
+//
+//                tempFile1html.createNewFile();
+//
+//            } catch (IOException e) {
+//
+//                // TODO Auto-generated catch block
+//
+//                e.printStackTrace();
+//
+//            }
+//
+//        }
+//        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
+//
+//            sb.append("<div style=\"float: right; width:65%\">");
+//
+//            sb.append("<span><b>FileNo : </b> " + workflowProcess.getItem().getName() + "</span><br>");
+//
+//            sb.append("<span><b>Date :  </b> " + DateUtils.getCurrentDDMMYY() + "</span>");
+//
+//            sb.append("</div>");
+//
+//        }
+//
+//        sb.append("</br></br></br></br><p> <b>Subject : " + workflowProcess.getSubject() + "</b></p>");
+//
+//        isTextEditorFlow = true;
+//
+//        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
+//
+//        DigitalSignRequet digitalSignRequet = null;
+//
+//        List<WorkFlowProcessComment> commentsa = workFlowProcessCommentService.getComments(context, workflowProcess.getID());
+//
+//       List<WorkFlowProcessComment> comments=filterCommentsForCurrentUser(context,workflowProcess,commentsa);
+//
+//        System.out.println("comments size:::::::::::::::" + comments.size());
+//
+//
+//
+//
+//
+//        for (WorkFlowProcessComment comment : comments) {
+//
+//            if (Boolean.TRUE.equals(comment.getIsdraftsave())) {
+//                System.out.println("continue---");
+//                continue;
+//            }
+//
+//            System.out.println("comment # " + comment.getNoteindex() + " : " + comment.getID());
+//
+//            sb.append("<div style=\"width:100% ;text-align: left; float:left;\">");
+//
+//            //coment count
+//
+//            sb.append("<p><u>Note# " + comment.getNoteindex() + "</u></p>");
+//
+//            //comment text
+//
+//            if (comment.getComment() != null) {
+//
+//                sb.append("<p>" + comment.getComment() + "</p>");
+//
+//            }
+//
+//            // Initialize bitstreams for each comment
+//
+//            bitstreams = new ArrayList<>();
+//
+//            if (comment.getWorkflowProcessReferenceDoc() != null) {
+//
+//                bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
+//
+//                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+//
+//                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
+//
+//                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
+//
+//                        .filter(d -> d.getDrafttype() != null && d.getDrafttype().getPrimaryvalue() != null && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
+//
+//                        .filter(d -> d.getBitstream() != null)
+//
+//                        .map(d -> d.getBitstream()).collect(Collectors.toList());
+//
+//            }
+//
+//            sb.append("<br><br>");
+//
+//            sb.append("<br><br><div style=\"width:100%;\"> ");
+//
+//            sb.append("<div style=\"width:70%;  float:left;\"> <p><b></b></p> ");
+////
+////            if (bitstreams.size() != 0) {
+////
+////                for (Bitstream bitstream : bitstreams) {
+////
+////                    if (bitstream != null) {
+////
+////                        System.out.println("in Attachment");
+////
+////                        String baseurl = configurationService.getProperty("dspace.server.url");
+////
+////                        sb.append("<span> <a href=" + baseurl + "/api/core/bitstreams/" + bitstream.getID() + "/content>");
+////
+////                        sb.append(bitstream.getName() + "</a></span>");
+////
+////                        // stroremetadate(bitstream, sb);
+////
+////                    }
+////
+////                }
+////
+////            }
+//
+//            sb.append("</div>");
+//
+//            //start normal sign with HTML Cordinate
+//
+//            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + comment.getNoteindex() + "_Name:</B> </p>");
+//
+//            //this is normal
+//
+//            //String icon = configurationService.getProperty("digital.sign.icon");
+//
+//            //String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+//
+//            //sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+//
+//            sb.append("<div class=\"sign\">");
+//
+//
+//
+//            sb.append("<B>");
+//
+//            if (comment.getIsdosign() && comment.getCommonname() != null) {
+//
+//                sb.append("<br>Signed By : " + comment.getCommonname());
+//
+//
+//
+//            } else {
+//
+//                if (comment.getSubmitter() != null) {
+//                    if (comment.getSubmitter().getFullName() != null) {
+//                        sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
 //
 //                    }
 //
 //                }
 //
 //            }
+//
+//            if (comment.getDesignation() != null) {
+//
+//                sb.append("<br>Designation : " + comment.getDesignation());
+//
+//            }
+//
+//            if (comment.getActionDate() != null) {
+//
+//                sb.append("<br>Date : " + DateFormate(comment.getActionDate()));
+//
+//            }
+//
+//
+//
+//            //sb.append("<br>Reason :Digital Copy.");
+//
+//            //sb.append("<br>Location :New Delhi.");
+//
+//            sb.append("</B>");
+//
+//            //end  normal sign
+//
+//            sb.append("</div>");
+//
+//            sb.append("</div>");
+//
+//            //end  normal sign
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            sb.append("</br>");
+//
+//            digitalSignRequets.add(digitalSignRequet);
+//
+//        }
+//
+//        sb.append("</body></html>");
+//
+//        if (isTextEditorFlow) {
+//
+//            System.out.println("::::::::::IN isTextEditorFlow :::::::::");
+//
+//            FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
+//
+//
+//
+//
+//
+//            //System.out.println("HTML:::" + sb.toString());
+//
+//            //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
+//
+//            int ii = jbpmServer.htmltopdf(sb.toString(), files);
+//
+//            //System.out.println("iii>>>>>>>.."+ii);
+//
+//            System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
+//
+//            File finalnotepath = tempFile1html;//PDFTextSearch.getSingDoc(tempFile1html.getAbsolutePath(),digitalSignRequets);
+//
+//            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+//
+//            margedoc.setSubject(workflowProcess.getSubject());
+//
+//            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(finalnotepath.getName()));
+//
+//            margedoc.setInitdate(new Date());
+//
+//            margedoc.setItemname(workflowProcess.getItem().getName());
+//
+//            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
+//
+//            if (workFlowProcessMaster != null) {
+//                WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
+//                if (workFlowProcessMasterValue != null) {
+//                    margedoc.setDrafttype(workFlowProcessMasterValue);
+//                }
+//            }
+//
+//            margedoc.setWorkflowProcess(workflowProcess);
+//            FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
+//            return outputfile;
+//        }
+//
+//        return null;
+//    }
 
-            sb.append("</div>");
 
-            //start normal sign with HTML Cordinate
+    public FileInputStream createFinalNoteInpogresss(Context context, WorkflowProcess workflowProcess) throws Exception {
 
-            sb.append("<div style=\"    float: right;  width:30%\"><p> <B>Signature_" + i + "_Name:</B> </p>");
+        List<Bitstream> bitstreams = null;
+        final String TEMP_DIRECTORY = getFolderTmp("createFinalNoteInpogresss");
 
-            //this is normal
+        // ── NOTE COUNT ───────────────────────────────────────────────────────────
+        long notecount = 0;
+        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
+            UUID statusid = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
+            notecount = workflowProcessNoteService.getNoteCountNumber(
+                    context, workflowProcess.getItem().getID(), statusid);
+        }
+        notecount = notecount + 1;
 
-            //String icon = configurationService.getProperty("digital.sign.icon");
+        // ── TEMP FILE ────────────────────────────────────────────────────────────
+        File tempFile = new File(TEMP_DIRECTORY, "Note#" + notecount + ".pdf");
+        if (!tempFile.exists()) {
+            try {
+                tempFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-            //String base64Image = java.util.Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(icon)));
+        // ── BUILD HTML ───────────────────────────────────────────────────────────
+        StringBuilder sb = new StringBuilder();
 
-            //sb.append("<div class=\"sign\">  <img class=\"img\" src=\"data:image/png;base64," + base64Image + "\">");
+        // HEAD + CSS
+        sb.append("<!DOCTYPE html>")
+                .append("<html>")
+                .append("<head>")
+                .append("<meta charset='UTF-8'>")
+                .append("<title>Note</title>")
+                .append("<style>")
 
-            sb.append("<div class=\"sign\">");
+                .append("@page{size:A4;margin:10mm 10mm;background:#c5e6c1 !important;}")
 
+                .append("html{background:#c5e6c1 !important;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;}")
 
+                .append("body{background:#c5e6c1 !important;margin:0;padding:20px;")
+                .append("font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#000;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;}")
 
-            sb.append("<B>");
+                .append("*{box-sizing:border-box;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;}")
 
+                .append(".pdf-page-bg{background:#c5e6c1 !important;width:100%;}")
+
+                .append(".page-wrap{width:100%;background:#c5e6c1 !important;}")
+
+                .append(".header{width:100%;text-align:right;margin-bottom:20px;")
+                .append("background:#c5e6c1 !important;page-break-after:avoid;break-after:avoid;}")
+
+                .append(".subject{width:100%;margin-bottom:20px;padding-top:40px;")
+                .append("background:#c5e6c1 !important;page-break-after:avoid;break-after:avoid;}")
+
+                .append(".note-block{width:100%;background:#c5e6c1 !important;margin-bottom:0;")
+                .append("padding-top:8mm;padding-bottom:8mm;padding-left:0;padding-right:0;}")
+
+                .append(".note-title{font-weight:bold;text-decoration:underline;")
+                .append("margin-bottom:10px;page-break-after:avoid;break-after:avoid;}")
+
+                .append(".note-content{width:100%;margin-bottom:10px;")
+                .append("word-break:break-word;overflow-wrap:break-word;")
+                .append("page-break-after:avoid;break-after:avoid;}")
+
+                .append(".sig-table{width:100%;border-collapse:collapse;")
+                .append("background:#c5e6c1 !important;")
+                .append("page-break-inside:avoid;break-inside:avoid;}")
+
+                .append(".sig-table tr,.sig-table td{background:#c5e6c1 !important;")
+                .append("page-break-inside:avoid !important;break-inside:avoid !important;}")
+
+                .append(".sig-left{width:70%;vertical-align:top;}")
+
+                .append(".sig-right{width:30%;vertical-align:top;text-align:left;}")
+
+                .append(".sig-title{font-weight:bold;margin-bottom:6px;}")
+
+                .append(".sig-details{line-height:1.8;}")
+
+                .append("@media print{")
+                .append("html,body,.pdf-page-bg,.page-wrap,.header,.subject,")
+                .append(".note-block,.sig-table,.sig-table tr,.sig-table td{")
+                .append("background:#c5e6c1 !important;")
+                .append("-webkit-print-color-adjust:exact !important;")
+                .append("print-color-adjust:exact !important;}}")
+
+                .append("</style>")
+                .append("</head>")
+                .append("<body>")
+                .append("<div class='pdf-page-bg'>")
+                .append("<div class='page-wrap'>");
+
+        // ── HEADER ───────────────────────────────────────────────────────────────
+        if (workflowProcess.getItem() != null && workflowProcess.getItem().getName() != null) {
+            sb.append("<div class='header'>")
+                    .append("<div><b>FileNo :</b> ")
+                    .append(escapeHtml(workflowProcess.getItem().getName()))
+                    .append("</div>")
+                    .append("<div><b>Date :</b> ")
+                    .append(escapeHtml(DateUtils.getCurrentDDMMYY()))
+                    .append("</div>")
+                    .append("</div>");
+        }
+
+        // ── SUBJECT ──────────────────────────────────────────────────────────────
+        sb.append("<div class='subject'>")
+                .append("<b>Subject :</b> ")
+                .append(escapeHtml(workflowProcess.getSubject()))
+                .append("</div>");
+
+        // ── COMMENTS ─────────────────────────────────────────────────────────────
+        List<WorkFlowProcessComment> commentsa =
+                workFlowProcessCommentService.getComments(context, workflowProcess.getID());
+
+        List<WorkFlowProcessComment> comments =
+                filterCommentsForCurrentUser(context, workflowProcess, commentsa);
+
+        System.out.println("comments size:::::::::::::::" + comments.size());
+
+        List<DigitalSignRequet> digitalSignRequets = new ArrayList<>();
+
+        int i = 1;
+        for (WorkFlowProcessComment comment : comments) {
+
+            if (Boolean.TRUE.equals(comment.getIsdraftsave())) {
+                System.out.println("continue---");
+                continue;
+            }
+
+            System.out.println("comment # " + comment.getNoteindex() + " : " + comment.getID());
+
+            int noteIndex = (comment.getNoteindex() != null) ? comment.getNoteindex() : i;
+
+            // ── NOTE BLOCK ───────────────────────────────────────────────────────
+            sb.append("<div class='note-block'>");
+
+            // Title
+            sb.append("<div class='note-title'>Note# ").append(noteIndex).append("</div>");
+
+            // Content
+            if (comment.getComment() != null) {
+                sb.append("<div class='note-content'>")
+                        .append(comment.getComment())   // already HTML from editor
+                        .append("</div>");
+            }
+
+            // Bitstreams (filtered — kept from original logic, currently commented out)
+            bitstreams = new ArrayList<>();
+            if (comment.getWorkflowProcessReferenceDoc() != null) {
+                bitstreams = comment.getWorkflowProcessReferenceDoc().stream()
+                        .filter(d -> d.getDrafttype() != null
+                                && d.getDrafttype().getPrimaryvalue() != null
+                                && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Note"))
+                        .filter(d -> d.getDrafttype() != null
+                                && d.getDrafttype().getPrimaryvalue() != null
+                                && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Reply Note"))
+                        .filter(d -> d.getDrafttype() != null
+                                && d.getDrafttype().getPrimaryvalue() != null
+                                && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reply Note"))
+                        .filter(d -> d.getDrafttype() != null
+                                && d.getDrafttype().getPrimaryvalue() != null
+                                && !d.getDrafttype().getPrimaryvalue().equalsIgnoreCase("Reference Document"))
+                        .filter(d -> d.getBitstream() != null)
+                        .map(WorkflowProcessReferenceDoc::getBitstream)
+                        .collect(Collectors.toList());
+            }
+
+            // Signature row
+            sb.append("<table class='sig-table'><tr>")
+                    .append("<td class='sig-left'></td>")
+                    .append("<td class='sig-right'>")
+                    .append("<div class='sig-title'>Signature_").append(noteIndex).append("_Name:</div>")
+                    .append("<div class='sig-details'>");
+
+            // Signed By
             if (comment.getIsdosign() && comment.getCommonname() != null) {
-
-                sb.append("<br>Signed By : " + comment.getCommonname());
-
-
-
-            } else {
-
-                if (comment.getSubmitter() != null) {
-                    if (comment.getSubmitter().getFullName() != null) {
-                        sb.append("<br>Signed By : " + comment.getSubmitter().getFullName());
-
-                    }
-
-                }
-
+                sb.append("<b>Signed By :</b> ")
+                        .append(escapeHtml(comment.getCommonname()))
+                        .append("<br>");
+            } else if (comment.getSubmitter() != null
+                    && comment.getSubmitter().getFullName() != null) {
+                sb.append("<b>Signed By :</b> ")
+                        .append(escapeHtml(comment.getSubmitter().getFullName()))
+                        .append("<br>");
             }
 
+            // Designation
             if (comment.getDesignation() != null) {
-
-                sb.append("<br>Designation : " + comment.getDesignation());
-
+                sb.append("<b>Designation :</b> ")
+                        .append(escapeHtml(comment.getDesignation()))
+                        .append("<br>");
             }
 
+            // Date
             if (comment.getActionDate() != null) {
-
-                sb.append("<br>Date : " + DateFormate(comment.getActionDate()));
-
+                sb.append("<b>Date :</b> ")
+                        .append(escapeHtml(DateFormate(comment.getActionDate())));
             }
 
+            sb.append("</div>")   // sig-details
+                    .append("</td>")
+                    .append("</tr></table>")
+                    .append("</div>"); // note-block
 
-
-            //sb.append("<br>Reason :Digital Copy.");
-
-            //sb.append("<br>Location :New Delhi.");
-
-            sb.append("</B>");
-
-            //end  normal sign
-
-            sb.append("</div>");
-
-            sb.append("</div>");
-
-            //end  normal sign
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            sb.append("</br>");
-
-            digitalSignRequets.add(digitalSignRequet);
-
+            digitalSignRequets.add(null);
             i++;
-
         }
 
-        sb.append("</body></html>");
+        sb.append("</div>")   // page-wrap
+                .append("</div>")   // pdf-page-bg
+                .append("</body></html>");
 
-        if (isTextEditorFlow) {
+        // ── CONVERT HTML → PDF ───────────────────────────────────────────────────
+        System.out.println("::::::::::IN isTextEditorFlow :::::::::");
 
-            System.out.println("::::::::::IN isTextEditorFlow :::::::::");
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            int result = jbpmServer.htmltopdf(sb.toString(), fos);
+            System.out.println("HTML CONVERT DONE, result=" + result
+                    + " path=" + tempFile.getAbsolutePath());
+        }
 
-            FileOutputStream files = new FileOutputStream(new File(tempFile1html.getAbsolutePath()));
+        // ── SAVE REFERENCE DOC METADATA ──────────────────────────────────────────
+        WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
+        margedoc.setSubject(workflowProcess.getSubject());
+        margedoc.setDescription(workflowProcess.getSubject()
+                + " for " + FileUtils.getNameWithoutExtension(tempFile.getName()));
+        margedoc.setInitdate(new Date());
+        margedoc.setItemname(workflowProcess.getItem().getName());
+
+        WorkFlowProcessMaster master = workFlowProcessMasterService.findByName(context, "Draft Type");
+        if (master != null) {
+            WorkFlowProcessMasterValue masterValue =
+                    workFlowProcessMasterValueService.findByName(context, "Note", master);
+            if (masterValue != null) {
+                margedoc.setDrafttype(masterValue);
+            }
+        }
+        margedoc.setWorkflowProcess(workflowProcess);
+
+        return new FileInputStream(tempFile);
+    }
 
 
+    private List<WorkFlowProcessComment> filterCommentsForCurrentUser(Context context, WorkflowProcess wp,
+                                                                      List<WorkFlowProcessComment> comments) {
+
+        if (comments == null || comments.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // If current user is initiator, return all comments (no filtering)
 
 
+        // For sender or owner, apply filtering logic
+        if (comments!=null) {
+            System.out.println(">>>Current Comment size:::download<<<<<<"+comments.size());
+            EPerson currentUser = context.getCurrentUser();
+            if (currentUser == null) {
+                return new ArrayList<>();
+            }
 
-            //System.out.println("HTML:::" + sb.toString());
+            // Sort by noteIndex first
+            List<WorkFlowProcessComment> sortedComments = comments.stream()
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(
+                            WorkFlowProcessComment::getNoteindex,
+                            Comparator.nullsLast(Integer::compareTo)))
+                    .collect(toList());
 
-            //int result = PdfUtils.HtmlconvertToPdf(sb.toString(), files);
+            if(iscurrentuserinisiator(context,wp)&&iscurrentuserWoner(context,wp)){
+                return sortedComments;
+            }else if(iscurrentuserWoner(context,wp)){
+                return sortedComments;
+            }else  if(wp.getIsconfidential()!=null&&!wp.getIsconfidential()){
+                return sortedComments;
+            }else if(wp.getWorkflowStatus()!=null&&wp.getWorkflowStatus().getPrimaryvalue()!=null&&wp.getWorkflowStatus().getPrimaryvalue().equalsIgnoreCase("Complete"))
+            {
+                return sortedComments;
+            }
 
-            int ii = jbpmServer.htmltopdf(sb.toString(), files);
-
-            //System.out.println("iii>>>>>>>.."+ii);
-
-            System.out.println("HTML CONVERT DONE::::::::::::::: :" + tempFile1html.getAbsolutePath());
-
-            File finalnotepath = tempFile1html;//PDFTextSearch.getSingDoc(tempFile1html.getAbsolutePath(),digitalSignRequets);
-
-            WorkflowProcessReferenceDoc margedoc = new WorkflowProcessReferenceDoc();
-
-            margedoc.setSubject(workflowProcess.getSubject());
-
-            margedoc.setDescription(workflowProcess.getSubject() + " for " + FileUtils.getNameWithoutExtension(finalnotepath.getName()));
-
-            margedoc.setInitdate(new Date());
-
-            margedoc.setItemname(workflowProcess.getItem().getName());
-
-            WorkFlowProcessMaster workFlowProcessMaster = workFlowProcessMasterService.findByName(context, "Draft Type");
-
-            if (workFlowProcessMaster != null) {
-                WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, "Note", workFlowProcessMaster);
-                if (workFlowProcessMasterValue != null) {
-                    margedoc.setDrafttype(workFlowProcessMasterValue);
+            // Find the last index where current user is the submitter
+            int lastUserIndex = -1;
+            for (int i = 0; i < sortedComments.size(); i++) {
+                WorkFlowProcessComment comment = sortedComments.get(i);
+                EPerson submitter = comment.getSubmitter();
+                if (submitter != null && submitter.equals(currentUser)) {
+                    lastUserIndex = i;
                 }
             }
 
-            margedoc.setWorkflowProcess(workflowProcess);
-            FileInputStream outputfile = new FileInputStream(new File(finalnotepath.getAbsolutePath()));
-            return outputfile;
+            // If current user is found in the comments, return up to that point
+            if (lastUserIndex != -1) {
+                return sortedComments.subList(0, lastUserIndex + 1);
+            }
+
+            // If current user not found, return all sorted comments (fallback)
+            return sortedComments;
         }
 
-        return null;
+        // Default case: return all comments sorted
+        return comments.stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(
+                        WorkFlowProcessComment::getNoteindex,
+                        Comparator.nullsLast(Integer::compareTo)))
+                .collect(toList());
     }
+
+    boolean iscurrentuserinisiator(Context context, WorkflowProcess wp) {
+        Optional<EPerson> epp = wp.getWorkflowProcessEpeople().stream().filter(d -> d.getSequence() == 0).map(f -> f.getePerson()).findFirst();
+
+        if (epp.isPresent()) {
+            if (epp.get().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                System.out.println("--> initiator");
+                return true;
+            } else {
+                System.out.println("-->not initiator");
+                return false;
+            }
+        }
+        return false;
+
+    }
+    boolean iscurrentuserWoner(Context context, WorkflowProcess wp) {
+        Optional<EPerson> epp = wp.getWorkflowProcessEpeople().stream().filter(d -> d.getOwner() == true).map(f -> f.getePerson()).findFirst();
+        if (epp.isPresent()) {
+            if (epp.get().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                System.out.println("--> getOwner");
+                return true;
+            } else {
+                System.out.println("-->not getOwner");
+                return false;
+            }
+        }
+        return false;
+
+    }
+
+    boolean iscurrentusersender(Context context, WorkflowProcess wp) {
+        Optional<EPerson> epp = wp.getWorkflowProcessEpeople().stream().filter(d -> d.getSender() == true).map(f -> f.getePerson()).findFirst();
+        if (epp.isPresent()) {
+            if (epp.get().getID().toString().equalsIgnoreCase(context.getCurrentUser().getID().toString())) {
+                System.out.println("--> sender");
+                return true;
+            } else {
+                System.out.println("-->not sender");
+                return false;
+            }
+        }
+        return false;
+
+    }
+
 
     public WorkflowProcessReferenceDoc createFinalNote(Context context, WorkflowProcess workflowProcess) throws
 
@@ -6948,6 +8659,28 @@ public class WorkflowProcessActionController extends AbstractDSpaceRestRepositor
         workFlowProcessHistoryService.create(context, workFlowAction);
 
         System.out.println("::::::OUT :storeWorkFlowHistoryForSignaturePanding:::: ");
+
+    }
+
+
+    public void storeWorkFlowHistoryDiscard(Context context, WorkflowProcess workflowProcess,String remark) throws Exception {
+        System.out.println("=============IN :storeWorkFlowHistoryDiscard============= ");
+        Optional<WorkflowProcessEperson>ep= workflowProcess.getWorkflowProcessEpeople().stream().filter(d->d.getSequence()==0).findFirst();
+        WorkflowProcessEperson workflowProcessEperson=ep.get();
+        WorkFlowProcessHistory workFlowAction = null;
+        workFlowAction = new WorkFlowProcessHistory();
+        WorkFlowProcessMaster workFlowProcessMaster = WorkFlowAction.MASTER.getMaster(context);
+        WorkFlowProcessMasterValue workFlowProcessMasterValue = workFlowProcessMasterValueService.findByName(context, WorkFlowAction.DISCARDED.getAction(), workFlowProcessMaster);
+        workFlowAction.setActionDate(new Date());
+        workFlowAction.setAction(workFlowProcessMasterValue);
+        workFlowAction.setWorkflowProcess(workflowProcess);
+        workFlowAction.setSentbyname(context.getCurrentUser().getFullName());
+        workFlowAction.setSenttoname(context.getCurrentUser().getFullName());
+        workFlowAction.setComment(remark);
+        workFlowAction.setSentto(workflowProcessEperson);
+        workFlowAction.setWorkflowProcessEpeople(workflowProcessEperson);
+        workFlowProcessHistoryService.create(context, workFlowAction);
+        System.out.println("================OUT :storeWorkFlowHistoryDiscard============= ");
 
     }
 

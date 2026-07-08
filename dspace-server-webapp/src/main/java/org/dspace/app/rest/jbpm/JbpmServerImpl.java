@@ -217,6 +217,7 @@ public class JbpmServerImpl {
             HttpEntity<JBPMProcess> entity = new HttpEntity<JBPMProcess>(jbpmProcess, headers);
             return restTemplate.exchange(baseurl + JBPM.RECEIVED, HttpMethod.POST, entity, String.class).getBody();
         } catch (Exception e){
+            e.printStackTrace();
                 throw new JBPMServerExpetion(e.getMessage());
             }
         }

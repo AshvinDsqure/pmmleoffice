@@ -1041,7 +1041,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                     department=map.get().getEpersonmapping().getDepartment();
                 }
                 if (department.getPrimaryvalue() != null) {
-                    sb.append("T/" + department.getPrimaryvalue());
+                    sb.append("D/" + department.getPrimaryvalue());
                 }
                 if (map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getTablenumber()!= null) {
                     sb.append("/" + map.get().getEpersonmapping().getTablenumber());
@@ -1076,7 +1076,7 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
                 Optional<EpersonToEpersonMapping> map= context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d->d.getIsactive()==true).findFirst();
                 if (map.isPresent()) {
                     if (map.get().getEpersonmapping()!=null&&map.get().getEpersonmapping().getDepartment() != null &&map.get().getEpersonmapping().getDepartment().getPrimaryvalue()!=null) {
-                        sb.append("T/" + map.get().getEpersonmapping().getDepartment().getPrimaryvalue());
+                        sb.append("D/" + map.get().getEpersonmapping().getDepartment().getPrimaryvalue());
                     }
                     if (map.get().getEpersonmapping() != null&&map.get().getEpersonmapping().getTablenumber()!=null) {
                         sb.append("/" + map.get().getEpersonmapping().getTablenumber());
@@ -1097,6 +1097,8 @@ public class WorkflowProcessInwardController extends AbstractDSpaceRestRepositor
         map.put("inwardnumber", inwardnumber);
         return map;
     }
+
+
 
     @PreAuthorize("hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'NOTE', 'READ') || hasPermission(#uuid, 'ITEAM', 'WRITE') || hasPermission(#uuid, 'BITSTREAM','WRITE') || hasPermission(#uuid, 'COLLECTION', 'READ')")
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, value = "/getDraftNumber")

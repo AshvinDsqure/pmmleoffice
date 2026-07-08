@@ -142,6 +142,9 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     @Column(name = "ispredefineuser")
     private Boolean ispredefineuser = false;
 
+    @Column(name = "isconfidential")
+    private Boolean isconfidential = false;
+
     public Boolean getIspredefineuser() {
         return ispredefineuser;
     }
@@ -381,4 +384,14 @@ public class WorkflowProcess extends DSpaceObject implements DSpaceObjectLegacyS
     public void setIssignatorysame(Boolean issignatorysame) {
         this.issignatorysame = issignatorysame;
     }
+
+    public Boolean getIsconfidential() {
+        return isconfidential;
+    }
+
+    public void setIsconfidential(Boolean isconfidential) {
+        this.isconfidential = isconfidential;
+    }
+
+
 }

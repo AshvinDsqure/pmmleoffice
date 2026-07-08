@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1698,6 +1699,16 @@ prevent the generation of resource policy entry values with null dspace_object a
     }
 
     @Override
+    public List<Item> getItemBycurrentuserinworkflow(Context context, UUID workflowtype, UUID stastus, Integer offset, Integer limit) throws Exception {
+        return itemDAO.getItemBycurrentuserinworkflow(context,workflowtype,stastus,offset,limit);
+    }
+
+    @Override
+    public int getItemBycurrentuserinworkflow(Context context, UUID workflowtype, UUID stastus) throws Exception {
+        return itemDAO.getItemBycurrentuserinworkflow(context,workflowtype,stastus);
+    }
+
+    @Override
     public int countTotal(Context context, String startdate, String endDate) throws SQLException {
 
         MetadataField metadataField = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "accessioned");
@@ -1747,6 +1758,7 @@ prevent the generation of resource policy entry values with null dspace_object a
             if (orcidSynchronizationService.isSynchronizationAllowed(profile, entity)) {
                 String putCode = profileAndPutCodeMap.get(profile);
                 String title = getMetadataFirstValue(entity, "dc", "title", null, Item.ANY);
+
                 orcidQueueService.createEntityDeletionRecord(context, profile, title, entityType, putCode);
             }
         }
@@ -1770,6 +1782,18 @@ prevent the generation of resource policy entry values with null dspace_object a
         for (OrcidQueue orcidQueueRecord : orcidQueueRecords) {
             orcidQueueService.delete(context, orcidQueueRecord);
         }
+    }
+
+    @Override
+    public List<Item> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        MetadataField metadataFieldaccessioneddate = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "accessioned");
+        return itemDAO.departmentDiscardedFile(context, eperson, epersontoepersonmapid, perameter,metadataFieldaccessioneddate, offset, limit);
+    }
+
+    @Override
+    public int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter) throws SQLException {
+        MetadataField metadataFieldaccessioneddate = metadataFieldService.findByElement(context, MetadataSchemaEnum.DC.getName(), "date", "accessioned");
+        return itemDAO.countDepartmentDiscardedFile(context, eperson, epersontoepersonmapid, perameter,metadataFieldaccessioneddate);
     }
 
 }

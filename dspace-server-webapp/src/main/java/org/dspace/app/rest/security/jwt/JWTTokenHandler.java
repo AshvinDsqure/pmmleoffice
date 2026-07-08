@@ -33,6 +33,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.util.DateUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.dspace.app.rest.exception.SessionInvalidatedException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
@@ -143,6 +144,13 @@ public abstract class JWTTokenHandler {
 
             return ePerson;
         } else {
+            // Check if this is a session invalidated scenario
+            // If the EPerson exists and has a session salt, but the token is invalid,
+            // it means the session salt was changed (new login invalidated old session)
+            if (ePerson != null && StringUtils.isNotBlank(ePerson.getSessionSalt())) {
+                log.warn(getIpAddress(request) + " tried to use a token invalidated by new login for user: " + ePerson.getEmail());
+                throw new SessionInvalidatedException("Your session has expired because your account was logged in from another device.");
+            }
             log.warn(getIpAddress(request) + " tried to use an expired or non-valid token");
             return null;
         }
@@ -394,6 +402,8 @@ public abstract class JWTTokenHandler {
      * Update session salt information for the currently logged in user.
      * The session salt is a random key that is saved to EPerson object (and database table) and used to validate
      * a JWT on later requests.
+     * NOTE: This always regenerates the session salt to ensure single-session-per-user behavior.
+     * When a user logs in again from another device, the old session salt is invalidated.
      * @param context current DSpace Context
      * @param previousLoginDate date of last login (prior to this one)
      * @return EPerson object of current user, with an updated session salt
@@ -404,16 +414,11 @@ public abstract class JWTTokenHandler {
         try {
             ePerson = context.getCurrentUser();
 
-            //If the previous login was within the configured token expiration time, we reuse the session salt.
-            //This allows a user to login on multiple devices/browsers at the same time.
-            if (StringUtils.isBlank(ePerson.getSessionSalt())
-                || previousLoginDate == null
-                || (ePerson.getLastActive().getTime() - previousLoginDate.getTime() > getExpirationPeriod())) {
-                log.debug("Regenerating auth token as session salt was either empty or expired..");
-                //System.out.println("::::::::::::Regenerating auth token as session salt was either empty or expired..");
-                ePerson.setSessionSalt(generateRandomKey());
-                ePersonService.update(context, ePerson);
-            }
+            // Always regenerate the session salt to enforce single-session-per-user
+            // This invalidates any previous sessions when the user logs in again
+            log.debug("Regenerating auth token to enforce single-session-per-user");
+            ePerson.setSessionSalt(generateRandomKey());
+            ePersonService.update(context, ePerson);
 
         } catch (AuthorizeException e) {
             ePerson = null;

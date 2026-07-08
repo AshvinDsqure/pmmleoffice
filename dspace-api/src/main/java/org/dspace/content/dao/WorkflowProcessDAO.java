@@ -122,4 +122,12 @@ public interface WorkflowProcessDAO extends DSpaceObjectLegacySupportDAO<Workflo
     List<WorkflowProcess> searchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber,Integer offset, Integer limit) throws SQLException;
     int countsearchByOldFileNumber(Context context,UUID drafttype,UUID epersontoepersonmapid,String oldfilenumber) throws SQLException;
 
+    List<WorkflowProcess> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+    int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid,HashMap<String, String> perameter) throws SQLException;
+
+    List<WorkflowProcess> discardedFile(Context context, UUID eperson, UUID epersontoepersonmapid,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+    int countDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid,HashMap<String, String> perameter) throws SQLException;
+
+    WorkflowProcess getByItem(Context context, UUID item) throws SQLException;
+
 }

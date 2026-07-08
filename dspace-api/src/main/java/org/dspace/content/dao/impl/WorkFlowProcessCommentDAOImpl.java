@@ -74,4 +74,20 @@ public class WorkFlowProcessCommentDAOImpl extends AbstractHibernateDAO<WorkFlow
 
         }
     }
+    @Override
+    public WorkFlowProcessComment getLatestCommentByNoteIndex(Context context, UUID workflowprocessid) throws SQLException {
+        Query query = createQuery(context,
+                "SELECT c FROM WorkFlowProcessComment as c " +
+                        "JOIN c.workFlowProcess as wp " +
+                        "WHERE wp.id = :workflowprocessid " +
+                        "AND c.noteindex = (" +
+                        "   SELECT MAX(c2.noteindex) " +
+                        "   FROM WorkFlowProcessComment c2 " +
+                        "   JOIN c2.workFlowProcess wp2 " +
+                        "   WHERE wp2.id = :workflowprocessid" +
+                        ")");
+
+        query.setParameter("workflowprocessid", workflowprocessid);
+        return uniqueResult(query);
+    }
 }

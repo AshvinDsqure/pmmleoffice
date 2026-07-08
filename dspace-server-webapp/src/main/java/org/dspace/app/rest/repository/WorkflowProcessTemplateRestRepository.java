@@ -112,27 +112,28 @@ public class WorkflowProcessTemplateRestRepository extends DSpaceObjectRestRepos
         try {
             workflowProcessTemplateRest = mapper.readValue(req.getInputStream(), WorkflowProcessTemplateRest.class);
             // Validate required fields
-            if(workflowProcessTemplateRest.getePersonRest() == null || workflowProcessTemplateRest.getePersonRest().getId() == null){
-                throw new UnprocessableEntityException("EPerson is required");
-            }
+//            if(workflowProcessTemplateRest.getePersonRest() == null || workflowProcessTemplateRest.getePersonRest().getId() == null){
+//                throw new UnprocessableEntityException("EPerson is required");
+//            }
+//
+//            if(workflowProcessTemplateRest.getEditortext() == null || workflowProcessTemplateRest.getEditortext().trim().isEmpty()){
+//                throw new UnprocessableEntityException("Editor text is required and cannot be empty");
+//            }
+//
+//            if(workflowProcessTemplateRest.getTemplatename() == null || workflowProcessTemplateRest.getTemplatename().trim().isEmpty()){
+//                throw new UnprocessableEntityException("Template name is required and cannot be empty");
+//            }
+//
+//            // Check for duplicate combination
+//            Integer i= workflowProcessTemplateService.getbyuserandeditorandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getEditortext().trim(),workflowProcessTemplateRest.getTemplatename().trim());
+//            if(i>0){
+//                throw new UnprocessableEntityException("The user has already created a Workflow process template with the same editor text and template name");
+//            }
+//            Integer ii= workflowProcessTemplateService.getbyuserandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getTemplatename().trim());
+//            if(ii>0){
+//                throw new UnprocessableEntityException("The user has already created a workflow process template with the same  template name");
+//            }
 
-            if(workflowProcessTemplateRest.getEditortext() == null || workflowProcessTemplateRest.getEditortext().trim().isEmpty()){
-                throw new UnprocessableEntityException("Editor text is required and cannot be empty");
-            }
-
-            if(workflowProcessTemplateRest.getTemplatename() == null || workflowProcessTemplateRest.getTemplatename().trim().isEmpty()){
-                throw new UnprocessableEntityException("Template name is required and cannot be empty");
-            }
-
-            // Check for duplicate combination
-            Integer i= workflowProcessTemplateService.getbyuserandeditorandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getEditortext().trim(),workflowProcessTemplateRest.getTemplatename().trim());
-            if(i>0){
-                throw new UnprocessableEntityException("The user has already created a Workflow process template with the same editor text and template name");
-            }
-            Integer ii= workflowProcessTemplateService.getbyuserandtemplate(context,UUID.fromString(workflowProcessTemplateRest.getePersonRest().getId()),workflowProcessTemplateRest.getTemplatename().trim());
-            if(ii>0){
-                throw new UnprocessableEntityException("The user has already created a workflow process template with the same  template name");
-            }
             workflowProcessTemplate = createworkflowProcessDefinitionFromRestObject(context, workflowProcessTemplateRest);
         } catch (UnprocessableEntityException e){
             throw e;

@@ -33,6 +33,7 @@ public enum WorkFlowStatus {
     DISPATCH("Dispatch Ready"),
     PARKED("Parked"),
     DRAFTNOTE("Draft Note"),
+    DISCARD("Discard"),
     DISPATCHCLOSE("Dispatch close");
 
     private String status;

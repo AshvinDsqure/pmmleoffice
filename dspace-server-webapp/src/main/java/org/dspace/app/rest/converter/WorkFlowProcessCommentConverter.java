@@ -103,6 +103,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(obj.getNoteindex()!=null){
             rest.setNoteindex(obj.getNoteindex());
         }
+        if(obj.getSenttoname()!=null){
+            rest.setSenttoname(obj.getSenttoname());
+        }
         rest.setIsdraftsave(obj.getIsdraftsave());
         rest.setUuid(obj.getID().toString());
         return rest;
@@ -154,6 +157,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getNoteindex()!=null){
             obj.setNoteindex(rest.getNoteindex());
         }
+        if(rest.getSenttoname()!=null){
+            obj.setSenttoname(rest.getSenttoname());
+        }
         obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
@@ -204,6 +210,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         if(rest.getNoteindex()!=null){
             obj.setNoteindex(rest.getNoteindex());
         }
+        if(rest.getSenttoname()!=null){
+            obj.setSenttoname(rest.getSenttoname());
+        }
         obj.setSubmitter(context.getCurrentUser());
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;
@@ -252,6 +261,9 @@ public class WorkFlowProcessCommentConverter extends DSpaceObjectConverter<WorkF
         }
         if(rest.getNoteindex()!=null){
             obj.setNoteindex(rest.getNoteindex());
+        }
+        if(rest.getSenttoname()!=null){
+            obj.setSenttoname(rest.getSenttoname());
         }
         obj.setIsdraftsave(rest.getIsdraftsave());
         return obj;

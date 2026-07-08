@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
@@ -27,10 +28,14 @@ import org.dspace.app.rest.exception.GroupNameNotProvidedException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
 import org.dspace.app.rest.exception.UnprocessableEntityException;
 import org.dspace.app.rest.model.GroupRest;
+import org.dspace.app.rest.model.ItemRest;
 import org.dspace.app.rest.model.patch.Patch;
+import org.dspace.app.rest.projection.Projection;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
 import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.eperson.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +132,98 @@ public class GroupRestRepository extends DSpaceObjectRestRepository<Group, Group
             return converter.toRestPage(groups, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+//    @SearchRestMethod(name = "isGroupMember")
+//    public GroupRest isGroupMember() {
+//        try {
+//            Context context = obtainContext();
+//                Group group = gs.findByName(context, "REPORTER");
+//                if(group!=null){
+//                    if(group.getMembers().contains(context.getCurrentUser())){
+//                        return converter.toRest(group, utils.obtainProjection());
+//                    }else {
+//                        throw new ResourceNotFoundException("You are not a member of the group " + group.getName());
+//                    }
+//                }
+//            return converter.toRest(group, utils.obtainProjection());} catch (SQLException e) {
+//            throw new RuntimeException(e.getMessage(), e);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+
+        @SearchRestMethod(name = "isGroupMember")
+    public GroupRest isGroupMember() {
+
+        Context context = null;
+
+        try {
+            context = obtainContext();
+
+            // ── 1. VALIDATE AUTHENTICATION ───────────────────────────────────────
+            EPerson currentUser = context.getCurrentUser();
+            if (currentUser == null) {
+                throw new ResourceNotFoundException(
+                        "Authentication required. Please log in to access this resource."
+                );
+            }
+
+            // ── 2. FIND GROUP ────────────────────────────────────────────────────
+            Group group = gs.findByName(context, "REPORTER");
+            if (group == null) {
+                throw new ResourceNotFoundException(
+                        "Group 'REPORTER' does not exist or has been removed."
+                );
+            }
+
+            // ── 3. LOAD MEMBERS SAFELY ───────────────────────────────────────────
+            List<EPerson> members = group.getMembers();
+            if (members == null || members.isEmpty()) {
+                throw new ResourceNotFoundException(
+                        "Group '" + group.getName() + "' has no members."
+                );
+            }
+
+            // ── 4. CHECK MEMBERSHIP ──────────────────────────────────────────────
+            boolean isMember = members.stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(member -> member.getID().equals(currentUser.getID()));
+
+            if (!isMember) {
+                throw new ResourceNotFoundException(
+                        "User '" + currentUser.getEmail() + "' is not a member of group '"
+                                + group.getName() + "'."
+                );
+            }
+
+            // ── 5. RESOLVE PROJECTION ────────────────────────────────────────────
+            Projection projection = utils.obtainProjection();
+            if (projection == null) {
+                throw new IllegalStateException(
+                        "Failed to resolve projection for response conversion."
+                );
+            }
+
+            return converter.toRest(group, projection);
+
+        } catch (ResourceNotFoundException e) {
+            // Re-throw known REST exceptions directly — no wrapping
+            throw e;
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException(
+                    "A database error occurred while checking group membership.", e
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "An unexpected error occurred while checking group membership.", e
+            );
         }
     }
 

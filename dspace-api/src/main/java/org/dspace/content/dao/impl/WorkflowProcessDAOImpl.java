@@ -8,6 +8,7 @@
 package org.dspace.content.dao.impl;
 
 import org.apache.logging.log4j.Logger;
+import org.dspace.content.Item;
 import org.dspace.content.MetadataField;
 import org.dspace.content.WorkflowProcess;
 import org.dspace.content.dao.WorkflowProcessDAO;
@@ -355,7 +356,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, UUID epersontoepersonmapid, MetadataField metadatafield,UUID statusReject) throws SQLException {
+    public int countfindDraftPending(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID statusdraft, UUID epersontoepersonmapid, MetadataField metadatafield, UUID statusReject) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp.id) FROM WorkflowProcess as wp " +
                 "left join wp.workflowProcessEpeople as ep " +
@@ -504,16 +505,16 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid,UUID epersontoepersonmapid,HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> getWorkflowAfterNoteApproved(Context context, UUID eperson, UUID statuscloseid, UUID statusdraftid, UUID workflowtypeid, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
 
-        String orderby="";
-        String getgroupby1="";
-        if(perameter!=null) {
+        String orderby = "";
+        String getgroupby1 = "";
+        if (perameter != null) {
             orderby = OrderMappig.getOrderby(perameter);
-            getgroupby1=OrderMappig.getgroupby(perameter);
+            getgroupby1 = OrderMappig.getgroupby(perameter);
         }
 
-        Query query = createQuery(context,"SELECT  wp FROM WorkflowProcess as wp " +
+        Query query = createQuery(context, "SELECT  wp FROM WorkflowProcess as wp " +
                 "left join wp.priority as priority " +
                 "left join wp.workFlowProcessHistory as h " +   // <-- New join
                 "left join wp.workFlowProcessDraftDetails as draft  " +
@@ -522,7 +523,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "and wp.workflowStatus.id=:statusid " +
                 "and wp.workflowType.id=:workflowtype " +
                 "and draft.documentsignator.id=:eperson " +
-                "and wp.isdelete=:isdelete "+getgroupby1+orderby);
+                "and wp.isdelete=:isdelete " + getgroupby1 + orderby);
         query.setParameter("issinglatter", false);
         query.setParameter("eperson", eperson);
         query.setParameter("statusid", statuscloseid);
@@ -591,7 +592,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             hql.append(OrderMappig.getsentoJoin());
         }
         hql.append("" +
-                " where ep.issequence=:sequence and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson  and t.id IN (:workflowtype) and wp.isdelete=:isdelete  "+ getgroupby1 + orderby);
+                " where ep.issequence=:sequence and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson  and t.id IN (:workflowtype) and wp.isdelete=:isdelete  " + getgroupby1 + orderby);
 
         Query query = createQuery(context, hql.toString());
         query.setParameter("isOwner", false);
@@ -631,7 +632,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         }
         if (perameter != null && OrderMappig.findkey(perameter, "issender")) {
             hql.append(OrderMappig.getsentoJoin());
-        }   else {
+        } else {
             issendrcondition = " ";
         }
         hql.append(" where ep.issequence=:sequence and ep.isOwner=:isOwner and ep.epersontoepersonmapping.id=:epersontoepersonmapid and p.id=:eperson and t.id IN (:workflowtype) and wp.isdelete=:isdelete ");
@@ -747,7 +748,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                     "AND t.id IN (:workflowtype) " +
                     "AND p.id = :eperson " +
                     "AND wp.isdelete = :isdelete " +
-                    "AND ep.isSender = :issender "  + issendrcondition +
+                    "AND ep.isSender = :issender " + issendrcondition +
                     getgroupby1 + orderby
             );
             Query query = createQuery(context, hql.toString());
@@ -812,7 +813,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
             query.setParameter("usertype", usertype);
             query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
             return count(query);
-        }else{
+        } else {
             Query query = createQuery(context,
                     "SELECT count(distinct wp.id) FROM WorkflowProcess as wp " +
                             "LEFT join wp.workflowProcessEpeople as ep " +
@@ -1937,7 +1938,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public List<WorkflowProcess> searchByOldFileNumber(Context context, UUID drafttype,UUID epersontoepersonmapid, String oldfilenumber, Integer offset, Integer limit) throws SQLException {
+    public List<WorkflowProcess> searchByOldFileNumber(Context context, UUID drafttype, UUID epersontoepersonmapid, String oldfilenumber, Integer offset, Integer limit) throws SQLException {
 
         Query query = createQuery(context, "SELECT DISTINCT wp FROM WorkflowProcessReferenceDoc as d " +
                 "left join d.workflowProcess as wp " +
@@ -1945,10 +1946,10 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
                 "where d.drafttype.id=:drafttypeid " +
                 "AND  lower(d.oldfilenumber) like :oldfilenumber " +
                 "AND ep.ePerson.id=:eperson ");
-        query.setParameter("drafttypeid",drafttype);
-        query.setParameter("oldfilenumber","%"+oldfilenumber.toLowerCase()+"%");
-        query.setParameter("eperson",context.getCurrentUser().getID());
-       // query.setParameter("epersontoepersonmapid",epersontoepersonmapid);
+        query.setParameter("drafttypeid", drafttype);
+        query.setParameter("oldfilenumber", "%" + oldfilenumber.toLowerCase() + "%");
+        query.setParameter("eperson", context.getCurrentUser().getID());
+        // query.setParameter("epersontoepersonmapid",epersontoepersonmapid);
 
         if (0 <= offset) {
             query.setFirstResult(offset);
@@ -1961,23 +1962,23 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
 
     @Override
     public int countsearchByOldFileNumber(Context context, UUID drafttype, UUID epersontoepersonmapid, String oldfilenumber) throws SQLException {
-       try {
-           Query query = createQuery(context, "SELECT count(DISTINCT wp.id) FROM WorkflowProcessReferenceDoc as d " +
-                   "left join d.workflowProcess as wp " +
-                   "left join wp.workflowProcessEpeople ep " +
-                   "where d.drafttype.id=:drafttypeid " +
-                   "AND  lower(d.oldfilenumber) like :oldfilenumber " +
-                   "AND ep.ePerson.id=:eperson " +
-                   "AND ep.epersontoepersonmapping.id = :epersontoepersonmapid ");
-           query.setParameter("drafttypeid",drafttype);
-           query.setParameter("oldfilenumber","%"+oldfilenumber.toLowerCase()+"%");
-           query.setParameter("eperson",context.getCurrentUser().getID());
-           query.setParameter("epersontoepersonmapid",epersontoepersonmapid);
-           return count(query);
-       }catch (Exception e){
-           System.out.println("Error::countsearchByOldFileNumber:::"+e.getMessage());
-           return 0;
-       }
+        try {
+            Query query = createQuery(context, "SELECT count(DISTINCT wp.id) FROM WorkflowProcessReferenceDoc as d " +
+                    "left join d.workflowProcess as wp " +
+                    "left join wp.workflowProcessEpeople ep " +
+                    "where d.drafttype.id=:drafttypeid " +
+                    "AND  lower(d.oldfilenumber) like :oldfilenumber " +
+                    "AND ep.ePerson.id=:eperson " +
+                    "AND ep.epersontoepersonmapping.id = :epersontoepersonmapid ");
+            query.setParameter("drafttypeid", drafttype);
+            query.setParameter("oldfilenumber", "%" + oldfilenumber.toLowerCase() + "%");
+            query.setParameter("eperson", context.getCurrentUser().getID());
+            query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+            return count(query);
+        } catch (Exception e) {
+            System.out.println("Error::countsearchByOldFileNumber:::" + e.getMessage());
+            return 0;
+        }
     }
 
 
@@ -2311,7 +2312,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid,List<UUID> statusIDs) throws SQLException {
+    public int getInpogressWorkflowProcessByItemsid(Context context, UUID itemid, List<UUID> statusIDs) throws SQLException {
         try {
             Query query = createQuery(context, "" +
                     "SELECT count(wp.id) FROM WorkflowProcess as wp " +
@@ -3058,7 +3059,7 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
     }
 
     @Override
-    public int countByTypeAndPriorityPark(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid,UUID statusdraftid) throws SQLException {
+    public int countByTypeAndPriorityPark(Context context, UUID typeid, UUID priorityid, UUID epersonid, UUID statusid, UUID epersontoepersonmapid, UUID statusdraftid) throws SQLException {
         Query query = createQuery(context, "" +
                 "SELECT count(wp) FROM WorkflowProcess as wp " +
                 "join wp.workflowProcessEpeople as ep " +
@@ -3257,4 +3258,307 @@ public class WorkflowProcessDAOImpl extends AbstractHibernateDSODAO<WorkflowProc
         return query.getResultList();
     }
 
+    @Override
+    public List<WorkflowProcess> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+
+        String department = perameter.get("departmentname");
+        String workflowtype = perameter.get("workflowtype");
+        String satatus = perameter.get("status");
+        String startdate = perameter.get("startdate");
+        String enddate = perameter.get("enddate");
+        String item = perameter.get("item");
+        UUID statusUuid =null;
+        Boolean isdelete=false;
+        UUID itemuuid=null;
+        if(satatus!=null) {
+            statusUuid= UUID.fromString(satatus);
+            String isdiscard = perameter.get("isdiscard");
+            if(isdiscard!=null&&isdiscard.equalsIgnoreCase("yes")){
+                isdelete=true;
+            }
+        }
+        UUID workflowTypeUuid = UUID.fromString(workflowtype);
+        UUID departmentUuid = UUID.fromString(department);
+        if(item!=null) {
+            itemuuid = UUID.fromString(item);
+        }
+        System.out.println("===== INPUT PARAMETERS =====departmentDiscardedFile");
+        System.out.println("department     : " + department);
+        System.out.println("workflowtype   : " + workflowtype);
+        System.out.println("status         : " + satatus);
+        System.out.println("startdate      : " + startdate);
+        System.out.println("enddate        : " + enddate);
+        System.out.println("isdelete        : " + isdelete);
+        System.out.println("item        : " + item);
+        System.out.println("============================");
+
+
+        StringBuffer hql = new StringBuffer("SELECT wp FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap " +
+                "LEFT join emap.department as d ");
+        hql.append("WHERE d.id=:departmentname " +
+                "and t.id=:workflowtype and ep.sequence = 0 "
+        );
+        if(isdelete){
+            hql.append("and wp.isdelete = :isdelete ");
+        }
+        if(statusUuid != null&&satatus!=null){
+            hql.append("and st.id=:statusid ");
+        }
+        if(itemuuid!=null&&item!=null){
+            hql.append(" and wp.item.id=:itemuuid ");
+
+        }
+
+        if(startdate != null && enddate != null){
+            hql.append(" and wp.InitDate between :startdate and :enddate");
+        }
+        hql.append(" order by wp.InitDate DESC");
+
+        Query query = createQuery(context, hql.toString());
+        if(isdelete) {
+            query.setParameter("isdelete", isdelete);
+        }
+        query.setParameter("departmentname", departmentUuid);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        if(statusUuid != null) {
+            query.setParameter("statusid", statusUuid);
+        }
+        if(itemuuid!=null){
+            query.setParameter("itemuuid",itemuuid);
+        }
+        if (startdate != null && enddate != null) {
+
+            ZonedDateTime startZonedDateTime = LocalDate.parse(startdate.trim())
+                    .atStartOfDay(ZoneId.systemDefault());
+
+            ZonedDateTime endZonedDateTime = LocalDate.parse(enddate.trim())
+                    .atTime(23, 59, 59)
+                    .atZone(ZoneId.systemDefault());
+
+            query.setParameter("startdate", Timestamp.from(startZonedDateTime.toInstant()));
+            query.setParameter("enddate", Timestamp.from(endZonedDateTime.toInstant()));
+        }
+        System.out.println("hql::::::::"+hql);
+
+        if (offset != null && limit != null) {
+            query.setFirstResult(offset);
+            query.setMaxResults(limit);
+        }
+
+        return query.getResultList();
+    }
+
+    @Override
+    public int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter) throws SQLException {
+
+        String department = perameter.get("departmentname");
+        String workflowtype = perameter.get("workflowtype");
+        String satatus = perameter.get("status");
+        String startdate = perameter.get("startdate");
+        String enddate = perameter.get("enddate");
+
+        String item = perameter.get("item");
+
+        System.out.println("===== INPUT PARAMETERS =====countDepartmentDiscardedFile");
+        System.out.println("department     : " + department);
+        System.out.println("workflowtype   : " + workflowtype);
+        System.out.println("status         : " + satatus);
+        System.out.println("startdate      : " + startdate);
+        System.out.println("enddate        : " + enddate);
+        System.out.println("item        : " + item);
+
+        UUID workflowTypeUuid = UUID.fromString(workflowtype);
+        UUID statusUuid =null;
+        Boolean isdelete=false;
+        UUID itemuuid =null;
+        if(satatus!=null) {
+            statusUuid= UUID.fromString(satatus);
+            String isdiscard = perameter.get("isdiscard");
+            if(isdiscard!=null&&isdiscard.equalsIgnoreCase("yes")){
+                isdelete=true;
+            }
+        }
+        System.out.println("isdelete:::"+isdelete);
+        System.out.println("============================");
+        UUID departmentUuid = UUID.fromString(department);
+        if(item!=null) {
+            itemuuid= UUID.fromString(item);
+        }
+        StringBuffer hql = new StringBuffer("SELECT count(distinct wp.id) FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap " +
+                "LEFT join emap.department as d ");
+        hql.append("WHERE d.id =:departmentname " +
+                "and t.id =:workflowtype and ep.sequence = 0 "
+        );
+        if(statusUuid != null&&satatus!=null){
+            hql.append("and st.id=:statusid ");
+        }
+        if(itemuuid!=null&&item!=null){
+            hql.append(" and wp.item.id=:itemuuid ");
+        }
+        if(startdate != null && enddate != null){
+            hql.append("and wp.InitDate between :startdate and :enddate");
+        }
+        if(isdelete){
+            hql.append(" and wp.isdelete = :isdelete ");
+        }
+
+
+        Query query = createQuery(context, hql.toString());
+        //query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+       // query.setParameter("eperson", eperson);
+        if(statusUuid != null&&satatus!=null) {
+            query.setParameter("statusid", statusUuid);
+        }
+        if(itemuuid!=null&&item!=null){
+            query.setParameter("itemuuid",itemuuid);
+        }
+        if (startdate != null && enddate != null) {
+
+            ZonedDateTime startZonedDateTime = LocalDate.parse(startdate.trim())
+                    .atStartOfDay(ZoneId.systemDefault());
+
+            ZonedDateTime endZonedDateTime = LocalDate.parse(enddate.trim())
+                    .atTime(23, 59, 59)
+                    .atZone(ZoneId.systemDefault());
+
+            query.setParameter("startdate", Timestamp.from(startZonedDateTime.toInstant()));
+            query.setParameter("enddate", Timestamp.from(endZonedDateTime.toInstant()));
+        }
+        System.out.println("hql:::"+hql);
+        if(isdelete) {
+            query.setParameter("isdelete", isdelete);
+        }
+        query.setParameter("departmentname", departmentUuid);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        return count(query);
+    }
+
+    @Override
+    public List<WorkflowProcess> discardedFile(Context context, UUID eperson, UUID epersontoepersonmapid,MetadataField metadataField, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException {
+        String workflowtype = perameter.get("workflowtype");
+        String workflowsatus = perameter.get("status");
+
+        UUID workflowTypeUuid = UUID.fromString(workflowtype);
+        UUID workflowsatusuuid = UUID.fromString(workflowsatus);
+
+        String orderby = "";
+        String getgroupby1 = "";
+        String issendrcondition = "";
+        
+        if (perameter != null) {
+            orderby = OrderMappig.getOrderby(perameter);
+            getgroupby1 = OrderMappig.getgroupby(perameter);
+        }
+        
+        StringBuffer hql = new StringBuffer("SELECT wp FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap "+
+                "LEFT join wp.workFlowProcessHistory as h " +   // <-- New join
+                "LEFT JOIN wp.priority AS priority " +
+                "LEFT join emap.department as d ");
+        
+        if (OrderMappig.findkey(perameter, "isdepartment")) {
+            hql.append(OrderMappig.getDEpartmentjoinString());
+        }
+        if (OrderMappig.findkey(perameter, "issender")) {
+            hql.append(OrderMappig.getSenderJoin());
+            issendrcondition = " And metadatavalue.metadataField = :metadataField ";
+        } else {
+            issendrcondition = " ";
+        }
+        
+        hql.append("WHERE wp.isdelete = :isdelete " +
+                "and t.id=:workflowtype " +
+                "and p.id=:eperson " +
+                "and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
+                "and  ep.isOwner=:isOwner and st.id=:workflowsatusuuid"
+        );
+        hql.append(issendrcondition);
+        hql.append(getgroupby1);
+        hql.append(orderby);
+
+        Query query = createQuery(context, hql.toString());
+        query.setParameter("isdelete", true);
+        query.setParameter("isOwner", true);
+        query.setParameter("eperson", eperson);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        query.setParameter("workflowsatusuuid", workflowsatusuuid);
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+        
+        if (OrderMappig.findkey(perameter, "issender")) {
+            query.setParameter("metadataField", metadataField);
+        }
+
+        if (offset != null && limit != null) {
+            query.setFirstResult(offset);
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public int countDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter) throws SQLException {
+        String workflowtype = perameter.get("workflowtype");
+        String workflowsatus = perameter.get("status");
+        UUID workflowTypeUuid = UUID.fromString(workflowtype);
+        UUID workflowsatusuuid = UUID.fromString(workflowsatus);
+        StringBuffer hql = new StringBuffer("SELECT count(distinct wp.id) FROM WorkflowProcess as wp " +
+                "LEFT join wp.workflowProcessEpeople as ep " +
+                "LEFT join ep.ePerson as p " +
+                "LEFT join wp.workflowStatus as st " +
+                "LEFT join wp.workflowType as t " +
+                "LEFT join ep.epersontoepersonmapping as map " +
+                "LEFT join map.epersonmapping as emap " +
+                "LEFT join emap.department as d ");
+        hql.append("WHERE wp.isdelete = :isdelete " +
+                "and t.id =:workflowtype " +
+                "and p.id=:eperson " +
+                "and ep.epersontoepersonmapping.id=:epersontoepersonmapid " +
+                "and  ep.isOwner=:isOwner and st.id=:workflowsatusuuid"
+        );
+
+        Query query = createQuery(context, hql.toString());
+        query.setParameter("epersontoepersonmapid", epersontoepersonmapid);
+        query.setParameter("eperson", eperson);
+        query.setParameter("isdelete", true);
+        query.setParameter("workflowtype", workflowTypeUuid);
+        query.setParameter("workflowsatusuuid", workflowsatusuuid);
+        query.setParameter("isOwner", true);
+        return count(query);
+    }
+
+    @Override
+    public WorkflowProcess getByItem(Context context, UUID item)
+            throws SQLException {
+
+        String hql =
+                "SELECT wp FROM WorkflowProcess wp " +
+                        "WHERE wp.item.id = :itemId " +
+                        "ORDER BY wp.InitDate DESC";
+        Query query = createQuery(context, hql.toString());
+
+        query.setParameter("itemId", item);
+
+        query.setMaxResults(1);
+
+        List<WorkflowProcess> list = query.getResultList();
+
+        return list.isEmpty() ? null : list.get(0);
+    }
 }

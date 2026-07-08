@@ -11,6 +11,7 @@ import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,6 +23,7 @@ import org.dspace.app.rest.Parameter;
 import org.dspace.app.rest.SearchRestMethod;
 import org.dspace.app.rest.converter.ItemConverter;
 import org.dspace.app.rest.converter.MetadataConverter;
+import org.dspace.app.rest.enums.WorkFlowStatus;
 import org.dspace.app.rest.enums.WorkFlowType;
 import org.dspace.app.rest.exception.DSpaceBadRequestException;
 import org.dspace.app.rest.exception.RepositoryMethodNotImplementedException;
@@ -48,6 +50,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
@@ -58,6 +61,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is the repository responsible to manage Item Rest object
@@ -435,6 +440,7 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
 
         try {
             Context context = obtainContext();
+
             long total = itemService.countTotal(context, startdate, enddate);
             List<Item> witems = itemService.getDataTwoDateRange(context, startdate, enddate, Math.toIntExact(pageable.getOffset()),
                     Math.toIntExact(pageable.getPageSize()));
@@ -442,6 +448,27 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
 
             return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
         } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+    @SearchRestMethod(name = "getItemBycurrentuserinworkflow")
+    public Page<ItemRest> getItemBycurrentuserinworkflow(Pageable pageable) {
+        try {
+            Context context = obtainContext();
+            UUID workflowtypeid = WorkFlowType.DRAFT.getUserTypeFromMasterValue(context).get().getID();
+            UUID statusclose = WorkFlowStatus.COMPLETE.getUserTypeFromMasterValue(context).get().getID();
+            int total = itemService.getItemBycurrentuserinworkflow(context,workflowtypeid,statusclose);
+            List<Item> witems = itemService.getItemBycurrentuserinworkflow(context, workflowtypeid, statusclose, Math.toIntExact(pageable.getOffset()),
+                    Math.toIntExact(pageable.getPageSize()));
+            List<ItemRest>rest=witems.stream().map(d -> {
+                return itemConverter.convertNameOnly(d, utils.obtainProjection());
+            }).collect(toList());
+            return new PageImpl(rest, pageable, total);
+            //return converter.toRestPage(witems, pageable, total, utils.obtainProjection());
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -506,6 +533,65 @@ public class ItemRestRepository extends DSpaceObjectRestRepository<Item, ItemRes
             throw new RuntimeException(e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @SearchRestMethod(name = "departmentDiscardedFile")
+    public Page<ItemRest> departmentDiscardedFile(@Parameter(value = "departmentname", required = false) String departmentname,
+                                             @Parameter(value = "status", required = false) String status,
+                                             @Parameter(value = "startdate", required = false) String startdate,
+                                             @Parameter(value = "enddate", required = false) String enddate,
+                                             @Parameter(value = "workflowtype", required = false) String workflowtype,
+                                             Pageable pageable) {
+        System.out.println("in departmentDiscardedFile");
+        List<ItemRest> itemsRes = new ArrayList<ItemRest>();
+        try {
+            // Validation for required parameters
+            if (departmentname == null || departmentname.trim().isEmpty()) {
+                throw new UnprocessableEntityException("Department name is required and cannot be null or empty");
+            }
+            if (workflowtype == null || workflowtype.trim().isEmpty()) {
+                throw new UnprocessableEntityException("Workflow type is required and cannot be null or empty");
+            }
+            Context context = obtainContext();
+            context.turnOffAuthorisationSystem();
+            
+            UUID epersonToEpersonMappingid = null;
+            Optional<EpersonToEpersonMapping> map = context.getCurrentUser().getEpersonToEpersonMappings().stream().filter(d -> d.getIsactive() == true).findFirst();
+            if (map.isPresent()) {
+                epersonToEpersonMappingid = map.get().getID();
+            }
+            
+            HashMap<String, String> perameter = new HashMap<>();
+            perameter.put("departmentname", departmentname.trim());
+            perameter.put("workflowtype", workflowtype.trim());
+            if(status!=null) {
+                perameter.put("status", status.trim());
+                    WorkFlowProcessMasterValue wp= workFlowProcessMasterValueService.find(context,UUID.fromString(status));
+                    if(wp.getPrimaryvalue()!=null&&wp.getPrimaryvalue().equalsIgnoreCase("Discard")){
+                        perameter.put("isdiscard","yes");
+                    }
+            }
+            if(startdate != null && !startdate.trim().isEmpty()){
+                perameter.put("startdate", startdate.trim());
+            }
+            if(enddate != null && !enddate.trim().isEmpty()){
+                perameter.put("enddate", enddate.trim());
+            }
+            
+            int count = itemService.countDepartmentDiscardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter);
+            List<Item> items = itemService.departmentDiscardedFile(context, context.getCurrentUser().getID(), epersonToEpersonMappingid, perameter, Math.toIntExact(pageable.getOffset()), Math.toIntExact(pageable.getPageSize()));
+
+            System.out.println("size"+items.size());
+            itemsRes = items.stream().map(d -> {
+                return itemConverter.convertNameOnly1(context,d, utils.obtainProjection());
+            }).collect(Collectors.toList());
+            
+            System.out.println("out departmentDiscardedFile");
+            return new PageImpl(itemsRes, pageable, count);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new UnprocessableEntityException(e.getMessage(), e);
         }
     }
 }

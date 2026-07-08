@@ -87,6 +87,49 @@ public class WorkFlowProcessEpersonConverter extends DSpaceObjectConverter<Workf
         return workflowProcessDefinitionEpersonRest;
     }
 
+    public WorkflowProcessEpersonRest convertByDashbord(WorkflowProcessEperson obj, Projection projection) {
+        WorkflowProcessEpersonRest workflowProcessDefinitionEpersonRest = new WorkflowProcessEpersonRest();
+        if (obj.getePerson() != null) {
+            workflowProcessDefinitionEpersonRest.setePersonRest(ePersonConverter.convert(obj.getePerson(), projection));
+        }
+        if (obj.getDepartment() != null) {
+            workflowProcessDefinitionEpersonRest.setDepartmentRest(workFlowProcessMasterValueConverter.convert(obj.getDepartment(), projection));
+        }
+        if (obj.getOffice() != null) {
+            workflowProcessDefinitionEpersonRest.setOfficeRest(workFlowProcessMasterValueConverter.convert(obj.getOffice(), projection));
+        }
+        if (obj.getUsertype() != null) {
+            workflowProcessDefinitionEpersonRest.setUserType(workFlowProcessMasterValueConverter.convert(obj.getUsertype(), projection));
+        }
+        if (obj.getResponsebyallusers() != null) {
+            workflowProcessDefinitionEpersonRest.setResponsebyallusersRest(workFlowProcessMasterValueConverter.convert(obj.getResponsebyallusers(), projection));
+        }
+        if(obj.getInitiator()!=null) {
+            workflowProcessDefinitionEpersonRest.setInitiator(obj.getInitiator());
+        }
+        if(obj.getRemark()!=null){
+            workflowProcessDefinitionEpersonRest.setRemark(obj.getRemark());
+        }
+        if(obj.getEpersontoepersonmapping()!=null){
+            workflowProcessDefinitionEpersonRest.setEpersonToEpersonMappingRest(epersonToEpersonMappingConverter.convert(obj.getEpersontoepersonmapping(),projection));
+        }
+        if(obj.getAssignDate()!=null) {
+            workflowProcessDefinitionEpersonRest.setAssignDate(obj.getAssignDate());
+        }
+        workflowProcessDefinitionEpersonRest.setIndex(obj.getIndex());
+        workflowProcessDefinitionEpersonRest.setIssequence(obj.getIssequence());
+        workflowProcessDefinitionEpersonRest.setSequence(obj.getSequence());
+        workflowProcessDefinitionEpersonRest.setOwner(obj.getOwner());
+        workflowProcessDefinitionEpersonRest.setIsrefer(obj.getIsrefer());
+        workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+        workflowProcessDefinitionEpersonRest.setIsapproved(obj.getIsapproved());
+        workflowProcessDefinitionEpersonRest.setIssignnote(obj.getIssignnote());
+        workflowProcessDefinitionEpersonRest.setIsdraftreview(obj.getIsdraftreview());
+
+        workflowProcessDefinitionEpersonRest.setIsacknowledgement(obj.getIsacknowledgement());
+        return workflowProcessDefinitionEpersonRest;
+    }
+
     public WorkflowProcessEpersonRest convertByHistory(WorkflowProcessEperson obj, Projection projection) {
         WorkflowProcessEpersonRest workflowProcessDefinitionEpersonRest = new WorkflowProcessEpersonRest();
         if (obj.getePerson() != null) {

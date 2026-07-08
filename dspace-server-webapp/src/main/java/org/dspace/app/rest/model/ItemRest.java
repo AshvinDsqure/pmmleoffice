@@ -73,6 +73,9 @@ import org.dspace.eperson.EPerson;
     private String uploaddate;
     private String uploadedby;
     private String hierarchy;
+    private String currentRecipients;
+
+    private Date recivedDate;
 
     @JsonProperty
     private WorkFlowProcessMasterValueRest itemtypeRest = null;
@@ -209,5 +212,21 @@ import org.dspace.eperson.EPerson;
 
     public void setWorkFlowProcessRest(WorkFlowProcessRest workFlowProcessRest) {
         this.workFlowProcessRest = workFlowProcessRest;
+    }
+
+    public String getCurrentRecipients() {
+        return currentRecipients;
+    }
+
+    public void setCurrentRecipients(String currentRecipients) {
+        this.currentRecipients = currentRecipients;
+    }
+
+    public Date getRecivedDate() {
+        return recivedDate;
+    }
+
+    public void setRecivedDate(Date recivedDate) {
+        this.recivedDate = recivedDate;
     }
 }

@@ -102,6 +102,11 @@ public class WorkFlowProcessCommentServiceImpl extends DSpaceObjectServiceImpl<W
     }
 
     @Override
+    public WorkFlowProcessComment getLatestCommentByNoteIndex(Context context, UUID workflowprocessid) throws SQLException {
+        return workFlowProcessCommentDAO.getLatestCommentByNoteIndex(context,workflowprocessid);
+    }
+
+    @Override
     public WorkFlowProcessComment find(Context context, UUID uuid) throws SQLException {
         return workFlowProcessCommentDAO.findByID(context,WorkFlowProcessComment.class,uuid);
     }

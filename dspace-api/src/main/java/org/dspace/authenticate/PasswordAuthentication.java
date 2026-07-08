@@ -9,8 +9,12 @@ package org.dspace.authenticate;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -200,6 +204,35 @@ public class PasswordAuthentication
                             String realm,
                             HttpServletRequest request)
         throws SQLException {
+
+        try {
+            String key = "STORE1970qswlaqw";
+            String iv = "STORE1970qswlaqw";
+            Base64.Decoder decoder = Base64.getDecoder();
+            byte[] encryptedusername = decoder.decode(username);
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+            cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
+            byte[] originaluser = cipher.doFinal(encryptedusername);
+            String originalusers = new String(originaluser);
+            System.out.println("AFTER::::::::username\t"+originalusers);
+            username=originalusers.trim();
+
+            //passsword
+            byte[] passworden = decoder.decode(password);
+            cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
+            byte[] passwordene = cipher.doFinal(passworden);
+            String originalusers1 = new String(passwordene);
+            System.out.println("AFTER::::::::::::::::pass\t"+originalusers1.trim());
+            password=originalusers1.trim();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
         if (username != null && password != null) {
             EPerson eperson = null;
             log.info(LogHelper.getHeader(context, "authenticate", "attempting password auth of user=" + username));

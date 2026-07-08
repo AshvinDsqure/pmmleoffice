@@ -34,8 +34,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.http.MediaType;
@@ -134,7 +138,22 @@ public class Application extends SpringBootServletInitializer {
         // This listener initializes the DSpace Context object
         return new DSpaceContextListener();
     }
+    @Bean
+    @Primary
+    public CacheManager getCacheManager() {
+        return new ConcurrentMapCacheManager("captchaCache");
+    }
+    @Bean
+    public CaffeineCacheManager cacheManager() {
 
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("customers", "orders");
+       /* cacheManager.setCaffeine(Caffeine.newBuilder()
+                .initialCapacity(200)
+                .maximumSize(500)
+                .weakKeys()
+                .recordStats());*/
+        return cacheManager;
+    }
     @Bean
     public ModelMapper modelMapper(){
         return new ModelMapper();

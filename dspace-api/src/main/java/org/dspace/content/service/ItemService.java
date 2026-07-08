@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -847,5 +848,33 @@ public interface ItemService
 
     public List<Item> searchItemByTitleAndYear(Context context, String title, String year) throws Exception;
     public List<Object[]> getDepartmentWiseNoOfProcessWorkflowCounts(Context context, String startdate,String endtdate,String workflowtype) throws SQLException;
+    public List<Item> getItemBycurrentuserinworkflow(Context context,UUID workflowtype,UUID stastus,Integer offset,Integer limit) throws Exception;
+    public int getItemBycurrentuserinworkflow(Context context,UUID workflowtype,UUID stastus) throws Exception;
+
+    /**
+     * Find items by department discarded file criteria
+     *
+     * @param context DSpace context
+     * @param eperson eperson UUID
+     * @param epersontoepersonmapid eperson to eperson mapping UUID
+     * @param perameter parameters map containing departmentname, workflowtype, status, startdate, enddate, isdiscard
+     * @param offset pagination offset
+     * @param limit pagination limit
+     * @return list of items matching criteria
+     * @throws SQLException if database error
+     */
+    public List<Item> departmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter, Integer offset, Integer limit) throws SQLException;
+
+    /**
+     * Count items by department discarded file criteria
+     *
+     * @param context DSpace context
+     * @param eperson eperson UUID
+     * @param epersontoepersonmapid eperson to eperson mapping UUID
+     * @param perameter parameters map containing departmentname, workflowtype, status, startdate, enddate, isdiscard
+     * @return count of items matching criteria
+     * @throws SQLException if database error
+     */
+    public int countDepartmentDiscardedFile(Context context, UUID eperson, UUID epersontoepersonmapid, HashMap<String, String> perameter) throws SQLException;
 
 }

@@ -15,6 +15,7 @@ import org.dspace.app.rest.model.wrapper.AuthenticationToken;
 import org.dspace.authenticate.service.AuthenticationService;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 /**
@@ -106,5 +107,5 @@ public interface RestAuthenticationService {
      * @param res current response (where Cookie should be destroyed)
      */
     void invalidateAuthenticationCookie(HttpServletRequest request, HttpServletResponse res);
-
+    public CacheManager getCacheManager();
 }

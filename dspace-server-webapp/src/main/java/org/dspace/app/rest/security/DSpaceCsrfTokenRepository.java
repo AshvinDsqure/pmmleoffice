@@ -115,7 +115,7 @@ public class DSpaceCsrfTokenRepository implements CsrfTokenRepository {
         // If client is on a different domain than the backend, then Cookie MUST use "SameSite=None" and "Secure".
         // Most modern browsers will block it otherwise.
         // TODO: Make SameSite configurable? "Lax" cookies are more secure, but require client & backend on same domain.
-        String sameSite = "None";
+        String sameSite = "Lax";
         if (!cookie.getSecure()) {
             sameSite = "Lax";
         }

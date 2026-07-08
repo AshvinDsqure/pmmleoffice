@@ -7,6 +7,7 @@
  */
 package org.dspace.app.rest.security.jwt;
 
+import java.sql.SQLException;
 import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 

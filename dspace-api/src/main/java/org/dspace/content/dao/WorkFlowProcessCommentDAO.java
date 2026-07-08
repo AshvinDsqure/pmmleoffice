@@ -24,5 +24,5 @@ public interface WorkFlowProcessCommentDAO extends DSpaceObjectLegacySupportDAO<
     public WorkFlowProcessComment findCommentByworkflowprocessidAndissavedrafttrue(Context context,UUID workflowprocessid) throws SQLException;
     public WorkFlowProcessComment findCommentBySubmiterandWorkflowProcessID(Context context,UUID submiter,UUID workflowprocessid) throws SQLException;
     int getCountBysubmiter(Context context,  UUID submiter);
-
+    public WorkFlowProcessComment getLatestCommentByNoteIndex(Context context, UUID workflowprocessid) throws SQLException;
 }

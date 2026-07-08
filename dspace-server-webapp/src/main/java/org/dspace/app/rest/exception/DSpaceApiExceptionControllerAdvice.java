@@ -82,6 +82,18 @@ public class DSpaceApiExceptionControllerAdvice extends ResponseEntityExceptionH
         }
     }
 
+    @ExceptionHandler(CaptchaNotmatchException.class)
+    protected void captchaNotmatchException(HttpServletRequest request, HttpServletResponse response,
+                                            Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, "Captcha does not match!", HttpServletResponse.SC_NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler(SessionInvalidatedException.class)
+    protected void SessionInvalidatedException(HttpServletRequest request, HttpServletResponse response,
+                                            Exception ex) throws IOException {
+        sendErrorResponse(request, response, ex, "Session Invalidated Exception", HttpServletResponse.SC_NOT_ACCEPTABLE);
+    }
+
     // NOTE: DSpaceAccessDeniedHandler does some preprocessing of InvalidCsrfTokenException errors (to reset the
     // CSRF token) before sending error handling to this method.
     @ExceptionHandler({InvalidCsrfTokenException.class, MissingCsrfTokenException.class})

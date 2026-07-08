@@ -139,7 +139,7 @@ public enum WorkFlowAction {
             return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
         }
     },
-    BACKWARD("Backward") {
+    CHANGDRAFT("ChangeDraft") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
             String forwardResponce = this.getJbpmServer().backwardTask(workFlowProcessRest);
@@ -220,12 +220,14 @@ public enum WorkFlowAction {
             WorkflowProcessEperson currentOwner = this.changeOwnership(context, jbpmResponse, workflowProcess);
             workFlowProcessRest.setSendername(context.getCurrentUser().getFullName());
             System.out.println("Reject action " + this.getComment());
+            workFlowProcessRest.setRemark(this.getComment());
             WorkFlowProcessHistory workFlowAction = this.storeWorkFlowHistory(context, workflowProcess, currentOwner, workFlowProcessRest);
             this.setComment(null);
             return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
         }
     },
     DELETE("Delete"),
+    DISCARDED("Discarded"),
     REVIEW("Review") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException {
@@ -249,7 +251,7 @@ public enum WorkFlowAction {
     UPDATE("Update"),
     APPROVED("Approved"),
     PENDING("Pending"),
-    CALLBACK("CallBack") {
+    CallbackandPreviousNotediscarded("Callback and Previous Note discarded") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException, JBPMServerExpetion {
             this.setIscallback(true);
@@ -273,7 +275,7 @@ public enum WorkFlowAction {
             return this.getWorkFlowProcessHistoryService().create(context, workFlowAction);
         }
     },
-    CHANGDRAFT("ChangeDraft") {
+    BACKWARD("Backward") {
         @Override
         public WorkFlowProcessHistory perfomeAction(Context context, WorkflowProcess workflowProcess, WorkFlowProcessRest workFlowProcessRest) throws SQLException, AuthorizeException, JBPMServerExpetion {
             this.setIscallback(true);
@@ -700,7 +702,7 @@ public enum WorkFlowAction {
             workFlowAction.setComment("Dack received by " + workflowProcessEperson.getePerson().getFullName() + ".");
             return workFlowAction;
         }
-        if (workFlowProcessMasterValue != null && workFlowProcessMasterValue.getPrimaryvalue() != null && workFlowProcessMasterValue.getPrimaryvalue().equalsIgnoreCase("CallBack")) {
+        if (workFlowProcessMasterValue != null && workFlowProcessMasterValue.getPrimaryvalue() != null && workFlowProcessMasterValue.getPrimaryvalue().equalsIgnoreCase("Callback and Previous Note discarded")) {
             if(workFlowProcessRest.getComment()!=null){
                 workFlowAction.setComment(workFlowProcessRest.getComment());
             }else {

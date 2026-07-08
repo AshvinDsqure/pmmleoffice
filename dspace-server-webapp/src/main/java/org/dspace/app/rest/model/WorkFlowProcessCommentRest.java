@@ -45,6 +45,8 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     private Integer noteindex;
 
+    private String senttoname;
+
     private WorkFlowProcessMasterValueRest sapdocumenttypeRest;
 
     @JsonProperty
@@ -211,5 +213,13 @@ public class WorkFlowProcessCommentRest extends DSpaceObjectRest {
 
     public void setNoteindex(Integer noteindex) {
         this.noteindex = noteindex;
+    }
+
+    public String getSenttoname() {
+        return senttoname;
+    }
+
+    public void setSenttoname(String senttoname) {
+        this.senttoname = senttoname;
     }
 }
